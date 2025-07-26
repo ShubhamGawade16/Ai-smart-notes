@@ -2,7 +2,15 @@
 
 ## Overview
 
-This is a full-stack TypeScript application for intelligent task and note management with AI-powered features. The application uses React for the frontend, Express.js for the backend, and PostgreSQL with Drizzle ORM for data persistence. It features AI-powered task categorization, productivity insights, and smart suggestions using OpenAI's GPT-4o model.
+This is a comprehensive freemium AI-powered productivity platform that transforms task management into an intelligent, predictive experience. The application combines advanced task organization, AI-driven insights, and behavioral optimization to help users achieve peak productivity through tier-based features.
+
+### Core Value Proposition
+- **Free Tier**: Essential productivity with light AI assistance (5 AI calls/day)
+- **Basic Pro ($9/month)**: Unlimited AI features and smart insights  
+- **Advanced Pro ($19/month)**: Predictive focus forecasting and auto-scheduling
+- **Premium Pro ($39/month)**: Complete AI transformation with personalized optimization
+
+The psychological strategy focuses on "taste before you buy" - giving free users enough value to form habits while creating natural upgrade paths through feature limitations and enhanced capabilities.
 
 ## User Preferences
 

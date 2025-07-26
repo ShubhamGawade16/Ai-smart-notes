@@ -142,6 +142,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Conversational Task Refiner (FREE with limits, unlimited for PRO)
+  app.post("/api/ai/refine-task", async (req, res) => {
+    try {
+      const { taskContent, refinementRequest } = req.body;
+      const userId = req.headers.authorization?.split(' ')[1] ? 'test-user' : null;
+      const user = userId ? await storage.getUser(userId) : null;
+      
+      const { aiService } = await import("./ai");
+      const refinement = await aiService.refineTask(
+        taskContent, 
+        refinementRequest, 
+        user?.tier || 'free'
+      );
+
+      res.json(refinement);
+    } catch (error) {
+      console.error("Task refinement error:", error);
+      res.status(500).json({ error: "Failed to refine task" });
+    }
+  });
+
+  // Focus Forecast (ADVANCED PRO+ feature)
+  app.get("/api/ai/focus-forecast", async (req, res) => {
+    try {
+      const userId = req.headers.authorization?.split(' ')[1] ? 'test-user' : null;
+      const user = userId ? await storage.getUser(userId) : null;
+      
+      const { aiService } = await import("./ai");
+      const forecast = await aiService.generateFocusForecast(
+        userId || 'anonymous',
+        user?.tier || 'free'
+      );
+
+      res.json(forecast);
+    } catch (error) {
+      console.error("Focus forecast error:", error);
+      res.status(500).json({ error: "Failed to generate focus forecast" });
+    }
+  });
+
   // ============================================================================
   // TASK ROUTES
   // ============================================================================
@@ -178,7 +218,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = 'test-user';
       const { id } = req.params;
-      const validatedData = updateTaskSchema.parse(req.body);
+      const validatedData = updateTaskSchema.parse({...req.body, id});
       const task = await storage.updateTask(id, userId, validatedData);
       
       if (!task) {

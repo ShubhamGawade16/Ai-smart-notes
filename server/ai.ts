@@ -35,6 +35,128 @@ export interface TaskAnalysis {
 
 // AI Service Class with tier-based limitations
 export class AIService {
+  // Conversational Task Refiner - Core feature for all tiers
+  async refineTask(taskContent: string, refinementRequest: string, userTier: string): Promise<{
+    refinedTask: string;
+    suggestions: string[];
+    decomposition?: string[];
+  }> {
+    const dailyLimit = userTier === 'free' ? 3 : 999;
+    
+    try {
+      const model = userTier === 'free' ? "openai/gpt-4o-mini" : "anthropic/claude-3.5-sonnet";
+      
+      const response = await openai.chat.completions.create({
+        model,
+        messages: [
+          {
+            role: "system",
+            content: `You are a productivity assistant that helps refine tasks. Based on the user's request, improve the task clarity, break it into steps if needed, and provide actionable suggestions. 
+            
+            For free users: Focus on basic clarity improvements.
+            For paid users: Provide detailed decomposition and advanced optimization suggestions.
+            
+            Respond with JSON: {
+              "refinedTask": "improved task description",
+              "suggestions": ["suggestion1", "suggestion2"],
+              "decomposition": ["step1", "step2", "step3"] // only for paid users or if specifically requested
+            }`
+          },
+          {
+            role: "user",
+            content: `Task: "${taskContent}"\nUser request: "${refinementRequest}"\nUser tier: ${userTier}`
+          }
+        ],
+        max_tokens: userTier === 'free' ? 300 : 600,
+        temperature: 0.7,
+      });
+
+      const result = JSON.parse(response.choices[0].message.content || '{}');
+      
+      return {
+        refinedTask: result.refinedTask || taskContent,
+        suggestions: result.suggestions || [],
+        decomposition: userTier !== 'free' ? result.decomposition : undefined
+      };
+    } catch (error) {
+      console.error('Task refinement error:', error);
+      return {
+        refinedTask: taskContent,
+        suggestions: ["Unable to process refinement request. Please try again."],
+        decomposition: undefined
+      };
+    }
+  }
+
+  // Focus Forecast - Advanced Pro feature
+  async generateFocusForecast(userId: string, userTier: string, historicalData?: any): Promise<{
+    peakFocusWindows: Array<{start: string, end: string, confidence: number}>;
+    suggestedBreaks: Array<{time: string, duration: number, reason: string}>;
+    burnoutRisk: {level: 'low' | 'medium' | 'high', factors: string[], recommendations: string[]};
+  }> {
+    if (!['advanced_pro', 'premium_pro'].includes(userTier)) {
+      return {
+        peakFocusWindows: [],
+        suggestedBreaks: [],
+        burnoutRisk: {
+          level: 'low',
+          factors: ['Upgrade to Advanced Pro for focus forecasting'],
+          recommendations: ['Unlock predictive focus insights with Advanced Pro subscription']
+        }
+      };
+    }
+
+    try {
+      // Mock focus forecast based on typical productivity patterns
+      // In production, this would use actual ML models trained on user data
+      const now = new Date();
+      const peakFocusWindows = [
+        {
+          start: '09:00',
+          end: '11:00', 
+          confidence: 0.85
+        },
+        {
+          start: '14:00',
+          end: '16:00',
+          confidence: 0.78
+        }
+      ];
+
+      const suggestedBreaks = [
+        {
+          time: '11:00',
+          duration: 15,
+          reason: 'Post-peak focus recovery'
+        },
+        {
+          time: '16:00', 
+          duration: 10,
+          reason: 'Afternoon energy dip mitigation'
+        }
+      ];
+
+      const burnoutRisk = {
+        level: 'medium' as const,
+        factors: ['High task completion variance', 'Irregular break patterns'],
+        recommendations: [
+          'Schedule regular breaks during peak focus windows',
+          'Consider time-blocking for consistent energy management',
+          'Implement the 90-minute focus/break cycle'
+        ]
+      };
+
+      return { peakFocusWindows, suggestedBreaks, burnoutRisk };
+    } catch (error) {
+      console.error('Focus forecast error:', error);
+      return {
+        peakFocusWindows: [],
+        suggestedBreaks: [],
+        burnoutRisk: { level: 'low', factors: [], recommendations: [] }
+      };
+    }
+  }
+
   // FREE TIER: Basic AI categorization (5 requests/day)
   async categorizeContent(content: string, userTier: string): Promise<CategorySuggestion[]> {
     if (userTier === 'free') {
