@@ -1,20 +1,27 @@
 import { createClient } from '@supabase/supabase-js'
 
 // Placeholder values for development - you'll need to add real Supabase credentials
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-project.supabase.co'
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key'
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co'
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-anon-key'
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+// Check if we have valid Supabase credentials
+const hasValidCredentials = supabaseUrl !== 'https://placeholder.supabase.co' && supabaseAnonKey !== 'placeholder-anon-key'
+
+export const supabase = hasValidCredentials ? createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     storage: window.localStorage,
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
   },
-})
+}) : null
 
 // Auth helpers
 export const signInWithGoogle = async () => {
+  if (!supabase) {
+    throw new Error('Supabase not configured. Please add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your environment variables.')
+  }
+  
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
@@ -31,6 +38,10 @@ export const signInWithGoogle = async () => {
 }
 
 export const signOut = async () => {
+  if (!supabase) {
+    throw new Error('Supabase not configured')
+  }
+  
   const { error } = await supabase.auth.signOut()
   if (error) {
     throw error
@@ -38,6 +49,10 @@ export const signOut = async () => {
 }
 
 export const getSession = async () => {
+  if (!supabase) {
+    return null
+  }
+  
   const { data: { session }, error } = await supabase.auth.getSession()
   if (error) {
     throw error
@@ -46,5 +61,9 @@ export const getSession = async () => {
 }
 
 export const onAuthStateChange = (callback: (event: string, session: any) => void) => {
+  if (!supabase) {
+    return { data: { subscription: { unsubscribe: () => {} } } }
+  }
+  
   return supabase.auth.onAuthStateChange(callback)
 }

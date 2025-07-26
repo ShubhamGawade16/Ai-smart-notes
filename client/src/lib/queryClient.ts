@@ -11,23 +11,28 @@ export async function apiRequest(
   url: string,
   options: RequestInit = {},
 ): Promise<any> {
-  // Get Supabase session
-  const { supabase } = await import('@/lib/supabase');
-  const { data: { session } } = await supabase.auth.getSession();
-  
-  const headers = {
-    'Content-Type': 'application/json',
-    ...options.headers,
-    ...(session?.access_token && { Authorization: `Bearer ${session.access_token}` }),
-  };
+  try {
+    // Get Supabase session
+    const { supabase } = await import('@/lib/supabase');
+    const session = supabase ? await supabase.auth.getSession().then(res => res.data.session) : null;
+    
+    const headers = {
+      'Content-Type': 'application/json',
+      ...options.headers,
+      ...(session?.access_token && { Authorization: `Bearer ${session.access_token}` }),
+    };
 
-  const res = await fetch(url, {
-    ...options,
-    headers,
-  });
+    const res = await fetch(url, {
+      ...options,
+      headers,
+    });
 
-  await throwIfResNotOk(res);
-  return await res.json();
+    await throwIfResNotOk(res);
+    return await res.json();
+  } catch (error) {
+    console.error('API request error:', error);
+    throw error;
+  }
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";

@@ -20,21 +20,29 @@ export function useAuth() {
       } else {
         setIsLoading(false)
       }
+    }).catch((error) => {
+      console.error('Session check error:', error)
+      setIsLoading(false)
     })
 
     // Listen for auth changes
-    const { data: { subscription } } = onAuthStateChange(async (event, session) => {
-      setSession(session)
-      if (session?.user) {
-        await syncUserWithBackend(session.user)
-      } else {
-        setUser(null)
-        setIsLoading(false)
-        queryClient.clear()
-      }
-    })
+    try {
+      const { data: { subscription } } = onAuthStateChange(async (event, session) => {
+        setSession(session)
+        if (session?.user) {
+          await syncUserWithBackend(session.user)
+        } else {
+          setUser(null)
+          setIsLoading(false)
+          queryClient.clear()
+        }
+      })
 
-    return () => subscription.unsubscribe()
+      return () => subscription.unsubscribe()
+    } catch (error) {
+      console.error('Auth state change error:', error)
+      setIsLoading(false)
+    }
   }, [queryClient])
 
   const syncUserWithBackend = async (supabaseUser: any) => {
