@@ -46,15 +46,20 @@ export const signInWithGoogle = async () => {
 
 export const signInWithEmail = async (email: string, password: string) => {
   if (!supabase) {
-    throw new Error('Supabase not configured')
+    throw new Error('Supabase not configured. Please check your environment variables.')
   }
+  
+  console.log('Attempting email sign in with:', { email, supabaseUrl: import.meta.env.VITE_SUPABASE_URL })
   
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   })
   
+  console.log('Supabase auth response:', { data, error })
+  
   if (error) {
+    console.error('Supabase auth error details:', error)
     throw new Error(`Sign in failed: ${error.message}`)
   }
   

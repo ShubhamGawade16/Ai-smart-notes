@@ -166,6 +166,12 @@ export default function Login() {
                 Sign up for free
               </Link>
             </div>
+            
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground mb-2">
+                For testing: First create an account on the sign-up page, then return here to log in.
+              </p>
+            </div>
           </CardContent>
         </Card>
 
