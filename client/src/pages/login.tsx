@@ -1,151 +1,110 @@
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Link, useLocation } from "wouter";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Eye, EyeOff } from "lucide-react";
-import { loginSchema, type LoginRequest } from "@shared/schema";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { Chrome, Brain, Zap, Target } from "lucide-react";
 
-export default function LoginPage() {
-  const [, setLocation] = useLocation();
-  const [showPassword, setShowPassword] = useState(false);
-  const { login, loginError, isLoginPending } = useAuth();
+export default function Login() {
+  const { login, isLoginPending, loginError } = useAuth();
+  const { toast } = useToast();
 
-  const form = useForm<LoginRequest>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  });
-
-  const onSubmit = async (data: LoginRequest) => {
+  const handleGoogleLogin = async () => {
     try {
-      await login(data);
-      setLocation("/"); // Redirect to dashboard after successful login
+      await login();
+      toast({
+        title: "Redirecting...",
+        description: "Taking you to Google to sign in.",
+      });
     } catch (error) {
-      // Error is handled by useAuth hook
+      toast({
+        title: "Login Failed",
+        description: loginError || "Unable to sign in with Google.",
+        variant: "destructive",
+      });
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
-        {/* Header */}
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Welcome Back
+        {/* Logo and branding */}
+        <div className="text-center space-y-2">
+          <div className="mx-auto w-16 h-16 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center">
+            <Brain className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            AI Smart Notes
           </h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
-            Sign in to your AI Smart Notes account
+          <p className="text-muted-foreground">
+            Intelligent task management with AI insights
           </p>
         </div>
 
-        {/* Login Form */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Sign In</CardTitle>
+        {/* Login card */}
+        <Card className="border-2 border-primary/10 shadow-xl">
+          <CardHeader className="text-center space-y-2">
+            <CardTitle>Welcome back</CardTitle>
             <CardDescription>
-              Enter your credentials to access your account
+              Sign in to access your AI-powered productivity dashboard
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              {/* Error Alert */}
-              {loginError && (
-                <Alert variant="destructive">
-                  <AlertDescription>{loginError}</AlertDescription>
-                </Alert>
+          <CardContent className="space-y-4">
+            <Button
+              onClick={handleGoogleLogin}
+              disabled={isLoginPending}
+              className="w-full h-12 text-base font-medium bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-2 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              variant="outline"
+            >
+              {isLoginPending ? (
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary mr-3" />
+              ) : (
+                <Chrome className="w-5 h-5 mr-3 text-blue-500" />
               )}
+              Continue with Google
+            </Button>
 
-              {/* Email Field */}
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="your@email.com"
-                  disabled={isLoginPending}
-                  {...form.register("email")}
-                />
-                {form.formState.errors.email && (
-                  <p className="text-sm text-red-500">
-                    {form.formState.errors.email.message}
-                  </p>
-                )}
+            {loginError && (
+              <div className="text-sm text-destructive text-center p-3 bg-destructive/10 rounded-lg border border-destructive/20">
+                {loginError}
               </div>
+            )}
 
-              {/* Password Field */}
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
-                    disabled={isLoginPending}
-                    {...form.register("password")}
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </button>
-                </div>
-                {form.formState.errors.password && (
-                  <p className="text-sm text-red-500">
-                    {form.formState.errors.password.message}
-                  </p>
-                )}
-              </div>
-
-              {/* Submit Button */}
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoginPending}
-              >
-                {isLoginPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing In...
-                  </>
-                ) : (
-                  "Sign In"
-                )}
-              </Button>
-            </form>
-
-            {/* Register Link */}
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Don't have an account?{" "}
-                <Link href="/register">
-                  <span className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 cursor-pointer">
-                    Sign up
-                  </span>
-                </Link>
-              </p>
+            <div className="text-center text-sm text-muted-foreground">
+              Don't have an account?{" "}
+              <Link href="/register" className="text-primary hover:underline font-medium">
+                Sign up for free
+              </Link>
             </div>
           </CardContent>
         </Card>
 
-        {/* Features Preview */}
-        <div className="text-center text-sm text-gray-500 dark:text-gray-400">
-          <p>🤖 AI-Powered Task Management</p>
-          <p>📊 Smart Analytics & Insights</p>
-          <p>🎯 Habit Tracking & Gamification</p>
+        {/* Feature highlights */}
+        <div className="grid grid-cols-3 gap-4 text-center">
+          <div className="space-y-2">
+            <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+              <Zap className="w-5 h-5 text-primary" />
+            </div>
+            <p className="text-xs text-muted-foreground">AI Insights</p>
+          </div>
+          <div className="space-y-2">
+            <div className="w-10 h-10 bg-secondary/10 rounded-full flex items-center justify-center mx-auto">
+              <Target className="w-5 h-5 text-secondary" />
+            </div>
+            <p className="text-xs text-muted-foreground">Smart Goals</p>
+          </div>
+          <div className="space-y-2">
+            <div className="w-10 h-10 bg-accent/10 rounded-full flex items-center justify-center mx-auto">
+              <Brain className="w-5 h-5 text-accent" />
+            </div>
+            <p className="text-xs text-muted-foreground">Auto Organize</p>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="text-center text-xs text-muted-foreground">
+          <p>Secure authentication powered by Google</p>
         </div>
       </div>
     </div>

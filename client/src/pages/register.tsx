@@ -1,224 +1,219 @@
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Link, useLocation } from "wouter";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Eye, EyeOff, CheckCircle } from "lucide-react";
-import { registerSchema, type RegisterRequest } from "@shared/schema";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { Chrome, Brain, Zap, Target, Star, CheckCircle, Users, Crown } from "lucide-react";
 
-export default function RegisterPage() {
-  const [, setLocation] = useLocation();
-  const [showPassword, setShowPassword] = useState(false);
-  const { register: registerUser, registerError, isRegisterPending } = useAuth();
+export default function Register() {
+  const { login, isLoginPending, loginError } = useAuth();
+  const { toast } = useToast();
 
-  const form = useForm<RegisterRequest>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-      firstName: "",
-      lastName: "",
-    },
-  });
-
-  const onSubmit = async (data: RegisterRequest) => {
+  const handleGoogleSignUp = async () => {
     try {
-      await registerUser(data);
-      setLocation("/"); // Redirect to dashboard after successful registration
+      await login();
+      toast({
+        title: "Redirecting...",
+        description: "Taking you to Google to create your account.",
+      });
     } catch (error) {
-      // Error is handled by useAuth hook
+      toast({
+        title: "Sign Up Failed",
+        description: loginError || "Unable to sign up with Google.",
+        variant: "destructive",
+      });
     }
   };
 
-  const password = form.watch("password");
-  const passwordStrength = {
-    hasLength: password && password.length >= 6,
-    hasNumber: password && /\d/.test(password),
-    hasSpecial: password && /[!@#$%^&*(),.?":{}|<>]/.test(password),
-  };
+  const tiers = [
+    {
+      name: "Free",
+      price: "$0",
+      period: "forever",
+      description: "Perfect for getting started",
+      features: [
+        "50 tasks per month",
+        "25 notes per month", 
+        "Basic AI insights",
+        "Mobile app access"
+      ],
+      icon: Users,
+      popular: false
+    },
+    {
+      name: "Basic",
+      price: "$9",
+      period: "per month",
+      description: "Great for personal productivity",
+      features: [
+        "500 tasks per month",
+        "250 notes per month",
+        "Advanced AI insights",
+        "Smart categorization",
+        "Priority support"
+      ],
+      icon: Star,
+      popular: true
+    },
+    {
+      name: "Pro",
+      price: "$19",
+      period: "per month", 
+      description: "For power users and teams",
+      features: [
+        "Unlimited tasks & notes",
+        "AI coaching & optimization",
+        "Advanced analytics",
+        "Team collaboration",
+        "Custom integrations",
+        "Priority support"
+      ],
+      icon: Crown,
+      popular: false
+    }
+  ];
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 py-8">
-      <div className="w-full max-w-md space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 py-12 px-4">
+      <div className="max-w-6xl mx-auto space-y-12">
         {/* Header */}
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Create Account
+        <div className="text-center space-y-4">
+          <div className="mx-auto w-20 h-20 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center">
+            <Brain className="w-10 h-10 text-white" />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            Join AI Smart Notes
           </h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
-            Join thousands of users improving their productivity with AI
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            Transform your productivity with AI-powered task management and intelligent insights
           </p>
         </div>
 
-        {/* Registration Form */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Sign Up</CardTitle>
-            <CardDescription>
-              Create your account to get started with AI Smart Notes
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              {/* Error Alert */}
-              {registerError && (
-                <Alert variant="destructive">
-                  <AlertDescription>{registerError}</AlertDescription>
-                </Alert>
+        {/* Pricing tiers */}
+        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          {tiers.map((tier, index) => (
+            <Card 
+              key={tier.name} 
+              className={`relative border-2 transition-all hover:shadow-xl ${
+                tier.popular 
+                  ? 'border-primary shadow-lg scale-105' 
+                  : 'border-primary/10 hover:border-primary/30'
+              }`}
+            >
+              {tier.popular && (
+                <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary">
+                  Most Popular
+                </Badge>
               )}
-
-              {/* Name Fields */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input
-                    id="firstName"
-                    placeholder="John"
-                    disabled={isRegisterPending}
-                    {...form.register("firstName")}
-                  />
-                  {form.formState.errors.firstName && (
-                    <p className="text-sm text-red-500">
-                      {form.formState.errors.firstName.message}
-                    </p>
-                  )}
+              
+              <CardHeader className="text-center space-y-3">
+                <div className="mx-auto w-12 h-12 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-full flex items-center justify-center">
+                  <tier.icon className="w-6 h-6 text-primary" />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input
-                    id="lastName"
-                    placeholder="Doe"
-                    disabled={isRegisterPending}
-                    {...form.register("lastName")}
-                  />
-                  {form.formState.errors.lastName && (
-                    <p className="text-sm text-red-500">
-                      {form.formState.errors.lastName.message}
-                    </p>
-                  )}
+                <div>
+                  <CardTitle className="text-2xl">{tier.name}</CardTitle>
+                  <CardDescription className="mt-1">{tier.description}</CardDescription>
                 </div>
-              </div>
-
-              {/* Email Field */}
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="your@email.com"
-                  disabled={isRegisterPending}
-                  {...form.register("email")}
-                />
-                {form.formState.errors.email && (
-                  <p className="text-sm text-red-500">
-                    {form.formState.errors.email.message}
-                  </p>
-                )}
-              </div>
-
-              {/* Password Field */}
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Create a strong password"
-                    disabled={isRegisterPending}
-                    {...form.register("password")}
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </button>
+                <div className="space-y-1">
+                  <div className="text-4xl font-bold">{tier.price}</div>
+                  <div className="text-sm text-muted-foreground">{tier.period}</div>
                 </div>
-                
-                {/* Password Strength Indicators */}
-                {password && (
-                  <div className="space-y-1">
-                    <div className={`flex items-center text-xs ${passwordStrength.hasLength ? 'text-green-600' : 'text-gray-400'}`}>
-                      <CheckCircle className={`mr-1 h-3 w-3 ${passwordStrength.hasLength ? 'text-green-600' : 'text-gray-400'}`} />
-                      At least 6 characters
-                    </div>
-                    <div className={`flex items-center text-xs ${passwordStrength.hasNumber ? 'text-green-600' : 'text-gray-400'}`}>
-                      <CheckCircle className={`mr-1 h-3 w-3 ${passwordStrength.hasNumber ? 'text-green-600' : 'text-gray-400'}`} />
-                      Contains a number
-                    </div>
-                  </div>
-                )}
-                
-                {form.formState.errors.password && (
-                  <p className="text-sm text-red-500">
-                    {form.formState.errors.password.message}
-                  </p>
-                )}
-              </div>
+              </CardHeader>
+              
+              <CardContent className="space-y-4">
+                <ul className="space-y-3">
+                  {tier.features.map((feature, idx) => (
+                    <li key={idx} className="flex items-start gap-3">
+                      <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                      <span className="text-sm">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
 
-              {/* Submit Button */}
+        {/* Sign up section */}
+        <div className="max-w-md mx-auto">
+          <Card className="border-2 border-primary/10 shadow-xl">
+            <CardHeader className="text-center">
+              <CardTitle>Start your free account</CardTitle>
+              <CardDescription>
+                Begin with our free tier, upgrade anytime
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <Button
-                type="submit"
-                className="w-full"
-                disabled={isRegisterPending}
+                onClick={handleGoogleSignUp}
+                disabled={isLoginPending}
+                className="w-full h-12 text-base font-medium bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-2 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                variant="outline"
               >
-                {isRegisterPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating Account...
-                  </>
+                {isLoginPending ? (
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary mr-3" />
                 ) : (
-                  "Create Account"
+                  <Chrome className="w-5 h-5 mr-3 text-blue-500" />
                 )}
+                Sign up with Google
               </Button>
 
-              {/* Terms */}
-              <p className="text-xs text-center text-gray-500 dark:text-gray-400">
-                By creating an account, you agree to our Terms of Service and Privacy Policy
-              </p>
-            </form>
+              {loginError && (
+                <div className="text-sm text-destructive text-center p-3 bg-destructive/10 rounded-lg border border-destructive/20">
+                  {loginError}
+                </div>
+              )}
 
-            {/* Login Link */}
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <div className="text-center text-sm text-muted-foreground">
                 Already have an account?{" "}
-                <Link href="/login">
-                  <span className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 cursor-pointer">
-                    Sign in
-                  </span>
+                <Link href="/login" className="text-primary hover:underline font-medium">
+                  Sign in
                 </Link>
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-        {/* Free Tier Benefits */}
-        <Card className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-gray-800 dark:to-gray-700 border-indigo-200 dark:border-gray-600">
-          <CardContent className="pt-6">
-            <h3 className="font-semibold text-indigo-900 dark:text-indigo-300 mb-2">
-              🎉 Start Free Today
-            </h3>
-            <div className="space-y-1 text-sm text-indigo-700 dark:text-indigo-400">
-              <p>✓ 50 tasks per month</p>
-              <p>✓ 5 AI insights daily</p>
-              <p>✓ Basic habit tracking</p>
-              <p>✓ Mobile-responsive design</p>
+        {/* Features showcase */}
+        <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+          <div className="text-center space-y-3">
+            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+              <Zap className="w-8 h-8 text-primary" />
             </div>
-            <p className="text-xs text-indigo-600 dark:text-indigo-300 mt-2">
-              Upgrade anytime for unlimited features and advanced AI
+            <h3 className="font-semibold text-lg">AI-Powered Insights</h3>
+            <p className="text-muted-foreground text-sm">
+              Get intelligent recommendations and productivity optimization based on your work patterns
             </p>
-          </CardContent>
-        </Card>
+          </div>
+          
+          <div className="text-center space-y-3">
+            <div className="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto">
+              <Target className="w-8 h-8 text-secondary" />
+            </div>
+            <h3 className="font-semibold text-lg">Smart Organization</h3>
+            <p className="text-muted-foreground text-sm">
+              Automatically categorize and prioritize your tasks with machine learning algorithms
+            </p>
+          </div>
+          
+          <div className="text-center space-y-3">
+            <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto">
+              <Brain className="w-8 h-8 text-accent" />
+            </div>
+            <h3 className="font-semibold text-lg">Adaptive Learning</h3>
+            <p className="text-muted-foreground text-sm">
+              The AI learns your preferences and adapts to provide increasingly personalized suggestions
+            </p>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="text-center text-sm text-muted-foreground space-y-2">
+          <p>✨ Join thousands of users who've transformed their productivity</p>
+          <p>🔒 Secure authentication • 📱 Mobile apps coming soon</p>
+        </div>
       </div>
     </div>
   );

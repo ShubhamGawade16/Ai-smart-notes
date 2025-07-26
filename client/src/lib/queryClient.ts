@@ -11,13 +11,14 @@ export async function apiRequest(
   url: string,
   options: RequestInit = {},
 ): Promise<any> {
-  // Get auth token from localStorage
-  const token = localStorage.getItem('auth_token');
+  // Get Supabase session
+  const { supabase } = await import('@/lib/supabase');
+  const { data: { session } } = await supabase.auth.getSession();
   
   const headers = {
     'Content-Type': 'application/json',
     ...options.headers,
-    ...(token && { Authorization: `Bearer ${token}` }),
+    ...(session?.access_token && { Authorization: `Bearer ${session.access_token}` }),
   };
 
   const res = await fetch(url, {

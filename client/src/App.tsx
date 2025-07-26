@@ -9,6 +9,7 @@ import Dashboard from "@/pages/dashboard";
 import Landing from "@/pages/landing";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
+import AuthCallback from "@/pages/auth/callback";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -24,6 +25,7 @@ function Router() {
 
   return (
     <Switch>
+      <Route path="/auth/callback" component={AuthCallback} />
       {!isAuthenticated ? (
         <>
           <Route path="/" component={Landing} />

@@ -1,152 +1,126 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { User, LoginRequest, RegisterRequest } from "@shared/schema";
-import { apiRequest } from "@/lib/queryClient";
-
-interface AuthResponse {
-  user: User;
-  token: string;
-  message: string;
-}
-
-interface AuthContextType {
-  user: User | null;
-  isLoading: boolean;
-  isAuthenticated: boolean;
-  login: (credentials: LoginRequest) => Promise<void>;
-  register: (userData: RegisterRequest) => Promise<void>;
-  logout: () => void;
-  updateProfile: (updates: Partial<User>) => Promise<void>;
-}
-
-// Token management
-const TOKEN_KEY = 'auth_token';
-
-export const getAuthToken = (): string | null => {
-  return localStorage.getItem(TOKEN_KEY);
-};
-
-export const setAuthToken = (token: string): void => {
-  localStorage.setItem(TOKEN_KEY, token);
-};
-
-export const removeAuthToken = (): void => {
-  localStorage.removeItem(TOKEN_KEY);
-};
-
-// Set up axios interceptor for auth token
-import { queryClient } from "@/lib/queryClient";
-
-// Add token to all requests
-const originalApiRequest = apiRequest;
-
-// No need to override - will use updated apiRequest from queryClient
+import { useState, useEffect } from 'react'
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { User } from "@shared/schema"
+import { supabase, signInWithGoogle, signOut, getSession, onAuthStateChange } from "@/lib/supabase"
+import { apiRequest } from "@/lib/queryClient"
 
 export function useAuth() {
-  const queryClient = useQueryClient();
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [session, setSession] = useState<any>(null)
+  const queryClient = useQueryClient()
 
-  // Get current user with token
-  const { data: user, isLoading } = useQuery({
-    queryKey: ['/api/auth/user'],
-    enabled: !!getAuthToken(),
-    retry: false,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchOnMount: true,
-  });
+  useEffect(() => {
+    // Get initial session
+    getSession().then((session) => {
+      setSession(session)
+      if (session?.user) {
+        // Sync with our backend
+        syncUserWithBackend(session.user)
+      } else {
+        setIsLoading(false)
+      }
+    })
 
-  // Login mutation
+    // Listen for auth changes
+    const { data: { subscription } } = onAuthStateChange(async (event, session) => {
+      setSession(session)
+      if (session?.user) {
+        await syncUserWithBackend(session.user)
+      } else {
+        setUser(null)
+        setIsLoading(false)
+        queryClient.clear()
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [queryClient])
+
+  const syncUserWithBackend = async (supabaseUser: any) => {
+    try {
+      setIsLoading(true)
+      const response = await fetch('/api/auth/sync', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseUser.access_token}`,
+        },
+        body: JSON.stringify({
+          id: supabaseUser.id,
+          email: supabaseUser.email,
+          firstName: supabaseUser.user_metadata?.first_name || supabaseUser.user_metadata?.name?.split(' ')[0] || '',
+          lastName: supabaseUser.user_metadata?.last_name || supabaseUser.user_metadata?.name?.split(' ').slice(1).join(' ') || '',
+          profileImageUrl: supabaseUser.user_metadata?.avatar_url || supabaseUser.user_metadata?.picture,
+        }),
+      })
+
+      if (response.ok) {
+        const userData = await response.json()
+        setUser(userData.user)
+      }
+    } catch (error) {
+      console.error('Error syncing user with backend:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const loginMutation = useMutation({
-    mutationFn: async (credentials: LoginRequest): Promise<AuthResponse> => {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(credentials),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Login failed');
-      }
-
-      return response.json();
+    mutationFn: signInWithGoogle,
+    onError: (error) => {
+      console.error('Google login error:', error)
     },
-    onSuccess: (data) => {
-      setAuthToken(data.token);
-      queryClient.setQueryData(['/api/auth/user'], data.user);
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+  })
+
+  const logoutMutation = useMutation({
+    mutationFn: signOut,
+    onSuccess: () => {
+      setUser(null)
+      setSession(null)
+      queryClient.clear()
     },
-  });
+  })
 
-  // Register mutation
-  const registerMutation = useMutation({
-    mutationFn: async (userData: RegisterRequest): Promise<AuthResponse> => {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Registration failed');
-      }
-
-      return response.json();
-    },
-    onSuccess: (data) => {
-      setAuthToken(data.token);
-      queryClient.setQueryData(['/api/auth/user'], data.user);
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
-    },
-  });
-
-  // Update profile mutation
   const updateProfileMutation = useMutation({
     mutationFn: async (updates: Partial<User>) => {
+      if (!session?.access_token) throw new Error('No valid session')
+      
       return apiRequest('/api/auth/user', {
         method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(updates),
-      });
+      })
     },
     onSuccess: (updatedUser) => {
-      queryClient.setQueryData(['/api/auth/user'], updatedUser);
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      setUser(updatedUser)
     },
-  });
+  })
 
-  const login = async (credentials: LoginRequest) => {
-    await loginMutation.mutateAsync(credentials);
-  };
+  const login = async () => {
+    await loginMutation.mutateAsync()
+  }
 
-  const register = async (userData: RegisterRequest) => {
-    await registerMutation.mutateAsync(userData);
-  };
-
-  const logout = () => {
-    removeAuthToken();
-    queryClient.setQueryData(['/api/auth/user'], null);
-    queryClient.clear();
-    window.location.href = '/';
-  };
+  const logout = async () => {
+    await logoutMutation.mutateAsync()
+  }
 
   const updateProfile = async (updates: Partial<User>) => {
-    await updateProfileMutation.mutateAsync(updates);
-  };
+    await updateProfileMutation.mutateAsync(updates)
+  }
 
   return {
-    user: user || null,
-    isLoading: isLoading || loginMutation.isPending || registerMutation.isPending,
-    isAuthenticated: !!user && !!getAuthToken(),
+    user,
+    session,
+    isLoading: isLoading || loginMutation.isPending || logoutMutation.isPending,
+    isAuthenticated: !!user && !!session,
     login,
-    register,
     logout,
     updateProfile,
     loginError: loginMutation.error?.message,
-    registerError: registerMutation.error?.message,
     isLoginPending: loginMutation.isPending,
-    isRegisterPending: registerMutation.isPending,
-  };
+  }
 }

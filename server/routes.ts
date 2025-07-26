@@ -43,6 +43,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // AUTHENTICATION ROUTES
   // ============================================================================
 
+  // Supabase auth sync endpoint
+  app.post('/api/auth/sync', async (req: AuthRequest, res) => {
+    try {
+      const { id, email, firstName, lastName, profileImageUrl } = req.body;
+      
+      if (!id || !email) {
+        return res.status(400).json({ error: 'Missing required user data' });
+      }
+
+      // Create or update user in our database
+      const user = await storage.upsertUser({
+        id,
+        email,
+        firstName: firstName || '',
+        lastName: lastName || '',
+        profileImageUrl: profileImageUrl || null,
+      });
+
+      res.json({ user });
+    } catch (error) {
+      console.error('Auth sync error:', error);
+      res.status(500).json({ error: 'Failed to sync user' });
+    }
+  });
+
   // Register new user
   app.post('/api/auth/register', async (req, res) => {
     try {
@@ -371,25 +396,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Generate AI insights
   app.get('/api/ai/insights', authenticateToken, checkAiUsage, async (req: AuthRequest, res) => {
     try {
-      const [tasks, completionHistory] = await Promise.all([
-        storage.getTasks(req.user!.id),
-        storage.getFocusSessions(req.user!.id, 20)
-      ]);
-
-      const insights = await aiService.generateInsights(req.user!, tasks, completionHistory);
+      const tasks = await storage.getTasks(req.user!.id);
       
-      // Store insights in database
-      for (const insight of insights) {
-        await storage.createAIInsight(req.user!.id, {
-          type: insight.type,
-          title: insight.title,
-          content: insight.content,
-          metadata: { confidence: insight.confidence },
-          isRead: false,
-          validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // Valid for 7 days
-        });
-      }
-
+      // Generate insights without focus sessions for now
+      const insights = await aiService.generateInsights(req.user!, tasks, []);
+      
       res.json(insights);
     } catch (error) {
       console.error('AI insights error:', error);
