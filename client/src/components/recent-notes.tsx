@@ -5,9 +5,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { noteApi } from "@/lib/api";
 
 export function RecentNotes() {
-  const { data: notes, isLoading } = useQuery({
+  const { data: notes = [], isLoading } = useQuery({
     queryKey: ['/api/notes/recent'],
-    queryFn: () => noteApi.getRecent(5),
+    queryFn: noteApi.getRecent,
   });
 
   if (isLoading) {

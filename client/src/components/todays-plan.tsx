@@ -10,7 +10,7 @@ export function TodaysPlan() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: tasks, isLoading } = useQuery({
+  const { data: tasks = [], isLoading } = useQuery({
     queryKey: ['/api/tasks/today'],
     queryFn: taskApi.getToday,
   });

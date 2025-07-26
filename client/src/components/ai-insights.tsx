@@ -5,9 +5,9 @@ import { Zap, AlertTriangle, Lightbulb } from "lucide-react";
 import { aiApi } from "@/lib/api";
 
 export function AIInsights() {
-  const { data: bottlenecks, isLoading } = useQuery({
-    queryKey: ['/api/ai/bottlenecks'],
-    queryFn: aiApi.getBottlenecks,
+  const { data: insights = [], isLoading } = useQuery({
+    queryKey: ['/api/ai/insights'],
+    queryFn: aiApi.getInsights,
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 
@@ -33,47 +33,28 @@ export function AIInsights() {
     }
   };
 
-  const mockInsights = [
+  const defaultInsights = [
     {
       type: 'productivity',
-      message: 'Moving high-priority tasks to morning hours could increase focus by 40%',
-      priority: 'high'
+      title: 'Morning Focus',
+      content: 'Moving high-priority tasks to morning hours could increase focus by 40%',
+      confidence: 0.8
     },
     {
       type: 'bottleneck',
-      message: '3 tasks are waiting on external approvals - consider following up',
-      priority: 'medium'
+      title: 'External Dependencies',
+      content: '3 tasks are waiting on external approvals - consider following up',
+      confidence: 0.7
     },
     {
       type: 'suggestion',
-      message: 'Group similar tasks together to reduce context switching',
-      priority: 'medium'
+      title: 'Context Switching',
+      content: 'Group similar tasks together to reduce context switching',
+      confidence: 0.9
     },
   ];
 
-  if (isLoading) {
-    return (
-      <div className="bg-gradient-to-br from-primary/5 to-secondary/5 rounded-lg card-shadow p-6 border border-primary/10">
-        <div className="flex items-center space-x-2 mb-4">
-          <Skeleton className="w-6 h-6 rounded-full" />
-          <Skeleton className="h-4 w-20" />
-        </div>
-        <div className="space-y-3">
-          {[...Array(3)].map((_, i) => (
-            <Skeleton key={i} className="h-16 w-full" />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  const insights = (bottlenecks?.bottlenecks && bottlenecks.bottlenecks.length > 0)
-    ? bottlenecks.bottlenecks.map(b => ({
-        type: b.type,
-        message: b.message,
-        priority: 'medium' as const
-      }))
-    : mockInsights;
+  const displayInsights = insights.length > 0 ? insights : defaultInsights;
 
   return (
     <div className="bg-gradient-to-br from-primary/5 to-secondary/5 rounded-lg card-shadow p-6 border border-primary/10">
@@ -84,25 +65,35 @@ export function AIInsights() {
         <h3 className="font-semibold text-sm">AI Insights</h3>
       </div>
       
-      <div className="space-y-3">
-        {insights.slice(0, 3).map((insight, index) => (
-          <div key={index} className="bg-background/50 dark:bg-card/50 rounded-lg p-3">
-            <div className="flex items-start space-x-2">
-              {getInsightIcon(insight.type)}
-              <div className="flex-1 min-w-0">
-                <p className={`text-sm font-medium mb-1 ${getInsightColor(insight.type)}`}>
-                  {insight.type === 'productivity' && 'Productivity Boost'}
-                  {insight.type === 'bottleneck' && 'Bottleneck Detected'}
-                  {insight.type === 'suggestion' && 'Smart Suggestion'}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {insight.message}
-                </p>
+      {isLoading ? (
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-16 w-full" />
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {displayInsights.slice(0, 3).map((insight: any, index: number) => (
+            <div key={index} className="bg-background/50 dark:bg-card/50 rounded-lg p-3">
+              <div className="flex items-start space-x-2">
+                {getInsightIcon(insight.type)}
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-medium mb-1 ${getInsightColor(insight.type)}`}>
+                    {insight.title || (
+                      insight.type === 'productivity' ? 'Productivity Boost' :
+                      insight.type === 'bottleneck' ? 'Bottleneck Detected' :
+                      'Smart Suggestion'
+                    )}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {insight.content || insight.message}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
