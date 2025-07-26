@@ -68,8 +68,16 @@ export const signInWithEmail = async (email: string, password: string) => {
 
 export const signUpWithEmail = async (email: string, password: string, firstName: string, lastName: string) => {
   if (!supabase) {
-    throw new Error('Supabase not configured')
+    throw new Error('Supabase not configured. Please check your environment variables.')
   }
+  
+  console.log('Attempting email sign up with:', { 
+    email, 
+    firstName, 
+    lastName,
+    supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
+    hasAnonKey: !!import.meta.env.VITE_SUPABASE_ANON_KEY
+  })
   
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -83,7 +91,10 @@ export const signUpWithEmail = async (email: string, password: string, firstName
     }
   })
   
+  console.log('Supabase signup response:', { data, error })
+  
   if (error) {
+    console.error('Supabase signup error details:', error)
     throw new Error(`Sign up failed: ${error.message}`)
   }
   
