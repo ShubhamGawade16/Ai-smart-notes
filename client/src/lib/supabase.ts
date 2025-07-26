@@ -56,11 +56,17 @@ export const getSession = async () => {
     return null
   }
   
-  const { data: { session }, error } = await supabase.auth.getSession()
-  if (error) {
-    throw error
+  try {
+    const { data: { session }, error } = await supabase.auth.getSession()
+    if (error) {
+      console.error('Session error:', error)
+      return null
+    }
+    return session
+  } catch (error) {
+    console.error('Session check failed:', error)
+    return null
   }
-  return session
 }
 
 export const onAuthStateChange = (callback: (event: string, session: any) => void) => {

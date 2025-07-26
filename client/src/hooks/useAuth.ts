@@ -11,23 +11,37 @@ export function useAuth() {
   const queryClient = useQueryClient()
 
   useEffect(() => {
+    let isMounted = true;
+    
     // Get initial session
-    getSession().then((session) => {
-      setSession(session)
-      if (session?.user) {
-        // Sync with our backend
-        syncUserWithBackend(session.user)
-      } else {
-        setIsLoading(false)
+    const initAuth = async () => {
+      try {
+        const session = await getSession();
+        if (!isMounted) return;
+        
+        setSession(session)
+        if (session?.user) {
+          // Sync with our backend
+          await syncUserWithBackend(session.user)
+        } else {
+          setIsLoading(false)
+        }
+      } catch (error) {
+        console.error('Session check error:', error)
+        if (isMounted) {
+          setIsLoading(false)
+        }
       }
-    }).catch((error) => {
-      console.error('Session check error:', error)
-      setIsLoading(false)
-    })
+    };
+
+    initAuth();
 
     // Listen for auth changes
+    let subscription: any = null;
     try {
-      const { data: { subscription } } = onAuthStateChange(async (event, session) => {
+      const { data: { subscription: sub } } = onAuthStateChange(async (event, session) => {
+        if (!isMounted) return;
+        
         setSession(session)
         if (session?.user) {
           await syncUserWithBackend(session.user)
@@ -37,11 +51,19 @@ export function useAuth() {
           queryClient.clear()
         }
       })
-
-      return () => subscription.unsubscribe()
+      subscription = sub;
     } catch (error) {
       console.error('Auth state change error:', error)
-      setIsLoading(false)
+      if (isMounted) {
+        setIsLoading(false)
+      }
+    }
+
+    return () => {
+      isMounted = false;
+      if (subscription) {
+        subscription.unsubscribe()
+      }
     }
   }, [queryClient])
 
