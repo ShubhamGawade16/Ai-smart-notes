@@ -25,6 +25,8 @@ export const signInWithGoogle = async () => {
     throw new Error('Supabase not configured. Please add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your environment variables.')
   }
   
+  console.log('Attempting Google sign in...')
+  
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
@@ -34,9 +36,11 @@ export const signInWithGoogle = async () => {
   })
   
   if (error) {
-    throw error
+    console.error('Supabase OAuth error:', error)
+    throw new Error(`Google authentication failed: ${error.message}. Please ensure Google OAuth is configured in your Supabase project.`)
   }
   
+  console.log('Google sign in data:', data)
   return data
 }
 

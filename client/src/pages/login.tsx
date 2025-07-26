@@ -18,9 +18,10 @@ export default function Login() {
         description: "Taking you to Google to sign in.",
       });
     } catch (error: any) {
+      console.error('Login error:', error)
       toast({
-        title: "Setup Required",
-        description: error.message || "Please configure Supabase credentials first.",
+        title: "Authentication Error",
+        description: error.message || "Please configure Google OAuth in Supabase first.",
         variant: "destructive",
       });
     }

@@ -100,6 +100,7 @@ export function useAuth() {
     mutationFn: signInWithGoogle,
     onError: (error) => {
       console.error('Google login error:', error)
+      console.error('Full error details:', JSON.stringify(error, null, 2))
     },
   })
 
