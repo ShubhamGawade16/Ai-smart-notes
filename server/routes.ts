@@ -182,6 +182,148 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Auto-Scheduler endpoint (BASIC PRO+ feature)
+  app.post("/api/ai/optimize-schedule", async (req, res) => {
+    try {
+      const userId = req.headers.authorization?.split(' ')[1] ? 'test-user' : null;
+      const user = userId ? await storage.getUser(userId) : null;
+      
+      // Only available for Basic Pro and above
+      if (!user || !['basic_pro', 'advanced_pro', 'premium_pro'].includes(user.tier)) {
+        return res.status(403).json({ error: "Basic Pro subscription required" });
+      }
+
+      const tasks = await storage.getTasks(userId);
+      
+      // Mock optimization - would use ML model in production
+      const optimization = {
+        optimizedSchedule: [
+          {
+            taskId: "1",
+            title: "Review quarterly reports",
+            startTime: "09:00",
+            endTime: "10:30",
+            priority: "high",
+            estimatedMinutes: 90,
+            reasoning: "Scheduled during peak focus window for analytical work"
+          },
+          {
+            taskId: "2", 
+            title: "Team standup meeting",
+            startTime: "11:00",
+            endTime: "11:30",
+            priority: "medium",
+            estimatedMinutes: 30,
+            reasoning: "Collaborative work fits well after individual focus time"
+          }
+        ],
+        insights: {
+          totalProductiveHours: 6.5,
+          bufferTimeAdded: 45,
+          conflictsResolved: 2,
+          recommendations: [
+            "Consider blocking calendar during deep work sessions",
+            "Set phone to do-not-disturb during focus blocks"
+          ]
+        }
+      };
+      res.json(optimization);
+    } catch (error) {
+      console.error("Schedule optimization error:", error);
+      res.status(500).json({ error: "Failed to optimize schedule" });
+    }
+  });
+
+  // Habit Gamification endpoint (FREE core + PRO enhanced)
+  app.get("/api/ai/habit-gamification", async (req, res) => {
+    try {
+      const userId = req.headers.authorization?.split(' ')[1] ? 'test-user' : null;
+      const user = userId ? await storage.getUser(userId) : null;
+      
+      const isPro = user && ['basic_pro', 'advanced_pro', 'premium_pro'].includes(user.tier);
+      const isPremium = user && user.tier === 'premium_pro';
+      
+      const gamification = {
+        currentXp: 1250,
+        level: 8,
+        xpToNextLevel: 350,
+        currentStreak: 7,
+        longestStreak: 14,
+        achievements: [
+          {
+            id: "early-bird",
+            name: "Early Bird",
+            description: "Complete 5 tasks before 10 AM",
+            icon: "🌅",
+            earned: true,
+            rarity: "common"
+          },
+          {
+            id: "focus-master",
+            name: "Focus Master",
+            description: "Complete 3 hours of deep work",
+            icon: "🎯",
+            earned: true,
+            rarity: "rare"
+          }
+        ],
+        dailyChallenges: [
+          {
+            id: "focus-session",
+            title: "Complete 2 Focus Sessions",
+            description: "Use 25-minute focused work blocks",
+            progress: 1,
+            target: 2,
+            reward: "+50 XP",
+            completed: false
+          }
+        ],
+        powerUps: isPro ? [
+          {
+            id: "focus-boost",
+            name: "Focus Boost",
+            description: "Double XP for next task completion",
+            rarity: "rare",
+            quantity: 2,
+            effect: "2x XP for 1 hour"
+          }
+        ] : [],
+        personalityInsights: isPremium ? {
+          type: "Achievement Hunter",
+          preferredRewards: ["badges", "streaks", "leaderboards"],
+          motivationStyle: "Goal-oriented with competitive elements",
+          recommendations: [
+            "Set weekly milestone challenges",
+            "Track progress visually with charts"
+          ]
+        } : undefined
+      };
+      res.json(gamification);
+    } catch (error) {
+      console.error("Habit gamification error:", error);
+      res.status(500).json({ error: "Failed to load gamification data" });
+    }
+  });
+
+  // Power-up usage endpoint (PRO feature)
+  app.post("/api/ai/use-power-up/:powerUpId", async (req, res) => {
+    try {
+      const { powerUpId } = req.params;
+      const userId = req.headers.authorization?.split(' ')[1] ? 'test-user' : null;
+      const user = userId ? await storage.getUser(userId) : null;
+      
+      if (!user || !['basic_pro', 'advanced_pro', 'premium_pro'].includes(user.tier)) {
+        return res.status(403).json({ error: "Pro subscription required" });
+      }
+
+      // Mock power-up activation
+      res.json({ success: true, message: `Power-up ${powerUpId} activated!` });
+    } catch (error) {
+      console.error("Power-up usage error:", error);
+      res.status(500).json({ error: "Failed to use power-up" });
+    }
+  });
+
   // ============================================================================
   // TASK ROUTES
   // ============================================================================
