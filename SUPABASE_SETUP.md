@@ -1,97 +1,121 @@
 # Supabase Setup Guide for AI Smart Notes
 
+This guide will walk you through setting up Supabase with Google OAuth for your AI Smart Notes application.
+
+## Prerequisites
+
+- A Google account for Supabase
+- A Google Cloud Console account for OAuth setup
+
 ## Step 1: Create Supabase Project
 
-1. Go to [supabase.com](https://supabase.com) and sign up/login
-2. Click "New Project"
-3. Choose your organization
-4. Enter project details:
-   - **Name**: `ai-smart-notes`
-   - **Database Password**: Generate a strong password (save this!)
-   - **Region**: Choose closest to your users
-5. Click "Create new project" and wait for setup to complete (~2 minutes)
+1. Go to [https://supabase.com/dashboard](https://supabase.com/dashboard)
+2. Sign up or log in with your Google account
+3. Click **"New Project"**
+4. Fill in the project details:
+   - **Name**: `ai-smart-notes` (or your preferred name)
+   - **Database Password**: Choose a strong password (save it!)
+   - **Region**: Choose the closest region to your users
+5. Click **"Create new project"**
+6. Wait 2-3 minutes for the project to be created
 
-## Step 2: Get Project Credentials
+## Step 2: Get Supabase Credentials
 
-1. In your Supabase dashboard, go to **Settings > API**
-2. Copy these values:
-   - **Project URL**: `https://your-project-id.supabase.co`
-   - **Project API Keys > anon public**: `eyJhbGciOiJIUzI1NiIs...`
-   - **Connection string**: Go to Settings > Database, copy "Connection string" under "Connection pooling"
+1. In your Supabase dashboard, go to **Settings** → **API**
+2. Copy the following values:
+   - **Project URL** (e.g., `https://abcdefgh.supabase.co`)
+   - **anon public** key (under "Project API Keys")
 
-## Step 3: Configure Google OAuth
+✅ These have been added to your Replit secrets already!
 
-1. Go to **Authentication > Providers** in your Supabase dashboard
-2. Click on **Google** provider
-3. Toggle **Enable Google provider** to ON
-4. You'll need Google OAuth credentials:
+## Step 3: Set Up Google OAuth
 
-### Get Google OAuth Credentials:
-1. Go to [Google Cloud Console](https://console.cloud.google.com)
+### 3.1 Create Google OAuth App
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
 2. Create a new project or select existing one
-3. Enable Google+ API:
-   - Go to **APIs & Services > Library**
+3. Enable the Google+ API:
+   - Go to **APIs & Services** → **Library**
    - Search for "Google+ API" and enable it
-4. Create OAuth 2.0 credentials:
-   - Go to **APIs & Services > Credentials**
-   - Click **Create Credentials > OAuth 2.0 Client IDs**
-   - Application type: **Web application**
-   - Name: `AI Smart Notes`
-   - Authorized redirect URIs: `https://your-project-id.supabase.co/auth/v1/callback`
+4. Create OAuth credentials:
+   - Go to **APIs & Services** → **Credentials**
+   - Click **"Create Credentials"** → **"OAuth 2.0 Client IDs"**
+   - Choose **"Web application"**
+   - Add authorized redirect URIs:
+     ```
+     https://[your-supabase-project-id].supabase.co/auth/v1/callback
+     ```
+     (Replace `[your-supabase-project-id]` with your actual project ID from the URL)
 
-5. Copy the **Client ID** and **Client Secret**
-6. Back in Supabase, paste these into the Google provider settings
-7. Set redirect URL to: `https://your-replit-domain/auth/callback`
-8. Click **Save**
+### 3.2 Configure Supabase Auth
 
-## Step 4: Add Environment Variables to Replit
+1. In your Supabase dashboard, go to **Authentication** → **Providers**
+2. Find **Google** and toggle it **ON**
+3. Enter your Google OAuth credentials:
+   - **Client ID**: From Google Cloud Console
+   - **Client Secret**: From Google Cloud Console
+4. Click **"Save"**
 
-1. In your Replit project, click the **Secrets** tab (lock icon in sidebar)
-2. Add these secrets:
+### 3.3 Configure Redirect URLs
 
-```
-VITE_SUPABASE_URL = https://your-project-id.supabase.co
-VITE_SUPABASE_ANON_KEY = your_anon_key_here
-DATABASE_URL = your_supabase_connection_string
-```
+In Supabase Authentication settings, add these redirect URLs:
+- `https://[your-replit-url]/auth/callback`
+- `http://localhost:3000/auth/callback` (for local development)
 
-## Step 5: Set Up Database Tables
+## Step 4: Database Schema Setup
 
-The app will automatically create the necessary tables when you first run it. The schema is defined in `shared/schema.ts`.
+Your database tables will be created automatically when users first sign up. The app uses:
 
-## Step 6: Test Authentication
+- `users` - User profiles synced from Google OAuth
+- `tasks` - User tasks and todos
+- `notes` - User notes and content
+- `ai_insights` - AI-generated productivity insights
 
-1. Restart your Replit application
-2. Navigate to `/login`
-3. Click "Continue with Google"
-4. You should be redirected to Google OAuth
-5. After approval, you'll be redirected back to your app
+## Step 5: Test Authentication
 
-## Troubleshooting
-
-### Common Issues:
-
-1. **"Invalid redirect URI"**: Make sure the redirect URI in Google Console exactly matches your Supabase callback URL
-2. **"Missing environment variables"**: Double-check all secrets are added in Replit
-3. **Database connection errors**: Verify the DATABASE_URL is correct and includes password
-
-### Check Setup:
-- Supabase project is created and running
-- Google OAuth is enabled with correct credentials
-- All environment variables are set in Replit Secrets
-- Application restarts successfully
+1. Go to your Replit app
+2. Click **"Continue with Google"** on the login page
+3. You should be redirected to Google OAuth
+4. After authorization, you'll be redirected back to your app dashboard
 
 ## Security Notes
 
-- Never commit `.env` files or expose API keys
-- Use Replit Secrets for all sensitive information
-- The anon key is safe to use in frontend code
-- Database policies will be handled by your backend authentication
+- Keep your Supabase anon key public-facing (it's designed to be)
+- Never expose your service role key
+- The app uses Row Level Security (RLS) for data protection
+- All API calls are authenticated via Supabase JWT tokens
 
-## Next Steps
+## Troubleshooting
 
-Once authentication is working:
-1. Test user registration and login flow
-2. Verify user data syncs to your backend
-3. Test tier management and AI features
-4. Configure any additional OAuth providers if needed
+### Issue: "Invalid redirect URL"
+- Check that your redirect URLs match exactly in both Google Console and Supabase
+- Ensure no trailing slashes
+
+### Issue: "Provider not enabled"
+- Verify Google provider is enabled in Supabase Authentication settings
+- Check that Client ID and Secret are correctly entered
+
+### Issue: Authentication not working
+- Check browser console for errors
+- Verify environment variables are set correctly in Replit
+- Ensure your Google OAuth app is published (not in testing mode)
+
+## Production Deployment
+
+When deploying to production:
+
+1. Update Google OAuth redirect URLs with your production domain
+2. Update Supabase redirect URLs
+3. Ensure environment variables are set in your production environment
+4. Consider upgrading your Supabase plan for higher usage limits
+
+## Support
+
+For issues with this setup:
+- Check Supabase documentation: https://supabase.com/docs
+- Google OAuth documentation: https://developers.google.com/identity/protocols/oauth2
+- Open an issue in your project repository
+
+---
+
+🎉 **Congratulations!** Your AI Smart Notes app now has secure Google authentication powered by Supabase!

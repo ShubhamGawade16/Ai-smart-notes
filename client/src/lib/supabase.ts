@@ -1,11 +1,14 @@
 import { createClient } from '@supabase/supabase-js'
 
 // Placeholder values for development - you'll need to add real Supabase credentials
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co'
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-anon-key'
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 // Check if we have valid Supabase credentials
-const hasValidCredentials = supabaseUrl !== 'https://placeholder.supabase.co' && supabaseAnonKey !== 'placeholder-anon-key'
+const hasValidCredentials = supabaseUrl && supabaseAnonKey && 
+  supabaseUrl.startsWith('https://') && 
+  supabaseUrl.includes('.supabase.co') &&
+  supabaseAnonKey.length > 20
 
 export const supabase = hasValidCredentials ? createClient(supabaseUrl, supabaseAnonKey, {
   auth: {

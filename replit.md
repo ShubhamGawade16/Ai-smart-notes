@@ -19,13 +19,14 @@ Preferred communication style: Simple, everyday language.
 - **UI Components**: shadcn/ui component library built on Radix UI primitives
 - **Styling**: Tailwind CSS with CSS variables for theming
 - **Build Tool**: Vite with custom configuration for development and production
+- **Authentication**: Supabase Auth with Google OAuth integration
 
 ### Backend Architecture
 - **Framework**: Express.js with TypeScript
-- **Database**: PostgreSQL with Drizzle ORM for type-safe database operations
+- **Authentication**: Supabase JWT token verification
+- **Database**: In-memory storage (MemStorage) for development and prototyping
 - **AI Integration**: OpenAI GPT-4o for task categorization, tagging, and productivity insights
-- **Session Management**: In-memory storage with optional PostgreSQL session store
-- **API Design**: RESTful API with consistent error handling and logging middleware
+- **API Design**: RESTful API with Supabase-compatible authentication middleware
 
 ### Database Schema
 The application uses two main entities:

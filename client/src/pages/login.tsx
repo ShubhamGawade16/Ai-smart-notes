@@ -17,10 +17,10 @@ export default function Login() {
         title: "Redirecting...",
         description: "Taking you to Google to sign in.",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
-        title: "Login Failed",
-        description: loginError || "Unable to sign in with Google.",
+        title: "Setup Required",
+        description: error.message || "Please configure Supabase credentials first.",
         variant: "destructive",
       });
     }
