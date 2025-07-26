@@ -47,7 +47,36 @@ export class MemStorage implements IStorage {
 
   // User methods
   async getUser(id: string): Promise<User | undefined> {
-    return this.users.find(user => user.id === id);
+    let user = this.users.find(user => user.id === id);
+    if (!user) {
+      // Create test user with Premium Pro tier for testing all features
+      user = {
+        id,
+        email: 'test@example.com',
+        passwordHash: null,
+        firstName: 'Test',
+        lastName: 'User',
+        profileImageUrl: null,
+        tier: 'premium_pro', // Enable all Pro features for testing
+        subscriptionId: 'test-sub-' + id,
+        subscriptionStatus: 'active',
+        subscriptionCurrentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        trialEndsAt: null,
+        isTrialUsed: false,
+        dailyAiCalls: 0,
+        dailyAiCallsResetAt: new Date(),
+        monthlyTaskCount: 0,
+        monthlyTaskCountResetAt: new Date(),
+        totalXp: 1250,
+        level: 8,
+        currentStreak: 7,
+        longestStreak: 14,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      this.users.push(user);
+    }
+    return user;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {

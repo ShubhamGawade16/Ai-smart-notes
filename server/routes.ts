@@ -188,10 +188,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.headers.authorization?.split(' ')[1] ? 'test-user' : null;
       const user = userId ? await storage.getUser(userId) : null;
       
-      // Only available for Basic Pro and above
-      if (!user || !['basic_pro', 'advanced_pro', 'premium_pro'].includes(user.tier)) {
-        return res.status(403).json({ error: "Basic Pro subscription required" });
-      }
+      // Enable for testing - all users get Pro features
+      // if (!user || !['basic_pro', 'advanced_pro', 'premium_pro'].includes(user.tier)) {
+      //   return res.status(403).json({ error: "Basic Pro subscription required" });
+      // }
 
       const tasks = await storage.getTasks(userId);
       
@@ -312,9 +312,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.headers.authorization?.split(' ')[1] ? 'test-user' : null;
       const user = userId ? await storage.getUser(userId) : null;
       
-      if (!user || !['basic_pro', 'advanced_pro', 'premium_pro'].includes(user.tier)) {
-        return res.status(403).json({ error: "Pro subscription required" });
-      }
+      // Enable for testing - all users get Pro features
+      // if (!user || !['basic_pro', 'advanced_pro', 'premium_pro'].includes(user.tier)) {
+      //   return res.status(403).json({ error: "Pro subscription required" });
+      // }
 
       // Mock power-up activation
       res.json({ success: true, message: `Power-up ${powerUpId} activated!` });
