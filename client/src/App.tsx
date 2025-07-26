@@ -16,23 +16,6 @@ import NotFound from "@/pages/not-found";
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
-  // Check if Supabase is properly configured
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-  const isSupabaseConfigured = supabaseUrl && supabaseAnonKey && 
-    supabaseUrl.startsWith('https://') && 
-    supabaseUrl.includes('.supabase.co') &&
-    supabaseAnonKey.length > 20;
-
-  if (!isSupabaseConfigured) {
-    return (
-      <Switch>
-        <Route path="/setup" component={Setup} />
-        <Route component={Setup} />
-      </Switch>
-    );
-  }
-
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
