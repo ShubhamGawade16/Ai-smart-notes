@@ -2,13 +2,18 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { Chrome, Brain, Zap, Target } from "lucide-react";
+import { Chrome, Brain, Zap, Target, Mail, Lock } from "lucide-react";
 
 export default function Login() {
-  const { login, isLoginPending, loginError } = useAuth();
+  const { login, loginWithEmail, isLoginPending, loginError } = useAuth();
   const { toast } = useToast();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const handleGoogleLogin = async () => {
     try {
@@ -22,6 +27,32 @@ export default function Login() {
       toast({
         title: "Authentication Error",
         description: error.message || "Please configure Google OAuth in Supabase first.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter both email and password.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await loginWithEmail(email, password);
+      toast({
+        title: "Success!",
+        description: "You have been signed in successfully.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Sign In Failed",
+        description: error.message || "Invalid email or password.",
         variant: "destructive",
       });
     }
@@ -51,25 +82,82 @@ export default function Login() {
               Sign in to access your AI-powered productivity dashboard
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
+            {/* Email/Password Form */}
+            <form onSubmit={handleEmailLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="flex items-center gap-2">
+                  <Mail className="w-4 h-4" />
+                  Email Address
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="h-12"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="password" className="flex items-center gap-2">
+                  <Lock className="w-4 h-4" />
+                  Password
+                </Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="h-12"
+                />
+              </div>
+              
+              <Button
+                type="submit"
+                disabled={isLoginPending}
+                className="w-full h-12 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90"
+              >
+                {isLoginPending ? (
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+                ) : (
+                  "Sign In"
+                )}
+              </Button>
+            </form>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <Separator className="w-full" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+              </div>
+            </div>
+
+            {/* Google OAuth Button */}
             <Button
               onClick={handleGoogleLogin}
               disabled={isLoginPending}
-              className="w-full h-12 text-base font-medium bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-2 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               variant="outline"
+              className="w-full h-12 font-medium"
             >
               {isLoginPending ? (
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary mr-3" />
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-900" />
               ) : (
-                <Chrome className="w-5 h-5 mr-3 text-blue-500" />
+                <>
+                  <Chrome className="w-5 h-5 mr-2" />
+                  Continue with Google
+                </>
               )}
-              Continue with Google
             </Button>
-
+            
             {loginError && (
-              <div className="text-sm text-destructive text-center p-3 bg-destructive/10 rounded-lg border border-destructive/20">
-                {loginError}
-              </div>
+              <p className="text-sm text-red-600 text-center">{loginError}</p>
             )}
 
             <div className="text-center text-sm text-muted-foreground">

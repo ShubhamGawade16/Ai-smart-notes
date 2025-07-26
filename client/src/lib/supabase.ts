@@ -44,6 +44,47 @@ export const signInWithGoogle = async () => {
   return data
 }
 
+export const signInWithEmail = async (email: string, password: string) => {
+  if (!supabase) {
+    throw new Error('Supabase not configured')
+  }
+  
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  })
+  
+  if (error) {
+    throw new Error(`Sign in failed: ${error.message}`)
+  }
+  
+  return data
+}
+
+export const signUpWithEmail = async (email: string, password: string, firstName: string, lastName: string) => {
+  if (!supabase) {
+    throw new Error('Supabase not configured')
+  }
+  
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        first_name: firstName,
+        last_name: lastName,
+        name: `${firstName} ${lastName}`,
+      }
+    }
+  })
+  
+  if (error) {
+    throw new Error(`Sign up failed: ${error.message}`)
+  }
+  
+  return data
+}
+
 export const signOut = async () => {
   if (!supabase) {
     throw new Error('Supabase not configured')

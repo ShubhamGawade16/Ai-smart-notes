@@ -8,8 +8,12 @@ import { useToast } from "@/hooks/use-toast";
 import { Chrome, Brain, Zap, Target, Star, CheckCircle, Users, Crown } from "lucide-react";
 
 export default function Register() {
-  const { login, isLoginPending, loginError } = useAuth();
+  const { login, signup, isLoginPending, isSignupPending, loginError, signupError } = useAuth();
   const { toast } = useToast();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
 
   const handleGoogleSignUp = async () => {
     try {

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { User } from "@shared/schema"
-import { supabase, signInWithGoogle, signOut, getSession, onAuthStateChange } from "@/lib/supabase"
+import { supabase, signInWithGoogle, signInWithEmail, signUpWithEmail, signOut, getSession, onAuthStateChange } from "@/lib/supabase"
 import { apiRequest } from "@/lib/queryClient"
 
 export function useAuth() {
@@ -104,6 +104,23 @@ export function useAuth() {
     },
   })
 
+  const emailLoginMutation = useMutation({
+    mutationFn: ({ email, password }: { email: string, password: string }) => 
+      signInWithEmail(email, password),
+    onError: (error) => {
+      console.error('Email login error:', error)
+    },
+  })
+
+  const signupMutation = useMutation({
+    mutationFn: ({ email, password, firstName, lastName }: { 
+      email: string, password: string, firstName: string, lastName: string 
+    }) => signUpWithEmail(email, password, firstName, lastName),
+    onError: (error) => {
+      console.error('Signup error:', error)
+    },
+  })
+
   const logoutMutation = useMutation({
     mutationFn: signOut,
     onSuccess: () => {
@@ -135,6 +152,14 @@ export function useAuth() {
     await loginMutation.mutateAsync()
   }
 
+  const loginWithEmail = async (email: string, password: string) => {
+    await emailLoginMutation.mutateAsync({ email, password })
+  }
+
+  const signup = async (email: string, password: string, firstName: string, lastName: string) => {
+    await signupMutation.mutateAsync({ email, password, firstName, lastName })
+  }
+
   const logout = async () => {
     await logoutMutation.mutateAsync()
   }
@@ -146,12 +171,16 @@ export function useAuth() {
   return {
     user,
     session,
-    isLoading: isLoading || loginMutation.isPending || logoutMutation.isPending,
+    isLoading: isLoading || loginMutation.isPending || logoutMutation.isPending || emailLoginMutation.isPending || signupMutation.isPending,
     isAuthenticated: !!user && !!session,
     login,
+    loginWithEmail,
+    signup,
     logout,
     updateProfile,
-    loginError: loginMutation.error?.message,
-    isLoginPending: loginMutation.isPending,
+    loginError: loginMutation.error?.message || emailLoginMutation.error?.message,
+    signupError: signupMutation.error?.message,
+    isLoginPending: loginMutation.isPending || emailLoginMutation.isPending,
+    isSignupPending: signupMutation.isPending,
   }
 }
