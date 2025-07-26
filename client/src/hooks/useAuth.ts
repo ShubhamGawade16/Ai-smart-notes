@@ -70,27 +70,23 @@ export function useAuth() {
   const syncUserWithBackend = async (supabaseUser: any) => {
     try {
       setIsLoading(true)
-      const response = await fetch('/api/auth/sync', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabaseUser.access_token}`,
-        },
-        body: JSON.stringify({
-          id: supabaseUser.id,
-          email: supabaseUser.email,
-          firstName: supabaseUser.user_metadata?.first_name || supabaseUser.user_metadata?.name?.split(' ')[0] || '',
-          lastName: supabaseUser.user_metadata?.last_name || supabaseUser.user_metadata?.name?.split(' ').slice(1).join(' ') || '',
-          profileImageUrl: supabaseUser.user_metadata?.avatar_url || supabaseUser.user_metadata?.picture,
-        }),
-      })
-
-      if (response.ok) {
-        const userData = await response.json()
-        setUser(userData.user)
+      
+      // Create user object directly from Supabase data
+      const userData = {
+        id: supabaseUser.id,
+        email: supabaseUser.email,
+        firstName: supabaseUser.user_metadata?.first_name || supabaseUser.user_metadata?.name?.split(' ')[0] || '',
+        lastName: supabaseUser.user_metadata?.last_name || supabaseUser.user_metadata?.name?.split(' ').slice(1).join(' ') || '',
+        profileImageUrl: supabaseUser.user_metadata?.avatar_url || supabaseUser.user_metadata?.picture || null,
+        createdAt: new Date(supabaseUser.created_at),
+        updatedAt: new Date(),
       }
+      
+      console.log('Setting user from Supabase data:', userData)
+      setUser(userData)
+      
     } catch (error) {
-      console.error('Error syncing user with backend:', error)
+      console.error('Error setting user from Supabase:', error)
     } finally {
       setIsLoading(false)
     }
