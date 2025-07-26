@@ -57,7 +57,7 @@ export class MemStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     const user: User = {
       id: crypto.randomUUID(),
-      email: insertUser.email || null,
+      email: insertUser.email,
       passwordHash: insertUser.passwordHash || null,
       firstName: insertUser.firstName || null,
       lastName: insertUser.lastName || null,
@@ -76,8 +76,8 @@ export class MemStorage implements IStorage {
       currentStreak: insertUser.currentStreak || 0,
       longestStreak: insertUser.longestStreak || 0,
       lastActivityAt: insertUser.lastActivityAt || null,
-      createdAt: insertUser.createdAt || new Date(),
-      updatedAt: insertUser.updatedAt || new Date(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
     this.users.push(user);
     return user;

@@ -71,13 +71,25 @@ export function useAuth() {
     try {
       setIsLoading(true)
       
-      // Create user object directly from Supabase data
+      // Create user object directly from Supabase data with all required fields
       const userData = {
         id: supabaseUser.id,
         email: supabaseUser.email,
+        passwordHash: null,
         firstName: supabaseUser.user_metadata?.first_name || supabaseUser.user_metadata?.name?.split(' ')[0] || '',
         lastName: supabaseUser.user_metadata?.last_name || supabaseUser.user_metadata?.name?.split(' ').slice(1).join(' ') || '',
         profileImageUrl: supabaseUser.user_metadata?.avatar_url || supabaseUser.user_metadata?.picture || null,
+        tier: 'free' as const,
+        subscriptionId: null,
+        subscriptionStatus: null,
+        subscriptionCurrentPeriodStart: null,
+        subscriptionCurrentPeriodEnd: null,
+        subscriptionCancelAtPeriodEnd: null,
+        subscriptionCanceledAt: null,
+        subscriptionTrialStart: null,
+        subscriptionTrialEnd: null,
+        tasksUsedThisMonth: 0,
+        notesUsedThisMonth: 0,
         createdAt: new Date(supabaseUser.created_at),
         updatedAt: new Date(),
       }
