@@ -74,7 +74,7 @@ export const tasks = pgTable("tasks", {
   scheduledAt: timestamp("scheduled_at"), // AI auto-schedule
   completedAt: timestamp("completed_at"),
   aiSuggestions: jsonb("ai_suggestions"), // AI-generated improvements
-  parentTaskId: varchar("parent_task_id").references(() => tasks.id),
+  parentTaskId: varchar("parent_task_id").references((): any => tasks.id),
   contextSwitchCost: integer("context_switch_cost"), // AI-calculated switching penalty
   xpReward: integer("xp_reward").default(10),
   createdAt: timestamp("created_at").defaultNow(),

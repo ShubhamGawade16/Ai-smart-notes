@@ -37,6 +37,12 @@ export interface IStorage {
   createNote(userId: string, insertNote: InsertNote): Promise<Note>;
   updateNote(id: string, userId: string, updates: Partial<UpdateNote>): Promise<Note | undefined>;
   deleteNote(id: string, userId: string): Promise<boolean>;
+
+  // Tier management methods
+  resetDailyLimits(userId: string): Promise<void>;
+  resetMonthlyLimits(userId: string): Promise<void>;
+  incrementDailyAiCalls(userId: string): Promise<void>;
+  incrementMonthlyTaskCount(userId: string): Promise<void>;
 }
 
 // In-memory storage implementation
@@ -282,6 +288,39 @@ export class MemStorage implements IStorage {
     
     this.notes.splice(noteIndex, 1);
     return true;
+  }
+
+  // Tier management methods
+  async resetDailyLimits(userId: string): Promise<void> {
+    const userIndex = this.users.findIndex(user => user.id === userId);
+    if (userIndex !== -1) {
+      this.users[userIndex].dailyAiCalls = 0;
+      this.users[userIndex].dailyAiCallsResetAt = new Date();
+    }
+  }
+
+  async resetMonthlyLimits(userId: string): Promise<void> {
+    const userIndex = this.users.findIndex(user => user.id === userId);
+    if (userIndex !== -1) {
+      this.users[userIndex].monthlyTaskCount = 0;
+      this.users[userIndex].monthlyTaskCountResetAt = new Date();
+    }
+  }
+
+  async incrementDailyAiCalls(userId: string): Promise<void> {
+    const userIndex = this.users.findIndex(user => user.id === userId);
+    if (userIndex !== -1) {
+      this.users[userIndex].dailyAiCalls += 1;
+      this.users[userIndex].updatedAt = new Date();
+    }
+  }
+
+  async incrementMonthlyTaskCount(userId: string): Promise<void> {
+    const userIndex = this.users.findIndex(user => user.id === userId);
+    if (userIndex !== -1) {
+      this.users[userIndex].monthlyTaskCount += 1;
+      this.users[userIndex].updatedAt = new Date();
+    }
   }
 }
 

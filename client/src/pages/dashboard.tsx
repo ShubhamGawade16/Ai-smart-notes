@@ -20,7 +20,10 @@ import { TaskDecayDeclutter } from "@/components/task-decay-declutter";
 import { MoodAwareTaskSuggestions } from "@/components/mood-aware-suggestions";
 import { GoalTrackingAlignment } from "@/components/goal-tracking-alignment";
 import { useIsMobile } from "@/hooks/use-mobile";
-import FocusForecast from "@/components/focus-forecast";
+import { FocusForecast } from "@/components/FocusForecast";
+import { ProductivityInsights } from "@/components/ProductivityInsights";
+import { SmartTaskInput } from "@/components/SmartTaskInput";
+import { ConversationalRefiner } from "@/components/ConversationalRefiner";
 import TaskRefiner from "@/components/task-refiner";
 import AutoScheduler from "@/components/auto-scheduler";
 import HabitGamification from "@/components/habit-gamification";
@@ -54,41 +57,8 @@ export default function Dashboard() {
       case 'ai':
         return (
           <div className="space-y-6">
-            <ProductivityInsightsDashboard />
-            <NotificationSystem />
-            
-            {/* Core AI Features Section */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                Smart AI Features
-              </h3>
-              
-              {/* Smart Reminder Recalibration */}
-              <SmartReminderRecalibration />
-              
-              {/* Recurring Task Generator & Tuner */}
-              <RecurringTaskGeneratorTuner />
-              
-              {/* Task Decay & Declutter */}
-              <TaskDecayDeclutter />
-              
-              {/* Mood-Aware Task Suggestions */}
-              <MoodAwareTaskSuggestions />  
-              
-              {/* Goal Tracking & Alignment */}
-              <GoalTrackingAlignment />
-            </div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <FocusForecast />
-              <TaskRefiner />
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <AutoScheduler />
-              <HabitGamification />
-            </div>
-            <AIInsightsEnhanced />
-            <ProgressStats />
+            <ProductivityInsights />
+            <FocusForecast />
           </div>
         );
       default:
@@ -112,22 +82,17 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
             {/* Main Content */}
             <div className="xl:col-span-3 space-y-6">
-              <QuickAdd />
+              <SmartTaskInput />
               <TodaysPlan />
               
-              {/* AI Features Section */}
+              {/* Phase 3: AI Features Section */}
               <div className="space-y-6">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                  Smart Features
+                  AI-Powered Features
                 </h2>
-                <NotificationSystem />
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <ProductivityInsights />
                   <FocusForecast />
-                  <TaskRefiner />
-                </div>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <AutoScheduler />
-                  <HabitGamification />
                 </div>
               </div>
               

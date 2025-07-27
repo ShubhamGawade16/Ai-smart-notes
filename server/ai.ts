@@ -1,14 +1,9 @@
 import OpenAI from "openai";
 import type { Task, Note, User } from "@shared/schema";
 
-// Use OpenRouter API with multiple model support
+// Use OpenAI API for AI features
 const openai = new OpenAI({
-  apiKey: process.env.OPENROUTER_API_KEY,
-  baseURL: "https://openrouter.ai/api/v1",
-  defaultHeaders: {
-    "HTTP-Referer": "https://replit.com", // Optional, for including your app in OpenRouter rankings
-    "X-Title": "AI Smart Notes", // Optional, shows up in rankings
-  }
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 export interface AIInsight {
@@ -44,7 +39,7 @@ export class AIService {
     const dailyLimit = userTier === 'free' ? 3 : 999;
     
     try {
-      const model = userTier === 'free' ? "openai/gpt-4o-mini" : "anthropic/claude-3.5-sonnet";
+      const model = userTier === 'free' ? "gpt-4o-mini" : "gpt-4o";
       
       const response = await openai.chat.completions.create({
         model,
@@ -80,55 +75,75 @@ export class AIService {
       };
     } catch (error) {
       console.error('Task refinement error:', error);
-      // Provide intelligent refinement without API for testing
-      const refinements: { [key: string]: any } = {
-        'make this clearer': {
-          refinedTask: `Clear and specific: ${taskContent} - Defined with measurable outcomes and clear next steps`,
-          suggestions: [
-            "Define specific deliverables and success criteria",
-            "Set realistic timeline with buffer time", 
-            "Identify required resources and dependencies"
-          ],
-          decomposition: [
-            "Clarify the exact objective and scope (10 min)",
-            "List all required resources and tools (15 min)",
-            "Break into 25-minute work sessions (main work)",
-            "Review and quality check results (10 min)"
-          ]
-        },
-        'break into steps': {
-          refinedTask: `Step-by-step approach: ${taskContent} - Organized into sequential, manageable actions`,
-          suggestions: [
-            "Start with the most critical step first",
-            "Set mini-deadlines for each step",
-            "Plan for potential roadblocks"
-          ],
-          decomposition: [
-            "Initial planning and research phase",
-            "Core execution divided into focused blocks", 
-            "Review and iteration phase",
-            "Final completion and documentation"
-          ]
-        },
-        'default': {
-          refinedTask: `Enhanced: ${taskContent} - Improved with ${refinementRequest}`,
-          suggestions: [
-            "Break into smaller 25-minute focused sessions",
-            "Set a clear success metric",
-            "Identify potential blockers upfront"
-          ],
-          decomposition: [
-            "Planning and preparation phase (15 min)",
-            "Main execution in focused blocks (60-90 min)",
-            "Review and refinement (15 min)",
-            "Final completion check (10 min)"
-          ]
-        }
+      return {
+        refinedTask: taskContent,
+        suggestions: ['Unable to process refinement request at this time'],
+        decomposition: undefined
       };
+    }
+  }
 
-      const key = refinementRequest.toLowerCase();
-      const bestMatch = Object.keys(refinements).find(k => key.includes(k)) || 'default';
-      return refinements[bestMatch];
+  // Natural Language Task Parsing - Core Phase 3 feature
+  async parseNaturalLanguageTask(input: string, userTier: string): Promise<{
+    title: string;
+    description?: string;
+    priority: 'low' | 'medium' | 'high' | 'urgent';
+    categories: string[];
+    tags: string[];
+    estimatedTime: number;
+    dueDate?: Date;
+  }> {
+    try {
+      const model = userTier === 'free' ? "gpt-4o-mini" : "gpt-4o";
+      
+      const response = await openai.chat.completions.create({
+        model,
+        messages: [
+          {
+            role: "system",
+            content: `Parse natural language task input into structured data. Return JSON with:
+            {
+              "title": "clear, actionable task title",
+              "description": "optional detailed description",
+              "priority": "low|medium|high|urgent",
+              "categories": ["category1", "category2"],
+              "tags": ["tag1", "tag2"],
+              "estimatedTime": number_in_minutes,
+              "dueDate": "ISO_date_string_if_mentioned"
+            }
+            
+            Extract due dates from phrases like "by Friday", "tomorrow", "next week", etc.
+            Infer priority from urgency words like "urgent", "ASAP", "when you can", etc.`
+          },
+          {
+            role: "user",
+            content: `Parse this task: "${input}"`
+          }
+        ],
+        max_tokens: 400,
+        temperature: 0.3,
+      });
+
+      const result = JSON.parse(response.choices[0].message.content || '{}');
+      
+      return {
+        title: result.title || input,
+        description: result.description,
+        priority: result.priority || 'medium',
+        categories: result.categories || ['General'],
+        tags: result.tags || [],
+        estimatedTime: result.estimatedTime || 30,
+        dueDate: result.dueDate ? new Date(result.dueDate) : undefined
+      };
+    } catch (error) {
+      console.error('Natural language parsing error:', error);
+      return {
+        title: input,
+        priority: 'medium' as const,
+        categories: ['General'],
+        tags: [],
+        estimatedTime: 30
+      };
     }
   }
 
@@ -211,7 +226,7 @@ export class AIService {
 
     try {
       const response = await openai.chat.completions.create({
-        model: "anthropic/claude-3.5-sonnet", // High-quality model for paid users
+        model: "gpt-4o", // High-quality model for paid users
         messages: [
           {
             role: "system",
@@ -249,8 +264,8 @@ export class AIService {
     try {
       const response = await openai.chat.completions.create({
         model: userTier === 'advanced_pro' || userTier === 'premium_pro' 
-          ? "anthropic/claude-3.5-sonnet" 
-          : "openai/gpt-4o-mini",
+          ? "gpt-4o" 
+          : "gpt-4o-mini",
         messages: [
           {
             role: "system",
@@ -343,12 +358,12 @@ export class AIService {
         id: t.id,
         title: t.title,
         priority: t.priority,
-        estimatedMinutes: t.estimatedMinutes || 30,
+        estimatedMinutes: t.estimatedTime || 30,
         dueDate: t.dueDate
       }));
 
       const response = await openai.chat.completions.create({
-        model: "anthropic/claude-3.5-sonnet",
+        model: "gpt-4o",
         messages: [
           {
             role: "system",
@@ -387,7 +402,7 @@ export class AIService {
 
     try {
       const response = await openai.chat.completions.create({
-        model: "anthropic/claude-3.5-sonnet",
+        model: "gpt-4o",
         messages: [
           {
             role: "system",

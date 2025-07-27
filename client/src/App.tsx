@@ -15,6 +15,7 @@ import AuthCallback from "@/pages/auth/callback";
 import NotFound from "@/pages/not-found";
 import { SettingsPage } from "@/pages/settings";
 import OnboardingPage from "@/pages/onboarding";
+import TaskRefiner from "@/pages/task-refiner";
 
 function Router() {
   // Check if user has completed onboarding
@@ -35,6 +36,7 @@ function Router() {
       </Route>
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/advanced" component={Dashboard} />
+      <Route path="/task-refiner" component={TaskRefiner} />
       <Route path="/settings" component={SettingsPage} />
       <Route component={NotFound} />
     </Switch>
