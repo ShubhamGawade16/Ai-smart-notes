@@ -33,7 +33,7 @@ function Router() {
       
       {/* Main app routes - redirect to onboarding if not completed */}
       <Route path="/">
-        {!hasCompletedOnboarding ? <OnboardingPage /> : <SimplifiedDashboard />}
+        {!hasCompletedOnboarding ? <Landing /> : <SimplifiedDashboard />}
       </Route>
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/advanced" component={AdvancedFeatures} />

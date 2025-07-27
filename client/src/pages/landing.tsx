@@ -37,9 +37,14 @@ export default function LandingPage() {
             </span>
           </div>
           <div className="flex items-center space-x-4">
-            <Link href="/">
+            <Link href="/onboarding">
               <Button className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700">
                 Start Free Trial
+              </Button>
+            </Link>
+            <Link href="/dashboard">
+              <Button variant="outline">
+                Try Demo
               </Button>
             </Link>
           </div>

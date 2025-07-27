@@ -61,18 +61,18 @@ export function UnifiedSidebar({ isCollapsed, onToggle, dailyAiCalls, maxDailyAi
       proOnly: false
     },
     {
-      id: 'ai-assistant',
-      label: 'AI Assistant',
-      icon: Brain,
-      path: '/ai-assistant',
+      id: 'task-refiner',
+      label: 'Task Refiner',
+      icon: Sparkles,
+      path: '/task-refiner',
       proOnly: false
     },
     {
-      id: 'goals',
-      label: 'Goals',
-      icon: Target,
-      path: '/goals',
-      proOnly: userTier === 'free' // Show only after 5 tasks created
+      id: 'advanced',
+      label: 'AI Features',
+      icon: Brain,
+      path: '/advanced',
+      proOnly: false // Make all AI features free for testing
     }
   ];
 
