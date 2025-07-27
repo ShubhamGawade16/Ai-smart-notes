@@ -193,7 +193,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       //   return res.status(403).json({ error: "Basic Pro subscription required" });
       // }
 
-      const tasks = await storage.getTasks(userId);
+      const tasks = await storage.getTasks(userId || 'anonymous');
       
       // Mock optimization - would use ML model in production
       const optimization = {
