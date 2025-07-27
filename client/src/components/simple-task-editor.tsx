@@ -49,7 +49,7 @@ export function SimpleTaskEditor({ task, trigger, isCreating = false }: SimpleTa
         title: formData.title.trim(),
         description: formData.description.trim() || null,
         priority: formData.priority,
-        category: formData.category.trim() || null,
+        category: formData.category.trim() && formData.category !== 'none' ? formData.category.trim() : null,
         estimatedTime: totalMinutes > 0 ? totalMinutes : null,
         dueDate: dueDateTime,
         tags: null, // Simplified for now
@@ -209,7 +209,7 @@ export function SimpleTaskEditor({ task, trigger, isCreating = false }: SimpleTa
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No Category</SelectItem>
+                  <SelectItem value="none">No Category</SelectItem>
                   <SelectItem value="Work">Work</SelectItem>
                   <SelectItem value="Personal">Personal</SelectItem>
                   <SelectItem value="Health">Health</SelectItem>

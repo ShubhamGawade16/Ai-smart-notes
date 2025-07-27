@@ -104,31 +104,15 @@ export function QuickAdd() {
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Plus className="h-5 w-5" />
-            Quick Add Task
-            <Badge variant="secondary" className="ml-2">
-              <Zap className="h-3 w-3 mr-1" />
-              AI-Enhanced
-            </Badge>
+            Create Task
           </div>
-          <div className="flex items-center gap-2">
-            <SimpleTaskEditor
-              task={{} as any}
-              isCreating={true}
-              trigger={
-                <Button size="sm" variant="outline">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Advanced
-                </Button>
-              }
-            />
-            <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                </Button>
-              </CollapsibleTrigger>
-            </Collapsible>
-          </div>
+          <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm">
+                {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </Button>
+            </CollapsibleTrigger>
+          </Collapsible>
         </CardTitle>
       </CardHeader>
       

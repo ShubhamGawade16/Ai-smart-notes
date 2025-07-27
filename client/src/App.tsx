@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import { useAuth } from "@/hooks/useAuth";
 import Dashboard from "@/pages/dashboard";
+import { SimplifiedDashboard } from "@/pages/simplified-dashboard";
 import Landing from "@/pages/landing";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
@@ -37,8 +38,9 @@ function Router() {
         </>
       ) : (
         <>
-          <Route path="/" component={Dashboard} />
+          <Route path="/" component={SimplifiedDashboard} />
           <Route path="/dashboard" component={Dashboard} />
+          <Route path="/advanced" component={Dashboard} />
           <Route path="/settings" component={SettingsPage} />
         </>
       )}
