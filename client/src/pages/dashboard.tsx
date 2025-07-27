@@ -17,6 +17,7 @@ import { RecurringTaskGenerator } from "@/components/recurring-task-generator";
 import { TaskDecayCleanup } from "@/components/task-decay-cleanup";
 import { MoodAwareTaskSuggestions } from "@/components/mood-aware-suggestions";
 import { GoalTrackingAlignment } from "@/components/goal-tracking-alignment";
+import { ProductivityInsightsDashboard } from "@/components/productivity-insights-dashboard";
 import { useIsMobile } from "@/hooks/use-mobile";
 import FocusForecast from "@/components/focus-forecast";
 import TaskRefiner from "@/components/task-refiner";
@@ -52,6 +53,7 @@ export default function Dashboard() {
       case 'ai':
         return (
           <div className="space-y-6">
+            <ProductivityInsightsDashboard />
             <NotificationSystem />
             <SmartReminderSystem />
             <RecurringTaskGenerator />

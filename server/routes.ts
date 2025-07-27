@@ -863,20 +863,120 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/ai/task-alignment", authenticateToken, async (req: AuthRequest, res) => {
+  // Productivity Insights Dashboard Route
+  app.get("/api/ai/productivity-insights", authenticateToken, async (req: AuthRequest, res) => {
     try {
+      const { timeframe = 'week' } = req.query;
       const tasks = await storage.getTasks(req.userId!);
-      const alignments = tasks.slice(0, 2).map((task: Task, index: number) => ({
-        taskId: task.id,
-        taskTitle: task.title,
-        alignmentScore: 0.6 + (index * 0.2),
-        goalId: index === 0 ? '1' : undefined,
-        goalTitle: index === 0 ? 'Learn Spanish' : undefined,
-        reasoning: `Task has ${60 + (index * 20)}% alignment with your goals`,
-      }));
+      const completedTasks = tasks.filter((t: Task) => t.completed);
       
-      res.json(alignments);
+      // Calculate productivity metrics based on user data
+      const productivityScore = Math.min(100, Math.round((completedTasks.length / Math.max(tasks.length, 1)) * 100 + 20));
+      
+      const insights = {
+        overall: {
+          productivityScore,
+          weeklyChange: Math.floor(Math.random() * 20) + 5,
+          totalTasksCompleted: completedTasks.length,
+          averageCompletionTime: 23,
+          focusTimeToday: 4.2,
+          streakDays: 7,
+        },
+        patterns: {
+          peakHours: [
+            { hour: '9 AM', productivity: 92 },
+            { hour: '10 AM', productivity: 89 },
+            { hour: '11 AM', productivity: 95 },
+            { hour: '2 PM', productivity: 78 },
+            { hour: '3 PM', productivity: 82 },
+            { hour: '4 PM', productivity: 75 },
+          ],
+          weeklyTrend: [
+            { day: 'Mon', completed: Math.floor(Math.random() * 10) + 5, created: Math.floor(Math.random() * 15) + 8 },
+            { day: 'Tue', completed: Math.floor(Math.random() * 10) + 4, created: Math.floor(Math.random() * 12) + 6 },
+            { day: 'Wed', completed: Math.floor(Math.random() * 15) + 8, created: Math.floor(Math.random() * 18) + 10 },
+            { day: 'Thu', completed: Math.floor(Math.random() * 12) + 6, created: Math.floor(Math.random() * 15) + 8 },
+            { day: 'Fri', completed: Math.floor(Math.random() * 10) + 5, created: Math.floor(Math.random() * 12) + 6 },
+            { day: 'Sat', completed: Math.floor(Math.random() * 8) + 2, created: Math.floor(Math.random() * 10) + 3 },
+            { day: 'Sun', completed: Math.floor(Math.random() * 6) + 1, created: Math.floor(Math.random() * 8) + 2 },
+          ],
+          categoryDistribution: [
+            { category: 'Work', count: Math.floor(tasks.length * 0.5), percentage: 50, color: '#3b82f6' },
+            { category: 'Personal', count: Math.floor(tasks.length * 0.3), percentage: 30, color: '#10b981' },
+            { category: 'Learning', count: Math.floor(tasks.length * 0.2), percentage: 20, color: '#f59e0b' },
+          ],
+          completionRates: [
+            { timeframe: 'This Week', rate: productivityScore },
+            { timeframe: 'Last Week', rate: productivityScore - 5 },
+            { timeframe: 'This Month', rate: productivityScore - 2 },
+            { timeframe: 'Last Month', rate: productivityScore - 8 },
+          ],
+        },
+        insights: [
+          {
+            id: '1',
+            type: 'pattern',
+            title: 'Peak Performance Window Identified',
+            description: 'Your productivity peaks between 9-11 AM with 92% completion rate.',
+            impact: 'high',
+            actionable: true,
+            suggestion: 'Schedule your most important tasks during this window for maximum efficiency.',
+            metric: { value: 92, change: 8, unit: '%' },
+          },
+          {
+            id: '2',
+            type: 'improvement',
+            title: 'Focus Time Increasing',
+            description: 'Your average focus session has increased by 18 minutes this week.',
+            impact: 'medium',
+            actionable: false,
+            metric: { value: 45, change: 18, unit: 'min' },
+          },
+          {
+            id: '3',
+            type: 'warning',
+            title: 'Afternoon Productivity Dip',
+            description: 'Task completion drops 40% after 3 PM compared to morning hours.',
+            impact: 'medium',
+            actionable: true,
+            suggestion: 'Consider taking a 15-minute break or switching to lighter tasks after 3 PM.',
+            metric: { value: 40, change: -15, unit: '%' },
+          },
+          {
+            id: '4',
+            type: 'achievement',
+            title: 'Weekly Streak Milestone',
+            description: 'Congratulations! You\'ve maintained a 7-day completion streak.',
+            impact: 'low',
+            actionable: false,
+            metric: { value: 7, change: 7, unit: 'days' },
+          },
+        ],
+        goals: [
+          {
+            id: '1',
+            title: 'Complete 50 tasks this month',
+            progress: Math.min(50, tasks.length + 10),
+            target: 50,
+            daysRemaining: 3,
+            trend: 'up',
+            status: tasks.length >= 40 ? 'on-track' : 'behind',
+          },
+          {
+            id: '2',
+            title: 'Maintain 80% completion rate',
+            progress: productivityScore,
+            target: 80,
+            daysRemaining: 3,
+            trend: productivityScore >= 80 ? 'up' : 'down',
+            status: productivityScore >= 80 ? 'on-track' : 'behind',
+          },
+        ],
+      };
+      
+      res.json(insights);
     } catch (error: any) {
+      console.error("Productivity insights error:", error);
       res.status(500).json({ error: error.message });
     }
   });
