@@ -21,29 +21,69 @@ jobs:
         node-version: '20'
         cache: 'npm'
         
+    - name: Cache Gradle
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        
     - name: Install dependencies
-      run: npm ci
+      run: |
+        npm install -g @ionic/cli @capacitor/core @capacitor/cli
+        npm ci
       
     - name: Build web assets
+      env:
+        VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://placeholder.supabase.co' }}
+        VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || 'placeholder' }}
       run: npm run build
       
     - name: Setup Java
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
-        java-version: '17'
+        java-version: '21'
         
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
+      with:
+        api-level: 35
+        build-tools: 35.0.0
+        ndk-version: 26.1.10909125
+        cmake-version: 3.22.1
+        
+    - name: Set up Android environment
+      run: |
+        echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+        echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> $GITHUB_ENV
+        echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
+        echo "$ANDROID_HOME/tools" >> $GITHUB_PATH
+        echo "$ANDROID_HOME/tools/bin" >> $GITHUB_PATH
+        
+    - name: Create local.properties
+      run: |
+        echo "sdk.dir=$ANDROID_HOME" > android/local.properties
+        echo "Created local.properties with SDK path: $ANDROID_HOME"
+        if [ -d "$ANDROID_HOME" ]; then
+          echo "Android SDK directory exists"
+          ls -la $ANDROID_HOME
+        else
+          echo "Android SDK directory not found at $ANDROID_HOME"
+        fi
       
     - name: Sync Capacitor
-      run: npx cap sync android
+      run: |
+        npx cap sync android
+        npx cap update android
       
     - name: Build Android APK
       run: |
         cd android
         chmod +x gradlew
-        ./gradlew assembleDebug
+        ./gradlew clean
+        ./gradlew assembleDebug --stacktrace --no-daemon --warning-mode all
         
     - name: Upload APK artifact
       uses: actions/upload-artifact@v4
@@ -51,6 +91,9 @@ jobs:
         name: ai-smart-notes-debug-apk
         path: android/app/build/outputs/apk/debug/app-debug.apk
         retention-days: 30
+        
+    - name: List build outputs (for debugging)
+      run: find android/app/build/outputs -name "*.apk" -ls
         
     - name: Create Release
       if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
@@ -69,5 +112,6 @@ jobs:
         files: |
           android/app/build/outputs/apk/debug/app-debug.apk
         prerelease: true
+        make_latest: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

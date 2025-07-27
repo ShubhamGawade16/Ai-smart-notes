@@ -21,3 +21,4 @@ apns_cert.*
 # Mobile build artifacts
 android/app/google-services.json
 ios/App/GoogleService-Info.plist
+android/local.properties
