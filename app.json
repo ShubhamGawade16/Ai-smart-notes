@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "AI Smart Notes",
+    "slug": "ai-smart-notes",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./android/app/src/main/res/drawable/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "platforms": ["android", "ios"],
+    "android": {
+      "package": "com.aismartnotes.app",
+      "compileSdkVersion": 34,
+      "targetSdkVersion": 34,
+      "permissions": [
+        "android.permission.INTERNET",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.VIBRATE",
+        "android.permission.WAKE_LOCK"
+      ]
+    },
+    "ios": {
+      "bundleIdentifier": "com.aismartnotes.app",
+      "buildNumber": "1"
+    }
+  }
+}
