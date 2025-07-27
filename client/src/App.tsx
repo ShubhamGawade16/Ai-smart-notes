@@ -12,6 +12,7 @@ import Register from "@/pages/register";
 import Setup from "@/pages/setup";
 import AuthCallback from "@/pages/auth/callback";
 import NotFound from "@/pages/not-found";
+import { SettingsPage } from "@/pages/settings";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -38,6 +39,7 @@ function Router() {
         <>
           <Route path="/" component={Dashboard} />
           <Route path="/dashboard" component={Dashboard} />
+          <Route path="/settings" component={SettingsPage} />
         </>
       )}
       <Route component={NotFound} />

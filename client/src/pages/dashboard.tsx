@@ -7,6 +7,7 @@ import { AIInsights } from "@/components/ai-insights";
 import { ProgressStats } from "@/components/progress-stats";
 import { QuickActions } from "@/components/quick-actions";
 import { Categories } from "@/components/categories";
+import { NotificationSystem } from "@/components/notification-system";
 import { MobileNav } from "@/components/mobile-nav";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -84,8 +85,9 @@ export default function Dashboard() {
               {/* AI Features Section */}
               <div className="space-y-6">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                  AI Features
+                  Smart Features
                 </h2>
+                <NotificationSystem />
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <FocusForecast />
                   <TaskRefiner />
