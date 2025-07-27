@@ -25,22 +25,38 @@ export const signInWithGoogle = async () => {
     throw new Error('Supabase not configured. Please add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your environment variables.')
   }
   
-  console.log('Attempting Google sign in...')
+  console.log('Initiating Google OAuth...')
+  
+  // Get the current host for proper redirect URL
+  const redirectUrl = `${window.location.origin}/auth/callback`
+  console.log('Using redirect URL:', redirectUrl)
   
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${window.location.origin}/auth/callback`,
-      scopes: 'email profile',
+      redirectTo: redirectUrl,
+      scopes: 'openid email profile',
+      queryParams: {
+        access_type: 'offline',
+        prompt: 'consent',
+      },
     },
   })
   
   if (error) {
-    console.error('Supabase OAuth error:', error)
-    throw new Error(`Google authentication failed: ${error.message}. Please ensure Google OAuth is configured in your Supabase project.`)
+    console.error('Google OAuth initiation error:', error)
+    
+    // Provide more specific error messages based on error types
+    if (error.message.includes('Provider not found')) {
+      throw new Error('Google authentication is not enabled in your Supabase project. Please configure Google OAuth provider in your Supabase dashboard.')
+    } else if (error.message.includes('redirect')) {
+      throw new Error('Invalid redirect URL configuration. Please check your Redirect URLs in Supabase Authentication settings.')
+    } else {
+      throw new Error(`Google authentication setup error: ${error.message}`)
+    }
   }
   
-  console.log('Google sign in data:', data)
+  console.log('Google OAuth initiated successfully:', data)
   return data
 }
 

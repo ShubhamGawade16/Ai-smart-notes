@@ -276,6 +276,166 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* App Insights - How It Works */}
+      <section className="container mx-auto px-4 py-20">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-6">
+            Extract Key Information from Any Task
+          </h2>
+          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+            Transform unstructured task descriptions into organized, actionable datasets ready for intelligent workflow optimization
+          </p>
+        </div>
+
+        <div className="grid lg:grid-cols-2 gap-12 items-center mb-20">
+          {/* Feature Description */}
+          <div>
+            <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
+             Supercharge Your Task Management
+            </h3>
+            <p className="text-lg text-gray-600 dark:text-gray-300 mb-8">
+              Use the power of AI to analyze any task description without manual categorization or coding skills. 
+              Get structured insights from your workflow, priorities, and patterns, then organize them into ready-to-use productivity formats.
+            </p>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="flex items-start space-x-3">
+                <div className="bg-yellow-100 dark:bg-yellow-900/20 p-2 rounded-full">
+                  <Zap className="h-5 w-5 text-yellow-600" />
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2">Analyze Any Task</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Smart To-Do AI's built-in task analyzer extracts meaning and context from any description.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3">
+                <div className="bg-indigo-100 dark:bg-indigo-900/20 p-2 rounded-full">
+                  <Brain className="h-5 w-5 text-indigo-600" />
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2">Use AI to Automate Workflows</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Ask AI to manipulate task data in whatever way you prompt it.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Visual Demo */}
+          <div className="relative">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+              {/* Browser Header */}
+              <div className="bg-gray-100 dark:bg-gray-700 px-4 py-3 flex items-center space-x-2">
+                <div className="flex space-x-2">
+                  <div className="w-3 h-3 rounded-full bg-red-400"></div>
+                  <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+                  <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                </div>
+                <div className="flex-1 bg-white dark:bg-gray-600 rounded mx-4 px-3 py-1 text-sm text-gray-500">
+                  Smart Task Analysis
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="p-6 space-y-4">
+                <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                  <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">Input Task:</div>
+                  <div className="font-medium">"Finish the quarterly sales report by Friday and schedule team meeting"</div>
+                </div>
+
+                <div className="flex items-center justify-center py-2">
+                  <div className="flex items-center space-x-2 text-indigo-600">
+                    <Brain className="h-5 w-5 animate-pulse" />
+                    <span className="text-sm font-medium">AI Analysis</span>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-lg p-4 border border-indigo-200 dark:border-indigo-700">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-2">
+                        <Target className="h-4 w-4 text-indigo-600" />
+                        <span className="font-medium text-indigo-900 dark:text-indigo-100">High Priority</span>
+                      </div>
+                      <Badge className="bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300">Urgent</Badge>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-500">Category:</span>
+                        <span className="ml-2 font-medium">Work</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Est. Time:</span>
+                        <span className="ml-2 font-medium">3-4 hours</span>
+                      </div>
+                      <div className="col-span-2">
+                        <span className="text-gray-500">Tags:</span>
+                        <span className="ml-2 font-medium">deadline, report, meeting, quarterly</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 border border-green-200 dark:border-green-700">
+                    <div className="flex items-center space-x-2 text-green-700 dark:text-green-300">
+                      <CheckCircle className="h-4 w-4" />
+                      <span className="text-sm font-medium">AI Suggestion: Break into 2 subtasks, schedule report work for Wednesday morning (your peak focus time)</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Secondary Feature */}
+        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/10 dark:to-purple-900/10 rounded-2xl p-8">
+          <div className="text-center mb-12">
+            <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+              Task Management Made Easy
+            </h3>
+            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+              Our AI understands context and learns your patterns to provide intelligent suggestions exactly when you need them
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="bg-gradient-to-r from-blue-500 to-indigo-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Brain className="h-8 w-8 text-white" />
+              </div>
+              <h4 className="text-xl font-semibold mb-3">Smart Categorization</h4>
+              <p className="text-gray-600 dark:text-gray-400">
+                Automatically organize tasks by project, priority, and context without manual tagging
+              </p>
+            </div>
+
+            <div className="text-center">
+              <div className="bg-gradient-to-r from-green-500 to-emerald-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Clock className="h-8 w-8 text-white" />
+              </div>
+              <h4 className="text-xl font-semibold mb-3">Time Intelligence</h4>
+              <p className="text-gray-600 dark:text-gray-400">
+                Get accurate time estimates and optimal scheduling based on your historical patterns
+              </p>
+            </div>
+
+            <div className="text-center">
+              <div className="bg-gradient-to-r from-purple-500 to-pink-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <TrendingUp className="h-8 w-8 text-white" />
+              </div>
+              <h4 className="text-xl font-semibold mb-3">Productivity Insights</h4>
+              <p className="text-gray-600 dark:text-gray-400">
+                Discover bottlenecks, peak performance times, and personalized optimization strategies
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* User Testimonials - Real Social Proof */}
       <section className="container mx-auto px-4 py-20 bg-gradient-to-r from-gray-50 to-indigo-50 dark:from-gray-800 dark:to-indigo-900 rounded-3xl mx-4">
         <div className="text-center mb-16">

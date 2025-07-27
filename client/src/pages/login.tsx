@@ -19,14 +19,29 @@ export default function Login() {
     try {
       await login();
       toast({
-        title: "Redirecting...",
-        description: "Taking you to Google to sign in.",
+        title: "Redirecting to Google",
+        description: "You'll be redirected back after signing in.",
       });
     } catch (error: any) {
-      console.error('Login error:', error)
+      console.error('Google login error:', error)
+      
+      let errorMessage = "Authentication failed";
+      let errorDescription = "Please try again or contact support.";
+      
+      if (error.message.includes('not enabled')) {
+        errorMessage = "Google Sign-In Not Configured";
+        errorDescription = "Please ask the administrator to set up Google OAuth in the system settings.";
+      } else if (error.message.includes('redirect')) {
+        errorMessage = "Configuration Error";
+        errorDescription = "The authentication redirect is not properly configured.";
+      } else if (error.message.includes('not configured')) {
+        errorMessage = "Service Configuration Required";
+        errorDescription = "The authentication service needs to be set up by an administrator.";
+      }
+      
       toast({
-        title: "Authentication Error",
-        description: error.message || "Please configure Google OAuth in Supabase first.",
+        title: errorMessage,
+        description: errorDescription,
         variant: "destructive",
       });
     }
