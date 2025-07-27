@@ -83,19 +83,21 @@ export default function LandingPage() {
             </p>
           </div>
 
-          {/* Social Proof & Metrics */}
-          <div className="grid md:grid-cols-3 gap-8 mb-16">
-            <div className="text-center">
-              <div className="text-5xl font-bold text-indigo-600 mb-2">10K+</div>
-              <p className="text-gray-600 dark:text-gray-300">Tasks Organized</p>
-            </div>
-            <div className="text-center">
-              <div className="text-5xl font-bold text-indigo-600 mb-2">95%</div>
-              <p className="text-gray-600 dark:text-gray-300">User Satisfaction</p>
-            </div>
-            <div className="text-center">
-              <div className="text-5xl font-bold text-indigo-600 mb-2">40%</div>
-              <p className="text-gray-600 dark:text-gray-300">Productivity Boost</p>
+          {/* Social Proof & Metrics - Single Prominent Banner */}
+          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-2xl p-8 mb-16">
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="text-center">
+                <div className="text-5xl font-bold text-indigo-600 mb-2 animate-pulse">10K+</div>
+                <p className="text-gray-600 dark:text-gray-300 font-medium">Tasks Organized</p>
+              </div>
+              <div className="text-center">
+                <div className="text-5xl font-bold text-indigo-600 mb-2 animate-pulse" style={{animationDelay: '0.5s'}}>95%</div>
+                <p className="text-gray-600 dark:text-gray-300 font-medium">User Satisfaction</p>
+              </div>
+              <div className="text-center">
+                <div className="text-5xl font-bold text-indigo-600 mb-2 animate-pulse" style={{animationDelay: '1s'}}>40%</div>
+                <p className="text-gray-600 dark:text-gray-300 font-medium">Productivity Boost</p>
+              </div>
             </div>
           </div>
         </div>
@@ -229,8 +231,13 @@ export default function LandingPage() {
             </div>
             <CardHeader className="text-center pb-8">
               <CardTitle className="text-3xl mb-2">Pro All-Inclusive</CardTitle>
-              <div className="text-6xl font-bold text-indigo-600 mb-2">₹12</div>
-              <div className="text-gray-600 dark:text-gray-300 mb-4">/month</div>
+              <div className="flex items-baseline justify-center space-x-2 mb-4">
+                <div className="text-6xl font-bold text-indigo-600">₹12</div>
+                <div className="text-lg text-gray-600 dark:text-gray-300">/mo</div>
+              </div>
+              <div className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                or ₹79/yr (2 months free)
+              </div>
               <CardDescription className="text-lg">Everything you need for peak productivity</CardDescription>
             </CardHeader>
             <CardContent>
@@ -529,25 +536,7 @@ export default function LandingPage() {
           </Card>
         </div>
 
-        {/* Key Metrics */}
-        <div className="grid md:grid-cols-4 gap-8 text-center">
-          <div>
-            <div className="text-4xl font-bold text-indigo-600 mb-2">95%</div>
-            <div className="text-gray-600 dark:text-gray-300">User Satisfaction</div>
-          </div>
-          <div>
-            <div className="text-4xl font-bold text-indigo-600 mb-2">40%</div>
-            <div className="text-gray-600 dark:text-gray-300">Productivity Boost</div>
-          </div>
-          <div>
-            <div className="text-4xl font-bold text-indigo-600 mb-2">17min</div>
-            <div className="text-gray-600 dark:text-gray-300">Daily Time Saved</div>
-          </div>
-          <div>
-            <div className="text-4xl font-bold text-indigo-600 mb-2">10K+</div>
-            <div className="text-gray-600 dark:text-gray-300">Active Users</div>
-          </div>
-        </div>
+
       </section>
 
       {/* CTA Section */}

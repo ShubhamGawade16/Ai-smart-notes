@@ -1,0 +1,137 @@
+1. Landing Page & Pricing Section Issues
+
+Issue 1.1: Overloaded Hero Section
+The hero text and statistics (“10,000+ Tasks Organized,” “95% User Satisfaction,” “40% Productivity Boost”) appear twice, creating visual redundancy and diluting impact
+
+.
+
+    Rectification: Consolidate metrics into a single, prominent banner immediately below the hero headline.
+
+    Improvement: Apply animation or progress-bar styling to highlight each metric sequentially, reinforcing credibility without clutter.
+
+Issue 1.2: Pricing Clarity and Currency
+The Pro plan displays “₹12/month” without annual pricing beside “Most Popular,” causing confusion about whether ₹12 is monthly or annual
+
+.
+
+    Rectification: Label pricing tiers clearly: “₹12/mo” and “₹79/yr (2 months free).”
+
+    Improvement: Add a toggle switch for “Monthly” vs. “Annual” pricing with real-time price adjustment.
+
+Issue 1.3: Incomplete Feature Lists
+The “Free Forever” card lists “25 notes/month” and “3 AI calls/day,” but the card for Pro fails to illustrate limits removed (e.g., “Unlimited notes & AI calls”), breaking consistency
+
+.
+
+    Rectification: Mirror formatting of both cards, using bullets or icons for each feature.
+
+    Improvement: Include checkmarks for unlocked features and dimmed icons for locked premium capabilities to visually guide the eye.
+
+2. Onboarding Wizard & Personalization
+
+Issue 2.1: Missing Progress Feedback
+During step-based onboarding, users lack a visual progress bar and can be uncertain of remaining steps
+
+.
+
+    Rectification: Add a horizontal progress indicator at the top showing steps 1/3, 2/3, 3/3.
+
+    Improvement: Provide micro-animations or illustrations per step to maintain engagement.
+
+Issue 2.2: Unclear Input Controls
+Priority selection (“Select up to 3 areas”) and “Preferred reminder style” options lack hover tooltips or examples, risking incorrect choices
+
+.
+
+    Rectification: Integrate brief helper text beneath each option.
+
+    Improvement: Offer “Why we ask this” modal to explain how choices influence AI suggestions.
+
+3. Dashboard & Analytics
+
+Issue 3.1: Repeated “Unable to generate insights” Errors
+The analytics panel consistently shows “Unable to generate insights” and “Try again later,” undermining trust in core AI functionality
+
+.
+
+    Rectification: Replace generic error with actionable guidance (“Check internet connection or retry”).
+
+    Improvement: Implement client-side caching to render the last successful insights when API calls fail, preserving perceived reliability.
+
+Issue 3.2: Sparse “Today’s Plan” for New Users
+“Today’s Plan” defaults to “No tasks for today!” without contextual suggestions or quick-start guidance
+
+.
+
+    Rectification: Insert a “Quick Add” module prompting users to create their first task or import from a template.
+
+    Improvement: Offer sample tasks (“Morning Review,” “Email Triage”) that can be added with one click to populate the dashboard.
+
+Issue 3.3: Analytics Overload in Patterns View
+The “Patterns” tab displays multiple insights (Peak Performance Window, Distraction Pattern, Consistency Streak, Task Batching) in a dense layout without collapsible sections
+
+.
+
+    Rectification: Group related insights into collapsible panels with summary headers.
+
+    Improvement: Allow users to pin their top 2 insights to the main dashboard for personalized focus.
+
+4. Task Creation & AI Features
+
+Issue 4.1: Missing Inline Error Handling
+When AI-powered features (categorization or refiner) hit free-tier limits, the panel simply disappears or locks without explanation
+
+.
+
+    Rectification: Display a clear “Daily limit reached” message with count of remaining free calls.
+
+    Improvement: Offer “Bonus free call” upon social share or referral to encourage organic growth.
+
+Issue 4.2: Inconsistent “Add New Task” CTA
+The “Add New Task” button on the dashboard is small and visually blends into the header, reducing discoverability
+
+.
+
+    Rectification: Elevate the CTA to a floating action button (FAB) in the lower right corner, following mobile conventions.
+
+    Improvement: Animate the FAB on first visit (“Tap to add your first task”) to draw attention.
+
+5. Settings & Cross-Platform Sync
+
+Issue 5.1: Undefined Plan Indicator
+In Settings, “Plan” is shown as “undefined,” confusing users about their subscription status
+
+.
+
+    Rectification: Ensure backend subscription API populates plan name; fallback to “Free Forever” if null.
+
+    Improvement: Show trial days remaining or renewal date for transparency.
+
+Issue 5.2: Missing Toggle States
+Preferences like “Auto-Schedule to Calendar” and “Show Time Estimates” appear as static labels without toggle switches or visual indication of on/off state
+
+.
+
+    Rectification: Convert these labels into actual toggles with clear on/off styling.
+
+    Improvement: Add “Learn more” links explaining each preference’s benefit, fostering informed usage.
+
+6. Subscription Flow & Monetization
+
+Issue 6.1: Trial Onboarding Disconnect
+Although the landing page promises a “7-day free trial,” users never see a trial activation prompt during signup or onboarding
+
+.
+
+    Rectification: Introduce a “Start Free Trial” step at the end of onboarding with clear trial terms.
+
+    Improvement: Send automated email reminders at Day 3 and Day 6 of trial to highlight Pro benefits and encourage conversion.
+
+Issue 6.2: Upgrade Path Friction
+Feature lock screens show a generic “Unlock Pro” without one-click upgrade or contextual benefits list
+
+.
+
+    Rectification: Embed an anchor link to the pricing modal, pre-selecting the best value plan.
+
+    Improvement: On feature-lock, display a mini-gallery of screenshots demonstrating the unlocked feature in action.

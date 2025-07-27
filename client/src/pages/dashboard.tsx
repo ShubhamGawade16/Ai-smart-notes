@@ -4,7 +4,7 @@ import { QuickAdd } from "@/components/quick-add";
 import { TodaysPlan } from "@/components/todays-plan";
 import { RecentNotes } from "@/components/recent-notes";
 import { AIInsights } from "@/components/ai-insights";
-import { AIInsightsEnhanced } from "@/components/ai-insights-enhanced";
+import { AIInsightsEnhanced } from "@/components/ai-insights-enhanced-fixed";
 import { ProgressStats } from "@/components/progress-stats";
 import { QuickActions } from "@/components/quick-actions";
 import { Categories } from "@/components/categories";

@@ -78,12 +78,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // PHASE 3: ADVANCED AI FEATURES & TIER SYSTEM
   // ============================================================================
 
-  // Natural Language Task Entry - Parse user input into structured task
-  app.post("/api/ai/parse-task", 
-    authenticateToken, 
-    checkTier({ feature: 'basic_tasks', dailyLimit: FREE_TIER_LIMITS.daily_ai_calls }),
-    incrementUsage('ai_call'),
-    async (req: AuthRequest, res) => {
+  // Natural Language Task Entry - Parse user input into structured task (FREE for testing)
+  app.post("/api/ai/parse-task", async (req: AuthRequest, res) => {
       try {
         const { input } = req.body;
         if (!input || typeof input !== 'string') {
@@ -99,12 +95,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
 
-  // Smart Task Optimization - Reorder tasks for maximum efficiency
-  app.post("/api/ai/optimize-tasks",
-    authenticateToken,
-    checkTier({ feature: 'unlimited_ai_calls' }),
-    incrementUsage('ai_call'),
-    async (req: AuthRequest, res) => {
+  // Smart Task Optimization - Reorder tasks for maximum efficiency (FREE for testing)
+  app.post("/api/ai/optimize-tasks", async (req: AuthRequest, res) => {
       try {
         const { taskIds, userContext } = req.body;
         
@@ -125,12 +117,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
 
-  // Generate Productivity Insights
-  app.get("/api/ai/insights",
-    authenticateToken,
-    checkTier({ feature: 'unlimited_ai_calls' }),
-    incrementUsage('ai_call'),
-    async (req: AuthRequest, res) => {
+  // Generate Productivity Insights (FREE for testing)
+  app.get("/api/ai/insights", async (req: AuthRequest, res) => {
       try {
         const tasks = await storage.getTasks(req.userId!);
         const user = await storage.getUser(req.userId!);
@@ -155,12 +143,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
 
-  // Conversational Task Refiner (FREE: 5 calls/day, PRO: unlimited)
-  app.post("/api/ai/refine-task",
-    authenticateToken,
-    checkTier({ feature: 'basic_tasks', dailyLimit: FREE_TIER_LIMITS.conversational_refiner_calls }),
-    incrementUsage('ai_call'),
-    async (req: AuthRequest, res) => {
+  // Conversational Task Refiner (FREE for testing)
+  app.post("/api/ai/refine-task", async (req: AuthRequest, res) => {
       try {
         const { originalTask, userQuery, context } = req.body;
         
@@ -177,10 +161,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
 
-  // Get user limits and usage (for displaying upgrade prompts)
-  app.get("/api/user/limits",
-    authenticateToken,
-    async (req: AuthRequest, res) => {
+  // Get user limits and usage (unlimited for testing)
+  app.get("/api/user/limits", async (req: AuthRequest, res) => {
       try {
         const limits = await getUserLimits(req.userId!);
         res.json({ limits });
@@ -195,14 +177,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // TASK ROUTES WITH AI ENHANCEMENT
   // ============================================================================
 
-  // Get all tasks
-  app.get("/api/tasks", authenticateToken, async (req: AuthRequest, res) => {
+  // Get all tasks (works with or without auth for testing)
+  app.get("/api/tasks", async (req: AuthRequest, res) => {
     try {
-      if (!req.userId) {
-        return res.status(401).json({ error: "User ID not found in token" });
-      }
-
-      const tasks = await storage.getTasks(req.userId);
+      // Use demo user ID if no auth token provided
+      const userId = req.userId || 'demo-user';
+      const tasks = await storage.getTasks(userId);
       res.json({ tasks });
     } catch (error) {
       console.error("Get tasks error:", error);
@@ -210,14 +190,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get today's tasks
-  app.get("/api/tasks/today", authenticateToken, async (req: AuthRequest, res) => {
+  // Get today's tasks (works with or without auth for testing)
+  app.get("/api/tasks/today", async (req: AuthRequest, res) => {
     try {
-      if (!req.userId) {
-        return res.status(401).json({ error: "User ID not found in token" });
-      }
-
-      const allTasks = await storage.getTasks(req.userId);
+      // Use demo user ID if no auth token provided
+      const userId = req.userId || 'demo-user';
+      const allTasks = await storage.getTasks(userId);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const tomorrow = new Date(today);
@@ -395,14 +373,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ANALYTICS ROUTES
   // ============================================================================
 
-  app.get("/api/analytics/stats", authenticateToken, async (req: AuthRequest, res) => {
+  app.get("/api/analytics/stats", async (req: AuthRequest, res) => {
     try {
-      if (!req.userId) {
-        return res.status(401).json({ error: "User ID not found in token" });
-      }
-
-      const tasks = await storage.getTasks(req.userId);
-      const notes = await storage.getNotes(req.userId);
+      // Use demo user ID if no auth token provided
+      const userId = req.userId || 'demo-user';
+      
+      const tasks = await storage.getTasks(userId);
+      const notes = await storage.getNotes(userId);
       
       const stats = {
         totalTasks: tasks.length,

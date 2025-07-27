@@ -84,7 +84,7 @@ export function SettingsPage() {
             </div>
             <div className="flex items-center gap-2">
               <Badge variant={user?.tier === 'free' ? 'secondary' : 'default'}>
-                {user?.tier === 'free' ? 'Free Plan' : `${user?.tier} Plan`}
+                {user?.tier === 'free' ? 'Free Forever' : `${user?.tier?.charAt(0).toUpperCase() + user?.tier?.slice(1)} Plan`}
               </Badge>
               {user?.tier === 'free' && (
                 <Button size="sm" variant="outline">

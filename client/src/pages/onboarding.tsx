@@ -49,6 +49,16 @@ function PreferencesStep({ onNext, preferences, setPreferences }: any) {
 
   return (
     <div className="max-w-2xl mx-auto">
+      {/* Progress Bar */}
+      <div className="mb-8">
+        <div className="flex items-center justify-center space-x-4 mb-4">
+          <div className="h-2 w-32 bg-indigo-600 rounded-full"></div>
+          <div className="h-2 w-32 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+          <div className="h-2 w-32 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+        </div>
+        <div className="text-center text-sm text-gray-600 dark:text-gray-400">Step 1 of 3</div>
+      </div>
+      
       <div className="text-center mb-12">
         <Badge className="mb-4 bg-indigo-100 text-indigo-800">Step 1 of 3</Badge>
         <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
@@ -67,6 +77,9 @@ function PreferencesStep({ onNext, preferences, setPreferences }: any) {
           </CardTitle>
           <CardDescription>
             Select up to 3 areas where you want to be most productive
+            <div className="text-xs text-indigo-600 mt-1 cursor-pointer hover:underline">
+              Why we ask this: Helps our AI understand your workflow patterns and provide relevant suggestions
+            </div>
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -106,6 +119,9 @@ function PreferencesStep({ onNext, preferences, setPreferences }: any) {
           </CardTitle>
           <CardDescription>
             How would you like the AI to help keep you on track?
+            <div className="text-xs text-indigo-600 mt-1 cursor-pointer hover:underline">
+              Why we ask this: Personalizes notification timing and AI suggestion style to match your preferences
+            </div>
           </CardDescription>
         </CardHeader>
         <CardContent>
