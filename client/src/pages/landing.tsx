@@ -42,7 +42,7 @@ export default function LandingPage() {
                 Start Free Trial
               </Button>
             </Link>
-            <Link href="/dashboard">
+            <Link href="/">
               <Button variant="outline">
                 Try Demo
               </Button>

@@ -31,10 +31,8 @@ function Router() {
       <Route path="/auth/callback" component={AuthCallback} />
       <Route path="/setup" component={Setup} />
       
-      {/* Main app routes - redirect to onboarding if not completed */}
-      <Route path="/">
-        {!hasCompletedOnboarding ? <Landing /> : <SimplifiedDashboard />}
-      </Route>
+      {/* Main app routes - always show dashboard for testing */}
+      <Route path="/" component={SimplifiedDashboard} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/advanced" component={AdvancedFeatures} />
       <Route path="/task-refiner" component={TaskRefiner} />

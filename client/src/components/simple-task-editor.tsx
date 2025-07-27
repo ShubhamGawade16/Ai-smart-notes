@@ -173,7 +173,7 @@ export function SimpleTaskEditor({ task, trigger, isCreating = false }: SimpleTa
                 <Flag className="h-4 w-4" />
                 Priority
               </Label>
-              <Select value={formData.priority} onValueChange={(value) => setFormData({ ...formData, priority: value })}>
+              <Select value={formData.priority} onValueChange={(value: 'low' | 'medium' | 'high' | 'urgent') => setFormData({ ...formData, priority: value })}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

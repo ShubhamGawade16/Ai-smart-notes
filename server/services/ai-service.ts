@@ -1,17 +1,11 @@
 import OpenAI from 'openai';
 
-if (!process.env.OPENROUTER_API_KEY) {
-  console.error('OPENROUTER_API_KEY environment variable is required');
+if (!process.env.OPENAI_API_KEY) {
+  console.error('OPENAI_API_KEY environment variable is required');
 }
 
 const openai = new OpenAI({
-  baseURL: "https://openrouter.ai/api/v1",
-  apiKey: process.env.OPENROUTER_API_KEY,
-  defaultHeaders: {
-    "HTTP-Referer": "https://gpt-do.replit.app",
-    "X-Title": "GPT Do - AI Task Manager",
-    "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
-  }
+  apiKey: process.env.OPENAI_API_KEY,
 });
 import { Task, InsertTask } from "@shared/schema";
 

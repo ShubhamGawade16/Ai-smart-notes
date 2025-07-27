@@ -207,8 +207,8 @@ export class MemStorage implements IStorage {
       completedAt: null,
       aiSuggestions: null,
       parentTaskId: insertTask.parentTaskId || null,
-      contextSwitchCost: insertTask.contextSwitchCost || null,
-      xpReward: insertTask.xpReward || 10,
+      contextSwitchCost: (insertTask as any).contextSwitchCost || null,
+      xpReward: (insertTask as any).xpReward || 10,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -319,7 +319,7 @@ export class MemStorage implements IStorage {
     if (userIndex !== -1) {
       this.users[userIndex] = {
         ...this.users[userIndex],
-        dailyAiCalls: this.users[userIndex].dailyAiCalls + 1,
+        dailyAiCalls: (this.users[userIndex].dailyAiCalls || 0) + 1,
         updatedAt: new Date()
       };
     }
@@ -330,7 +330,7 @@ export class MemStorage implements IStorage {
     if (userIndex !== -1) {
       this.users[userIndex] = {
         ...this.users[userIndex],
-        monthlyTaskCount: this.users[userIndex].monthlyTaskCount + 1,
+        monthlyTaskCount: (this.users[userIndex].monthlyTaskCount || 0) + 1,
         updatedAt: new Date()
       };
     }
