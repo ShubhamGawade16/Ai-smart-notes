@@ -1,7 +1,12 @@
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  baseURL: "https://openrouter.ai/api/v1",
+  apiKey: process.env.OPENROUTER_API_KEY,
+  defaultHeaders: {
+    "HTTP-Referer": "https://gpt-do.replit.app",
+    "X-Title": "GPT Do - AI Task Manager",
+  }
 });
 import { Task, InsertTask } from "@shared/schema";
 
@@ -58,7 +63,7 @@ Rules:
 
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "deepseek/deepseek-chat-v3-0324:free",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.3,
       max_tokens: 500,
@@ -132,17 +137,18 @@ Respond with JSON array of task indices in optimal order:
 
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "deepseek/deepseek-chat-v3-0324:free",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.2,
       max_tokens: 200,
     });
 
     const content = response.choices[0]?.message?.content?.trim();
-    const order = JSON.parse(content || '[]');
+    if (!content) throw new Error("No response from AI");
+    const order = JSON.parse(content);
     
     if (Array.isArray(order) && order.length === tasks.length) {
-      return order.map((index: number) => tasks[index - 1]).filter(Boolean);
+      return order.map((index: number) => tasks[index - 1]).filter(task => task !== undefined);
     }
   } catch (error) {
     console.error('Task optimization error:', error);
@@ -150,9 +156,9 @@ Respond with JSON array of task indices in optimal order:
 
   // Fallback: simple priority and due date sorting
   return [...tasks].sort((a, b) => {
-    const priorityWeight = { urgent: 4, high: 3, medium: 2, low: 1 };
-    const aPriority = priorityWeight[a.priority] || 2;
-    const bPriority = priorityWeight[b.priority] || 2;
+    const priorityWeight: Record<string, number> = { urgent: 4, high: 3, medium: 2, low: 1 };
+    const aPriority = priorityWeight[a.priority as string] || 2;
+    const bPriority = priorityWeight[b.priority as string] || 2;
     
     if (aPriority !== bPriority) return bPriority - aPriority;
     
@@ -206,7 +212,7 @@ Focus on:
 
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "deepseek/deepseek-chat-v3-0324:free",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.4,
       max_tokens: 800,
@@ -276,7 +282,7 @@ Examples of refinement:
 
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "deepseek/deepseek-chat-v3-0324:free",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.3,
       max_tokens: 1000,
