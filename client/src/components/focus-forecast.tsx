@@ -3,8 +3,9 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Clock, AlertTriangle, Coffee, Zap, TrendingUp } from 'lucide-react';
+import { Clock, AlertTriangle, Coffee, Zap, TrendingUp, Maximize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { AIFeatureModal } from '@/components/expanded-views/ai-feature-modal';
 
 interface FocusForecast {
   peakFocusWindows: Array<{start: string, end: string, confidence: number}>;
@@ -92,11 +93,109 @@ export default function FocusForecast() {
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Zap className="h-5 w-5 text-blue-500" />
-          Focus Forecast
-          <Badge variant="secondary">Advanced Pro</Badge>
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Zap className="h-5 w-5 text-blue-500" />
+            <CardTitle>Focus Forecast</CardTitle>
+            <Badge variant="secondary">Advanced Pro</Badge>
+          </div>
+          <AIFeatureModal
+            title="Focus Forecast"
+            tier="Advanced Pro"
+            description="AI-powered predictions for your peak productivity today with detailed insights and recommendations."
+            icon={<Zap className="h-5 w-5 text-blue-500" />}
+            trigger={
+              <Button variant="ghost" size="sm">
+                <Maximize2 className="h-4 w-4" />
+              </Button>
+            }
+          >
+            <div className="space-y-6">
+              {forecast && (
+                <>
+                  {/* Detailed Peak Focus Windows */}
+                  <div>
+                    <h4 className="font-semibold flex items-center gap-2 mb-4">
+                      <Clock className="h-4 w-4" />
+                      Today's Peak Focus Windows
+                    </h4>
+                    <div className="space-y-3">
+                      {forecast.peakFocusWindows.map((window, index) => (
+                        <div key={index} className="p-4 rounded-lg border bg-card">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-medium">
+                              {window.start} - {window.end}
+                            </span>
+                            <Badge variant={isInFocusWindow(window.start, window.end) ? 'default' : 'secondary'}>
+                              {window.confidence}% confidence
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            Optimal for deep work, complex problem-solving, and creative tasks.
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Detailed Break Recommendations */}
+                  <div>
+                    <h4 className="font-semibold flex items-center gap-2 mb-4">
+                      <Coffee className="h-4 w-4" />
+                      Recommended Breaks
+                    </h4>
+                    <div className="space-y-3">
+                      {forecast.suggestedBreaks.map((breakItem, index) => (
+                        <div key={index} className="p-4 rounded-lg border bg-card">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-medium">{breakItem.time}</span>
+                            <Badge variant="outline">{breakItem.duration} minutes</Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">{breakItem.reason}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Detailed Burnout Assessment */}
+                  <div>
+                    <h4 className="font-semibold flex items-center gap-2 mb-4">
+                      <AlertTriangle className="h-4 w-4" />
+                      Burnout Risk Assessment
+                    </h4>
+                    <div className="p-4 rounded-lg border bg-card">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Badge className={getRiskColor(forecast.burnoutRisk.level)}>
+                          {forecast.burnoutRisk.level.toUpperCase()} RISK
+                        </Badge>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-sm font-medium mb-2">Risk Factors:</p>
+                          <ul className="text-sm text-muted-foreground space-y-1">
+                            {forecast.burnoutRisk.factors.map((factor, index) => (
+                              <li key={index}>• {factor}</li>
+                            ))}
+                          </ul>
+                        </div>
+                        
+                        <div>
+                          <p className="text-sm font-medium mb-2">Recommendations:</p>
+                          <ul className="text-sm text-muted-foreground space-y-1">
+                            {forecast.burnoutRisk.recommendations.map((rec, index) => (
+                              <li key={index}>• {rec}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </AIFeatureModal>
+        </div>
         <CardDescription>
           AI-powered predictions for your peak productivity today
         </CardDescription>

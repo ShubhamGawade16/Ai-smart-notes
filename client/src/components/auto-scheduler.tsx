@@ -3,9 +3,10 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, Zap, ExternalLink, CheckCircle, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, Zap, ExternalLink, CheckCircle, AlertCircle, Maximize2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import { AIFeatureModal } from '@/components/expanded-views/ai-feature-modal';
 
 interface ScheduleOptimization {
   optimizedSchedule: Array<{
@@ -112,11 +113,127 @@ export default function AutoScheduler({ userTier = 'free' }: AutoSchedulerProps)
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Calendar className="h-5 w-5 text-green-500" />
-          Auto-Schedule to Calendar
-          <Badge variant="secondary">Basic Pro</Badge>
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-5 w-5 text-green-500" />
+            <CardTitle>Auto-Schedule to Calendar</CardTitle>
+            <Badge variant="secondary">Basic Pro</Badge>
+          </div>
+          <AIFeatureModal
+            title="Auto-Schedule to Calendar"
+            tier="Basic Pro"
+            description="AI-powered time blocking that optimizes your entire day with intelligent scheduling and calendar integration."
+            icon={<Calendar className="h-5 w-5 text-green-500" />}
+            trigger={
+              <Button variant="ghost" size="sm">
+                <Maximize2 className="h-4 w-4" />
+              </Button>
+            }
+          >
+            <div className="space-y-6">
+              {lastOptimization && (
+                <>
+                  <div>
+                    <h4 className="font-semibold flex items-center gap-2 mb-4">
+                      <Calendar className="h-4 w-4" />
+                      Optimized Schedule for Today
+                    </h4>
+                    <div className="space-y-3">
+                      {lastOptimization.optimizedSchedule.map((item, index) => (
+                        <div key={index} className="p-4 rounded-lg border bg-card">
+                          <div className="flex items-center justify-between mb-2">
+                            <div>
+                              <h5 className="font-medium">{item.title}</h5>
+                              <p className="text-sm text-muted-foreground">
+                                {item.startTime} - {item.endTime} ({item.estimatedMinutes} min)
+                              </p>
+                            </div>
+                            <Badge variant={
+                              item.priority === 'high' ? 'destructive' : 
+                              item.priority === 'medium' ? 'default' : 'secondary'
+                            }>
+                              {item.priority}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">{item.reasoning}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold flex items-center gap-2 mb-4">
+                      <Zap className="h-4 w-4" />
+                      Optimization Insights
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                      <div className="p-3 rounded-lg bg-muted">
+                        <p className="text-sm font-medium">Productive Hours</p>
+                        <p className="text-2xl font-bold">{lastOptimization.insights.totalProductiveHours}h</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-muted">
+                        <p className="text-sm font-medium">Buffer Added</p>
+                        <p className="text-2xl font-bold">{lastOptimization.insights.bufferTimeAdded}m</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-muted">
+                        <p className="text-sm font-medium">Conflicts Resolved</p>
+                        <p className="text-2xl font-bold">{lastOptimization.insights.conflictsResolved}</p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <p className="font-medium mb-2">Recommendations:</p>
+                      <ul className="space-y-1">
+                        {lastOptimization.insights.recommendations.map((rec, index) => (
+                          <li key={index} className="text-sm text-muted-foreground flex items-start gap-2">
+                            <CheckCircle className="h-3 w-3 mt-1 flex-shrink-0" />
+                            {rec}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button className="flex-1">
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Add All to Calendar
+                    </Button>
+                    <Button variant="outline" onClick={() => setLastOptimization(null)}>
+                      Create New Schedule
+                    </Button>
+                  </div>
+                </>
+              )}
+
+              {!lastOptimization && (
+                <div className="text-center py-8">
+                  <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground mb-4">
+                    No schedule optimization available yet. Click the button below to generate your optimized daily schedule.
+                  </p>
+                  <Button 
+                    onClick={handleOptimizeSchedule}
+                    disabled={optimizeScheduleMutation.isPending || !(tasks as any)?.tasks?.length}
+                    size="lg"
+                  >
+                    {optimizeScheduleMutation.isPending ? (
+                      <>
+                        <Zap className="h-4 w-4 mr-2 animate-pulse" />
+                        Optimizing Schedule...
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="h-4 w-4 mr-2" />
+                        Auto-Schedule My Day
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
+            </div>
+          </AIFeatureModal>
+        </div>
         <CardDescription>
           AI-powered time blocking that optimizes your entire day
         </CardDescription>
@@ -127,7 +244,7 @@ export default function AutoScheduler({ userTier = 'free' }: AutoSchedulerProps)
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium">Pending Tasks</span>
             <Badge variant="outline">
-              {tasks?.tasks?.filter((t: any) => !t.completed).length || 0} tasks
+              {(tasks as any)?.tasks?.filter((t: any) => !t.completed).length || 0} tasks
             </Badge>
           </div>
           <p className="text-xs text-gray-600 dark:text-gray-400">
@@ -138,7 +255,7 @@ export default function AutoScheduler({ userTier = 'free' }: AutoSchedulerProps)
         {/* Optimize Button */}
         <Button 
           onClick={handleOptimizeSchedule}
-          disabled={optimizeScheduleMutation.isPending || !tasks?.tasks?.length}
+          disabled={optimizeScheduleMutation.isPending || !(tasks as any)?.tasks?.length}
           className="w-full"
           size="lg"
         >

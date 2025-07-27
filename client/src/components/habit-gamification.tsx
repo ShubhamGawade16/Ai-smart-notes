@@ -4,9 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Trophy, Star, Zap, Gift, Target, Crown, Flame } from 'lucide-react';
+import { Trophy, Star, Zap, Gift, Target, Crown, Flame, Maximize2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import { AIFeatureModal } from '@/components/expanded-views/ai-feature-modal';
 
 interface HabitGamification {
   currentXp: number;
@@ -97,11 +98,13 @@ export default function HabitGamification({ userTier = 'free' }: HabitGamificati
     return (
       <Card className="w-full">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Trophy className="h-5 w-5 text-yellow-500" />
-            Habit-Loop Gamification
-            <Badge variant="secondary">Loading...</Badge>
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Trophy className="h-5 w-5 text-yellow-500" />
+              <CardTitle>Habit-Loop Gamification</CardTitle>
+              <Badge variant="secondary">Loading...</Badge>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="animate-pulse space-y-4">

@@ -2,11 +2,12 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MoreVertical, Clock } from "lucide-react";
+import { MoreVertical, Clock, Tag, Flag } from "lucide-react";
 import { taskApi } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import type { Task } from "@shared/schema";
 import { cn } from "@/lib/utils";
+import { TaskDetailModal } from "@/components/expanded-views/task-detail-modal";
 
 interface TaskItemProps {
   task: Task;
@@ -52,6 +53,19 @@ export function TaskItem({ task }: TaskItemProps) {
     }
   };
 
+  const formatDueDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const today = new Date();
+    const diffTime = date.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Tomorrow';
+    if (diffDays === -1) return 'Yesterday';
+    if (diffDays < 0) return `${Math.abs(diffDays)} days ago`;
+    return `In ${diffDays} days`;
+  };
+
   const getCategoryColor = (category?: string) => {
     if (!category) return 'bg-muted text-muted-foreground';
     
@@ -74,61 +88,88 @@ export function TaskItem({ task }: TaskItemProps) {
   };
 
   return (
-    <div className="flex items-start space-x-3 p-3 rounded-lg hover:bg-muted/50 cursor-pointer group">
-      <Checkbox
-        checked={task.completed || false}
-        onCheckedChange={handleToggleComplete}
-        disabled={updateTaskMutation.isPending}
-        className="mt-1"
-      />
-      
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center space-x-2 mb-1">
-          <span className={cn(
-            "text-sm font-medium",
-            task.completed && "line-through opacity-60"
-          )}>
-            {task.title}
-          </span>
-          
-          <Badge variant="outline" className={cn("text-xs", getPriorityColor(task.priority || 'medium'))}>
-            {task.priority || 'medium'}
-          </Badge>
-          
-          {task.category && (
-            <Badge variant="secondary" className={cn("text-xs", getCategoryColor(task.category))}>
-              {task.category}
-            </Badge>
-          )}
-        </div>
+    <div className="group p-4 bg-card rounded-lg border hover:shadow-md transition-shadow">
+      <div className="flex items-start gap-3">
+        <Checkbox
+          checked={task.completed || false}
+          onCheckedChange={handleToggleComplete}
+          disabled={updateTaskMutation.isPending}
+          className="mt-1"
+        />
         
-        {(task.estimatedTime || task.aiSuggestions) && (
-          <div className={cn(
-            "text-xs text-muted-foreground mt-1 flex items-center space-x-2",
-            task.completed && "opacity-60"
-          )}>
-            {task.estimatedTime && (
-              <span className="flex items-center">
-                <Clock className="w-3 h-3 mr-1" />
-                {formatEstimatedTime(task.estimatedTime)}
-              </span>
+        <div className="flex-1 min-w-0 cursor-pointer" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-between mb-2">
+            <TaskDetailModal
+              task={task as any}
+              trigger={
+                <h3 className={cn(
+                  "font-medium cursor-pointer hover:text-primary transition-colors",
+                  task.completed && "line-through opacity-60"
+                )}>
+                  {task.title}
+                </h3>
+              }
+            />
+            
+            <TaskDetailModal
+              task={task as any}
+              trigger={
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <MoreVertical className="w-4 h-4" />
+                </Button>
+              }
+            />
+          </div>
+          
+          {task.description && (
+            <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+              {task.description}
+            </p>
+          )}
+          
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            {task.priority && (
+              <Badge variant="outline" className={cn("text-xs", getPriorityColor(task.priority))}>
+                <Flag className="w-3 h-3 mr-1" />
+                {task.priority}
+              </Badge>
             )}
-            {task.aiSuggestions && (
-              <span>
-                AI suggests: {task.priority || 'medium'} priority
-              </span>
+            
+            {task.estimatedTime && (
+              <div className="flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                {formatEstimatedTime(task.estimatedTime)}
+              </div>
+            )}
+            
+            {task.dueDate && (
+              <div className="flex items-center gap-1">
+                <span>{formatDueDate(task.dueDate.toString())}</span>
+              </div>
             )}
           </div>
-        )}
+          
+          {task.tags && task.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              {task.tags.slice(0, 3).map((tag, index) => (
+                <Badge key={index} variant="outline" className="text-xs">
+                  <Tag className="w-2 h-2 mr-1" />
+                  {tag}
+                </Badge>
+              ))}
+              {task.tags.length > 3 && (
+                <Badge variant="outline" className="text-xs">
+                  +{task.tags.length - 3} more
+                </Badge>
+              )}
+            </div>
+          )}
+        </div>
       </div>
-      
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-      >
-        <MoreVertical className="w-4 h-4" />
-      </Button>
     </div>
   );
 }

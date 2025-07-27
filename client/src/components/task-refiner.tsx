@@ -6,9 +6,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { MessageSquare, Wand2, Lightbulb, ArrowRight, CheckCircle } from 'lucide-react';
+import { MessageSquare, Wand2, Lightbulb, ArrowRight, CheckCircle, Maximize2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import { AIFeatureModal } from '@/components/expanded-views/ai-feature-modal';
 
 interface TaskRefinement {
   refinedTask: string;
@@ -103,13 +104,153 @@ export default function TaskRefiner({
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <MessageSquare className="h-5 w-5 text-purple-500" />
-          Conversational Task Refiner
-          <Badge variant={userTier === 'free' ? 'outline' : 'secondary'}>
-            {userTier === 'free' ? `${usedToday}/${dailyLimit} today` : 'Unlimited'}
-          </Badge>
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="h-5 w-5 text-purple-500" />
+            <CardTitle>Conversational Task Refiner</CardTitle>
+            <Badge variant={userTier === 'free' ? 'outline' : 'secondary'}>
+              {userTier === 'free' ? `${usedToday}/${dailyLimit} today` : 'Unlimited'}
+            </Badge>
+          </div>
+          <AIFeatureModal
+            title="Conversational Task Refiner"
+            tier={userTier === 'free' ? 'Free with Limits' : 'Unlimited Pro'}
+            description="Chat with AI to make your tasks clearer and break them into actionable steps with advanced refinement options."
+            icon={<MessageSquare className="h-5 w-5 text-purple-500" />}
+            trigger={
+              <Button variant="ghost" size="sm">
+                <Maximize2 className="h-4 w-4" />
+              </Button>
+            }
+          >
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Current Task</label>
+                  <Textarea
+                    value={taskContent}
+                    onChange={(e) => setTaskContent(e.target.value)}
+                    placeholder="Enter the task you'd like to improve..."
+                    className="min-h-24"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">How should I improve it?</label>
+                  <Input
+                    value={refinementRequest}
+                    onChange={(e) => setRefinementRequest(e.target.value)}
+                    placeholder="e.g., 'Make this clearer' or 'Break into steps'"
+                  />
+                </div>
+              </div>
+
+              {/* Extended Quick Prompts */}
+              <div>
+                <p className="text-sm font-medium mb-3">Quick refinement prompts:</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    "Make this clearer and more specific",
+                    "Break this into smaller steps", 
+                    "Add time estimates and deadlines",
+                    "Identify potential blockers",
+                    "Suggest the best approach",
+                    "Add success criteria",
+                    "Include required resources",
+                    "Set priority levels"
+                  ].map((prompt, index) => (
+                    <Button
+                      key={index}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setRefinementRequest(prompt)}
+                      className="text-xs text-left justify-start"
+                    >
+                      {prompt}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              <Button 
+                onClick={handleRefine}
+                disabled={refineTaskMutation.isPending || (userTier === 'free' && usedToday >= dailyLimit)}
+                className="w-full"
+                size="lg"
+              >
+                {refineTaskMutation.isPending ? (
+                  <>
+                    <Wand2 className="h-4 w-4 mr-2 animate-spin" />
+                    Refining...
+                  </>
+                ) : (
+                  <>
+                    <Wand2 className="h-4 w-4 mr-2" />
+                    Refine Task with AI
+                  </>
+                )}
+              </Button>
+
+              {/* Detailed Refinement Results */}
+              {refinement && (
+                <div className="space-y-4 border-t pt-6">
+                  <h4 className="font-semibold flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    Refined Task
+                  </h4>
+                  
+                  <div className="p-4 bg-muted rounded-lg">
+                    <p className="font-medium mb-2">Improved Version:</p>
+                    <p className="text-sm">{refinement.refinedTask}</p>
+                  </div>
+
+                  {refinement.suggestions && refinement.suggestions.length > 0 && (
+                    <div>
+                      <p className="font-medium mb-2">AI Suggestions:</p>
+                      <ul className="space-y-1">
+                        {refinement.suggestions.map((suggestion, index) => (
+                          <li key={index} className="text-sm text-muted-foreground flex items-start gap-2">
+                            <Lightbulb className="h-3 w-3 mt-1 flex-shrink-0" />
+                            {suggestion}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {refinement.decomposition && refinement.decomposition.length > 0 && (
+                    <div>
+                      <p className="font-medium mb-2">Subtasks:</p>
+                      <div className="space-y-2">
+                        {refinement.decomposition.map((step, index) => (
+                          <div key={index} className="flex items-center gap-2 p-2 bg-muted rounded text-sm">
+                            <span className="bg-primary text-primary-foreground rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                              {index + 1}
+                            </span>
+                            {step}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex gap-2">
+                    <Button onClick={handleAcceptRefinement} className="flex-1">
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Accept Refinement
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setRefinement(null)} 
+                      className="flex-1"
+                    >
+                      Try Again
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </AIFeatureModal>
+        </div>
         <CardDescription>
           Chat with AI to make your tasks clearer and break them into actionable steps
         </CardDescription>

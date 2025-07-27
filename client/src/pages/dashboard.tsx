@@ -110,13 +110,23 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Floating Action Button */}
-      <Button
-        size="lg"
-        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg hover:scale-105 transition-transform lg:hidden"
-      >
-        <Plus className="w-6 h-6" />
-      </Button>
+      {/* Floating Action Button for mobile */}
+      {isMobile && (
+        <Button
+          size="lg"
+          className="fixed bottom-20 right-6 h-14 w-14 rounded-full shadow-lg hover:scale-105 transition-transform z-40"
+          onClick={() => {
+            // Focus on the quick add input
+            const quickAddInput = document.querySelector('input[placeholder*="What would you like to add"]') as HTMLInputElement;
+            if (quickAddInput) {
+              quickAddInput.focus();
+              quickAddInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }}
+        >
+          <Plus className="w-6 h-6" />
+        </Button>
+      )}
     </div>
   );
 }
