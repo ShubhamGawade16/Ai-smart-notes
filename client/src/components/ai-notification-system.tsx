@@ -61,7 +61,7 @@ export function AINotificationSystem() {
 
   // Analyze user behavior and generate intelligent notifications
   useEffect(() => {
-    if (!tasks || !tasks.tasks || !analytics) return;
+    if (!tasks || !(tasks as any)?.tasks || !analytics) return;
 
     const analyzeBehavior = () => {
       const now = new Date();

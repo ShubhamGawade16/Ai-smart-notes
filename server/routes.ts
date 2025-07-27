@@ -20,6 +20,7 @@ import {
 } from "@shared/schema";
 import { checkTier, incrementUsage, getUserLimits, FREE_TIER_LIMITS } from "./middleware/tier-check";
 import { parseNaturalLanguageTask, optimizeTaskOrder, generateProductivityInsights, refineTask } from "./services/ai-service";
+import { notificationService } from "./services/notification-service";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Health check
@@ -399,6 +400,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // AI Routes
   app.use('/api/ai', aiRoutes);
+  
+  // ============================================================================
+  // NOTIFICATION ROUTES
+  // ============================================================================
+  
+  // Get pending notifications for real-time display
+  app.get("/api/notifications/pending", optionalAuth, async (req: AuthRequest, res) => {
+    try {
+      const userId = req.userId || 'demo-user';
+      const notifications = await notificationService.getPendingNotifications(userId);
+      res.json({ notifications });
+    } catch (error) {
+      console.error("Get notifications error:", error);
+      res.status(500).json({ error: "Failed to get notifications" });
+    }
+  });
+
+  // Register device for push notifications
+  app.post("/api/notifications/register-device", optionalAuth, async (req: AuthRequest, res) => {
+    try {
+      const userId = req.userId || 'demo-user';
+      const { token, platform } = req.body;
+      
+      // Store device token for push notifications
+      console.log(`Registered ${platform} device for user ${userId}:`, token?.substring(0, 20) + '...');
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Device registration error:", error);
+      res.status(500).json({ error: "Failed to register device" });
+    }
+  });
+
+  // Trigger notification analysis (for testing)
+  app.post("/api/notifications/analyze", optionalAuth, async (req: AuthRequest, res) => {
+    try {
+      const userId = req.userId || 'demo-user';
+      await notificationService.analyzeAndScheduleTaskNotifications(userId);
+      res.json({ success: true, message: "Notification analysis triggered" });
+    } catch (error) {
+      console.error("Notification analysis error:", error);
+      res.status(500).json({ error: "Failed to analyze notifications" });
+    }
+  });
   
   // Gamification Routes
   app.use('/api/gamification', gamificationRoutes);
