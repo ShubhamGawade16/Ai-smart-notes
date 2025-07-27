@@ -63,7 +63,7 @@ Rules:
 
   try {
     const response = await openai.chat.completions.create({
-      model: "deepseek/deepseek-chat-v3-0324:free",
+      model: "deepseek/deepseek-chat",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.3,
       max_tokens: 500,
@@ -137,7 +137,7 @@ Respond with JSON array of task indices in optimal order:
 
   try {
     const response = await openai.chat.completions.create({
-      model: "deepseek/deepseek-chat-v3-0324:free",
+      model: "deepseek/deepseek-chat",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.2,
       max_tokens: 200,
@@ -237,6 +237,11 @@ Focus on:
       messages: [{ role: "user", content: prompt }],
       temperature: 0.4,
       max_tokens: 800,
+    }, {
+      headers: {
+        "HTTP-Referer": "https://replit.com",
+        "X-Title": "GPT-Do-AI-App"
+      }
     });
 
     const content = response.choices[0]?.message?.content;
@@ -319,7 +324,7 @@ Examples of refinement:
 
   try {
     const response = await openai.chat.completions.create({
-      model: "deepseek/deepseek-chat-v3-0324:free",
+      model: "deepseek/deepseek-chat",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.3,
       max_tokens: 1000,
