@@ -12,6 +12,11 @@ import { NotificationSystem } from "@/components/notification-system";
 import { MobileNav } from "@/components/mobile-nav";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import { SmartReminderSystem } from "@/components/smart-reminder-system";
+import { RecurringTaskGenerator } from "@/components/recurring-task-generator";
+import { TaskDecayCleanup } from "@/components/task-decay-cleanup";
+import { MoodAwareTaskSuggestions } from "@/components/mood-aware-suggestions";
+import { GoalTrackingAlignment } from "@/components/goal-tracking-alignment";
 import { useIsMobile } from "@/hooks/use-mobile";
 import FocusForecast from "@/components/focus-forecast";
 import TaskRefiner from "@/components/task-refiner";
@@ -48,6 +53,11 @@ export default function Dashboard() {
         return (
           <div className="space-y-6">
             <NotificationSystem />
+            <SmartReminderSystem />
+            <RecurringTaskGenerator />
+            <TaskDecayCleanup />
+            <MoodAwareTaskSuggestions />
+            <GoalTrackingAlignment />
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <FocusForecast />
               <TaskRefiner />

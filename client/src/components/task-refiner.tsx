@@ -319,7 +319,13 @@ export default function TaskRefiner({
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
               Daily limit reached. Upgrade for unlimited refinements.
             </p>
-            <Button variant="outline" size="sm">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => {
+                window.open('https://billing.stripe.com/p/login/test_basic_pro', '_blank');
+              }}
+            >
               Upgrade to Basic Pro
             </Button>
           </div>
