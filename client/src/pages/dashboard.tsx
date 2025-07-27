@@ -9,6 +9,7 @@ import { ProgressStats } from "@/components/progress-stats";
 import { QuickActions } from "@/components/quick-actions";
 import { Categories } from "@/components/categories";
 import { NotificationSystem } from "@/components/notification-system";
+import { AINotificationSystem } from "@/components/ai-notification-system";
 import { MobileNav } from "@/components/mobile-nav";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -101,6 +102,7 @@ export default function Dashboard() {
 
             {/* Sidebar */}
             <div className="space-y-6">
+              <AINotificationSystem />
               <AIInsightsEnhanced />
               <ProgressStats />
               <QuickActions />
