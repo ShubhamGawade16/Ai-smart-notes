@@ -14,19 +14,28 @@ import Setup from "@/pages/setup";
 import AuthCallback from "@/pages/auth/callback";
 import NotFound from "@/pages/not-found";
 import { SettingsPage } from "@/pages/settings";
+import OnboardingPage from "@/pages/onboarding";
 
 function Router() {
+  // Check if user has completed onboarding
+  const hasCompletedOnboarding = localStorage.getItem('userPreferences');
+  
   return (
     <Switch>
-      <Route path="/" component={SimplifiedDashboard} />
+      <Route path="/onboarding" component={OnboardingPage} />
+      <Route path="/landing" component={Landing} />
+      <Route path="/login" component={Login} />
+      <Route path="/register" component={Register} />
+      <Route path="/auth/callback" component={AuthCallback} />
+      <Route path="/setup" component={Setup} />
+      
+      {/* Main app routes - redirect to onboarding if not completed */}
+      <Route path="/">
+        {!hasCompletedOnboarding ? <OnboardingPage /> : <SimplifiedDashboard />}
+      </Route>
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/advanced" component={Dashboard} />
       <Route path="/settings" component={SettingsPage} />
-      <Route path="/login" component={Login} />
-      <Route path="/register" component={Register} />
-      <Route path="/landing" component={Landing} />
-      <Route path="/auth/callback" component={AuthCallback} />
-      <Route path="/setup" component={Setup} />
       <Route component={NotFound} />
     </Switch>
   );

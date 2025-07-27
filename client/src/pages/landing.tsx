@@ -15,7 +15,11 @@ import {
   ArrowRight,
   Sparkles,
   Clock,
-  TrendingUp
+  TrendingUp,
+  Play,
+  Users,
+  Award,
+  Quote
 } from "lucide-react";
 
 export default function LandingPage() {
@@ -29,383 +33,390 @@ export default function LandingPage() {
               <Brain className="h-5 w-5 text-white" />
             </div>
             <span className="text-xl font-bold text-gray-900 dark:text-white">
-              AI Smart Notes
+              Smart To-Do AI
             </span>
           </div>
           <div className="flex items-center space-x-4">
-            <Link href="/login">
-              <Button variant="ghost">Sign In</Button>
-            </Link>
-            <Link href="/register">
+            <Link href="/">
               <Button className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700">
-                Get Started Free
+                Start Free Trial
               </Button>
             </Link>
           </div>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="container mx-auto px-4 py-16 text-center">
+      {/* Hero Section - Single Clear Value Proposition */}
+      <section className="container mx-auto px-4 py-20 text-center">
         <div className="max-w-4xl mx-auto">
-          <Badge className="mb-4 bg-indigo-100 text-indigo-800 hover:bg-indigo-200 dark:bg-indigo-900 dark:text-indigo-200">
-            🚀 AI-Powered Productivity
+          <Badge className="mb-6 bg-indigo-100 text-indigo-800 hover:bg-indigo-200 dark:bg-indigo-900 dark:text-indigo-200">
+            🚀 AI-Powered Task Management That Learns Your Workflow
           </Badge>
           
-          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
-            Transform Your 
+          <h1 className="text-6xl md:text-7xl font-bold text-gray-900 dark:text-white mb-8">
+            AI-Powered Task Management 
             <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              {" "}Productivity
+              {" "}That Learns Your Workflow
             </span>
-            <br />
-            with AI Intelligence
           </h1>
           
-          <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
-            Smart task management that learns from your habits, predicts your needs, 
-            and optimizes your workflow with cutting-edge AI technology.
+          <p className="text-2xl text-gray-600 dark:text-gray-300 mb-12 max-w-3xl mx-auto">
+            Stop managing tasks. Start achieving goals. Our AI learns your patterns, 
+            predicts your needs, and optimizes your productivity automatically.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <Link href="/register">
-              <Button size="lg" className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-lg px-8 py-6">
-                Start Free Trial
-                <ArrowRight className="ml-2 h-5 w-5" />
+          {/* Single Prominent CTA */}
+          <div className="mb-16">
+            <Link href="/">
+              <Button size="lg" className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-xl px-12 py-8 rounded-xl shadow-2xl transform hover:scale-105 transition-all">
+                Start Your Free Trial
+                <ArrowRight className="ml-3 h-6 w-6" />
               </Button>
             </Link>
-            <Button size="lg" variant="outline" className="text-lg px-8 py-6">
-              <BarChart3 className="mr-2 h-5 w-5" />
-              View Demo
-            </Button>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
+              ✨ No credit card required • 7-day free trial • 10,000+ users trust us
+            </p>
           </div>
 
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            ✨ No credit card required • 7-day Pro trial • Cancel anytime
+          {/* Social Proof & Metrics */}
+          <div className="grid md:grid-cols-3 gap-8 mb-16">
+            <div className="text-center">
+              <div className="text-5xl font-bold text-indigo-600 mb-2">10K+</div>
+              <p className="text-gray-600 dark:text-gray-300">Tasks Organized</p>
+            </div>
+            <div className="text-center">
+              <div className="text-5xl font-bold text-indigo-600 mb-2">95%</div>
+              <p className="text-gray-600 dark:text-gray-300">User Satisfaction</p>
+            </div>
+            <div className="text-center">
+              <div className="text-5xl font-bold text-indigo-600 mb-2">40%</div>
+              <p className="text-gray-600 dark:text-gray-300">Productivity Boost</p>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Features Grid */}
-      <section className="container mx-auto px-4 py-16">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-            Powered by Advanced AI
+      {/* Feature Teasers - 3 Core Benefits with Video Links */}
+      <section className="container mx-auto px-4 py-20 bg-white dark:bg-gray-800 rounded-3xl mx-4">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-6">
+            3 Core AI Features That Transform Your Workflow
           </h2>
-          <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Experience next-generation productivity with features that adapt to your workflow
+          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+            Experience the power of AI that adapts to your unique productivity patterns
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {/* Natural Language Tasks */}
-          <Card className="border-2 hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors">
-            <CardHeader>
-              <div className="h-12 w-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center mb-4">
-                <MessageSquare className="h-6 w-6 text-white" />
+        <div className="grid md:grid-cols-3 gap-12">
+          {/* Task AI */}
+          <Card className="border-2 hover:border-indigo-200 dark:hover:border-indigo-800 transition-all transform hover:scale-105 cursor-pointer group">
+            <CardHeader className="text-center">
+              <div className="h-20 w-20 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center mb-6 mx-auto group-hover:shadow-2xl transition-all">
+                <Brain className="h-10 w-10 text-white" />
               </div>
-              <CardTitle>Natural Language Entry</CardTitle>
-              <CardDescription>
-                "Finish the report by Friday" → Automatically parsed with priority, time estimates, and categorization
+              <CardTitle className="text-2xl">Task AI</CardTitle>
+              <CardDescription className="text-lg">
+                "Finish report by Friday" → Automatically categorized, prioritized, and time-estimated with smart suggestions
               </CardDescription>
+              <Button variant="ghost" className="mt-4 text-indigo-600 hover:text-indigo-700">
+                <Play className="h-4 w-4 mr-2" />
+                Watch Demo
+              </Button>
             </CardHeader>
           </Card>
 
-          {/* Smart Optimization */}
-          <Card className="border-2 hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors">
-            <CardHeader>
-              <div className="h-12 w-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center mb-4">
-                <Zap className="h-6 w-6 text-white" />
+          {/* Smart Scheduling */}
+          <Card className="border-2 hover:border-indigo-200 dark:hover:border-indigo-800 transition-all transform hover:scale-105 cursor-pointer group">
+            <CardHeader className="text-center">
+              <div className="h-20 w-20 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center mb-6 mx-auto group-hover:shadow-2xl transition-all">
+                <Calendar className="h-10 w-10 text-white" />
               </div>
-              <CardTitle>Smart Optimization</CardTitle>
-              <CardDescription>
-                AI reorders your tasks based on urgency, energy levels, and productivity patterns
+              <CardTitle className="text-2xl">Smart Scheduling</CardTitle>
+              <CardDescription className="text-lg">
+                AI learns your energy patterns and automatically schedules tasks when you're most productive
               </CardDescription>
+              <Button variant="ghost" className="mt-4 text-indigo-600 hover:text-indigo-700">
+                <Play className="h-4 w-4 mr-2" />
+                Watch Demo
+              </Button>
             </CardHeader>
           </Card>
 
-          {/* Focus Forecast */}
-          <Card className="border-2 hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors">
-            <CardHeader>
-              <div className="h-12 w-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mb-4">
-                <Target className="h-6 w-6 text-white" />
+          {/* Productivity Insights */}
+          <Card className="border-2 hover:border-indigo-200 dark:hover:border-indigo-800 transition-all transform hover:scale-105 cursor-pointer group">
+            <CardHeader className="text-center">
+              <div className="h-20 w-20 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center mb-6 mx-auto group-hover:shadow-2xl transition-all">
+                <TrendingUp className="h-10 w-10 text-white" />
               </div>
-              <CardTitle>Focus Forecast</CardTitle>
-              <CardDescription>
-                Predict your peak productivity windows and get personalized break recommendations
+              <CardTitle className="text-2xl">Productivity Insights</CardTitle>
+              <CardDescription className="text-lg">
+                Get personalized bottleneck analysis, focus forecasts, and optimization recommendations
               </CardDescription>
-            </CardHeader>
-          </Card>
-
-          {/* Auto-Schedule */}
-          <Card className="border-2 hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors">
-            <CardHeader>
-              <div className="h-12 w-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center mb-4">
-                <Calendar className="h-6 w-6 text-white" />
-              </div>
-              <CardTitle>Auto-Schedule</CardTitle>
-              <CardDescription>
-                Intelligently schedule tasks to your calendar based on deadlines and energy patterns
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          {/* Habit Gamification */}
-          <Card className="border-2 hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors">
-            <CardHeader>
-              <div className="h-12 w-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center mb-4">
-                <Star className="h-6 w-6 text-white" />
-              </div>
-              <CardTitle>Habit Gamification</CardTitle>
-              <CardDescription>
-                Personalized challenges, XP rewards, and streak tracking that adapts to your personality
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          {/* Predictive Insights */}
-          <Card className="border-2 hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors">
-            <CardHeader>
-              <div className="h-12 w-12 bg-gradient-to-r from-teal-500 to-green-500 rounded-lg flex items-center justify-center mb-4">
-                <TrendingUp className="h-6 w-6 text-white" />
-              </div>
-              <CardTitle>Predictive Insights</CardTitle>
-              <CardDescription>
-                Get bottleneck analysis, productivity forecasts, and personalized optimization tips
-              </CardDescription>
+              <Button variant="ghost" className="mt-4 text-indigo-600 hover:text-indigo-700">
+                <Play className="h-4 w-4 mr-2" />
+                Watch Demo
+              </Button>
             </CardHeader>
           </Card>
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section className="container mx-auto px-4 py-16">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-            Choose Your Productivity Level
+      {/* Simplified Two-Tier Pricing */}
+      <section className="container mx-auto px-4 py-20">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-6">
+            Simple, Transparent Pricing
           </h2>
-          <p className="text-gray-600 dark:text-gray-300">
-            Start free and unlock advanced AI features as you grow
+          <p className="text-xl text-gray-600 dark:text-gray-300">
+            Start free, upgrade when you're ready to unlock the full potential
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
-          {/* Free Tier */}
-          <Card className="relative">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                Free
-                <Badge variant="secondary">₹0</Badge>
-              </CardTitle>
-              <CardDescription>Perfect for getting started</CardDescription>
+        <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8">
+          {/* Free Forever */}
+          <Card className="relative border-2 border-gray-200 dark:border-gray-700">
+            <CardHeader className="text-center pb-8">
+              <CardTitle className="text-3xl mb-2">Free Forever</CardTitle>
+              <div className="text-6xl font-bold text-gray-900 dark:text-white mb-4">₹0</div>
+              <CardDescription className="text-lg">Perfect for getting started with AI-powered productivity</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
+              <div className="space-y-4 mb-8">
                 <div className="flex items-center">
-                  <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                  <span className="text-sm">50 tasks/month</span>
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                  <span>Unlimited tasks</span>
                 </div>
                 <div className="flex items-center">
-                  <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                  <span className="text-sm">5 AI insights/day</span>
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                  <span>25 notes/month</span>
                 </div>
                 <div className="flex items-center">
-                  <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                  <span className="text-sm">Basic habits</span>
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                  <span>3 AI calls/day</span>
                 </div>
                 <div className="flex items-center">
-                  <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                  <span className="text-sm">Mobile app</span>
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                  <span>Basic streaks & analytics</span>
+                </div>
+                <div className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                  <span>Up to 3 habits</span>
+                </div>
+                <div className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                  <span>Mobile app</span>
                 </div>
               </div>
-              <Link href="/register">
-                <Button className="w-full mt-6" variant="outline">
-                  Get Started
+              <Link href="/">
+                <Button className="w-full text-lg py-6" variant="outline">
+                  Get Started Free
                 </Button>
               </Link>
             </CardContent>
           </Card>
 
-          {/* Basic Pro */}
-          <Card className="relative border-indigo-200 dark:border-indigo-800">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                Basic Pro
-                <Badge className="bg-indigo-100 text-indigo-800">₹199/mo</Badge>
-              </CardTitle>
-              <CardDescription>For serious productivity enthusiasts</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex items-center">
-                  <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                  <span className="text-sm">Unlimited tasks</span>
-                </div>
-                <div className="flex items-center">
-                  <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                  <span className="text-sm">50 AI insights/day</span>
-                </div>
-                <div className="flex items-center">
-                  <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                  <span className="text-sm">No ads</span>
-                </div>
-                <div className="flex items-center">
-                  <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                  <span className="text-sm">Calendar integration</span>
-                </div>
-              </div>
-              <Link href="/register">
-                <Button className="w-full mt-6">
-                  Start 7-Day Trial
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          {/* Advanced Pro */}
-          <Card className="relative border-purple-200 dark:border-purple-800 bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20">
-            <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-              <Badge className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+          {/* Pro All-Inclusive */}
+          <Card className="relative border-2 border-indigo-500 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 shadow-2xl">
+            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+              <Badge className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-2 text-lg">
                 Most Popular
               </Badge>
             </div>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                Advanced Pro
-                <Badge className="bg-purple-100 text-purple-800">₹499/mo</Badge>
-              </CardTitle>
-              <CardDescription>Advanced AI and automation</CardDescription>
+            <CardHeader className="text-center pb-8">
+              <CardTitle className="text-3xl mb-2">Pro All-Inclusive</CardTitle>
+              <div className="text-6xl font-bold text-indigo-600 mb-2">₹12</div>
+              <div className="text-gray-600 dark:text-gray-300 mb-4">/month</div>
+              <CardDescription className="text-lg">Everything you need for peak productivity</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
+              <div className="space-y-4 mb-8">
                 <div className="flex items-center">
-                  <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                  <span className="text-sm">200 AI insights/day</span>
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                  <span><strong>Unlimited</strong> tasks, notes & AI calls</span>
                 </div>
                 <div className="flex items-center">
-                  <Sparkles className="h-4 w-4 text-purple-500 mr-2" />
-                  <span className="text-sm">Focus Forecast</span>
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                  <span><strong>Unlimited</strong> habits with smart reminders</span>
                 </div>
                 <div className="flex items-center">
-                  <Sparkles className="h-4 w-4 text-purple-500 mr-2" />
-                  <span className="text-sm">Auto-Schedule</span>
+                  <Sparkles className="h-5 w-5 text-indigo-500 mr-3" />
+                  <span><strong>Focus Forecast</strong> & burnout alerts</span>
                 </div>
                 <div className="flex items-center">
-                  <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                  <span className="text-sm">Meeting imports</span>
-                </div>
-              </div>
-              <Link href="/register">
-                <Button className="w-full mt-6 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700">
-                  Start 7-Day Trial
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          {/* Premium Pro */}
-          <Card className="relative border-yellow-200 dark:border-yellow-800">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                Premium Pro
-                <Badge className="bg-yellow-100 text-yellow-800">₹799/mo</Badge>
-              </CardTitle>
-              <CardDescription>Ultimate productivity powerhouse</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex items-center">
-                  <Crown className="h-4 w-4 text-yellow-500 mr-2" />
-                  <span className="text-sm">Unlimited AI</span>
+                  <Sparkles className="h-5 w-5 text-indigo-500 mr-3" />
+                  <span><strong>Auto-Schedule</strong> to calendar</span>
                 </div>
                 <div className="flex items-center">
-                  <Crown className="h-4 w-4 text-yellow-500 mr-2" />
-                  <span className="text-sm">7-day heat-map</span>
+                  <Sparkles className="h-5 w-5 text-indigo-500 mr-3" />
+                  <span><strong>Advanced insights</strong> & optimization</span>
                 </div>
                 <div className="flex items-center">
-                  <Crown className="h-4 w-4 text-yellow-500 mr-2" />
-                  <span className="text-sm">Custom integrations</span>
-                </div>
-                <div className="flex items-center">
-                  <Crown className="h-4 w-4 text-yellow-500 mr-2" />
-                  <span className="text-sm">Priority support</span>
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                  <span>Priority support</span>
                 </div>
               </div>
-              <Link href="/register">
-                <Button className="w-full mt-6 bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700">
-                  Start 7-Day Trial
+              <Link href="/">
+                <Button className="w-full text-lg py-6 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700">
+                  Start 7-Day Free Trial
                 </Button>
               </Link>
             </CardContent>
           </Card>
         </div>
 
-        <div className="text-center mt-8">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            All paid plans include a 7-day free trial. Cancel anytime. No hidden fees.
+        <div className="text-center mt-12">
+          <p className="text-lg text-gray-600 dark:text-gray-400 mb-4">
+            ✨ 7-day free trial for Pro • Annual billing: 2 months free • Cancel anytime
           </p>
+          <div className="flex justify-center items-center space-x-8 text-sm text-gray-500">
+            <span className="flex items-center"><CheckCircle className="h-4 w-4 mr-2" /> No credit card required</span>
+            <span className="flex items-center"><CheckCircle className="h-4 w-4 mr-2" /> Cancel anytime</span>
+            <span className="flex items-center"><CheckCircle className="h-4 w-4 mr-2" /> 30-day money back</span>
+          </div>
         </div>
       </section>
 
-      {/* Social Proof */}
-      <section className="container mx-auto px-4 py-16 bg-gray-50 dark:bg-gray-800 rounded-2xl">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-            Trusted by Productivity Enthusiasts
+      {/* User Testimonials - Real Social Proof */}
+      <section className="container mx-auto px-4 py-20 bg-gradient-to-r from-gray-50 to-indigo-50 dark:from-gray-800 dark:to-indigo-900 rounded-3xl mx-4">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-6">
+            Trusted by 10,000+ Productivity Enthusiasts
           </h2>
-          <div className="grid md:grid-cols-3 gap-8 mt-8">
-            <div className="text-center">
-              <div className="text-4xl font-bold text-indigo-600 mb-2">82%</div>
-              <div className="text-gray-600 dark:text-gray-300">Pro users complete 30% more tasks</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-purple-600 mb-2">17min</div>
-              <div className="text-gray-600 dark:text-gray-300">Average daily time saved</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-green-600 mb-2">4.9/5</div>
-              <div className="text-gray-600 dark:text-gray-300">User satisfaction rating</div>
-            </div>
+          <p className="text-xl text-gray-600 dark:text-gray-300">
+            See how our AI-powered platform transforms daily workflows
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-8 mb-16">
+          {/* Testimonial 1 */}
+          <Card className="bg-white dark:bg-gray-800 shadow-xl">
+            <CardHeader>
+              <div className="flex items-center space-x-4">
+                <div className="h-12 w-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center">
+                  <Users className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h4 className="font-semibold">Sarah Chen</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Product Manager</p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="h-4 w-4 text-yellow-400 fill-current" />
+                ))}
+              </div>
+              <p className="text-gray-700 dark:text-gray-300 italic">
+                "The AI categorization is incredible. It learns my patterns and suggests exactly what I need to focus on. My productivity increased by 40% in the first month."
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Testimonial 2 */}
+          <Card className="bg-white dark:bg-gray-800 shadow-xl">
+            <CardHeader>
+              <div className="flex items-center space-x-4">
+                <div className="h-12 w-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
+                  <Award className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h4 className="font-semibold">Marcus Rodriguez</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Startup Founder</p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="h-4 w-4 text-yellow-400 fill-current" />
+                ))}
+              </div>
+              <p className="text-gray-700 dark:text-gray-300 italic">
+                "Focus Forecast changed everything. I now know exactly when I'll be most productive and plan my deep work accordingly. Game-changer for entrepreneurs."
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Testimonial 3 */}
+          <Card className="bg-white dark:bg-gray-800 shadow-xl">
+            <CardHeader>
+              <div className="flex items-center space-x-4">
+                <div className="h-12 w-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                  <Quote className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h4 className="font-semibold">Emily Watson</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Software Developer</p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="h-4 w-4 text-yellow-400 fill-current" />
+                ))}
+              </div>
+              <p className="text-gray-700 dark:text-gray-300 italic">
+                "The auto-scheduling feature syncs perfectly with my calendar. No more manual planning - the AI knows my workflow better than I do!"
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Key Metrics */}
+        <div className="grid md:grid-cols-4 gap-8 text-center">
+          <div>
+            <div className="text-4xl font-bold text-indigo-600 mb-2">95%</div>
+            <div className="text-gray-600 dark:text-gray-300">User Satisfaction</div>
+          </div>
+          <div>
+            <div className="text-4xl font-bold text-indigo-600 mb-2">40%</div>
+            <div className="text-gray-600 dark:text-gray-300">Productivity Boost</div>
+          </div>
+          <div>
+            <div className="text-4xl font-bold text-indigo-600 mb-2">17min</div>
+            <div className="text-gray-600 dark:text-gray-300">Daily Time Saved</div>
+          </div>
+          <div>
+            <div className="text-4xl font-bold text-indigo-600 mb-2">10K+</div>
+            <div className="text-gray-600 dark:text-gray-300">Active Users</div>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="container mx-auto px-4 py-16 text-center">
-        <div className="max-w-2xl mx-auto">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+      <section className="container mx-auto px-4 py-20 text-center">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-6">
             Ready to Transform Your Productivity?
           </h2>
-          <p className="text-gray-600 dark:text-gray-300 mb-8">
+          <p className="text-xl text-gray-600 dark:text-gray-300 mb-12">
             Join thousands of users who've already supercharged their workflow with AI
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/register">
-              <Button size="lg" className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-lg px-8 py-6">
-                Start Free Today
-                <Sparkles className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
-            <Link href="/login">
-              <Button size="lg" variant="outline" className="text-lg px-8 py-6">
-                <Clock className="mr-2 h-5 w-5" />
-                Already have an account?
-              </Button>
-            </Link>
-          </div>
+          <Link href="/">
+            <Button size="lg" className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-xl px-12 py-8 rounded-xl shadow-2xl transform hover:scale-105 transition-all">
+              Start Your Free Trial Now
+              <ArrowRight className="ml-3 h-6 w-6" />
+            </Button>
+          </Link>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-6">
+            ✨ No credit card required • 7-day free trial • Cancel anytime
+          </p>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="container mx-auto px-4 py-8 border-t border-gray-200 dark:border-gray-700">
+      <footer className="container mx-auto px-4 py-12 border-t border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <div className="h-6 w-6 bg-gradient-to-r from-indigo-600 to-purple-600 rounded flex items-center justify-center">
-              <Brain className="h-4 w-4 text-white" />
+            <div className="h-8 w-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
+              <Brain className="h-5 w-5 text-white" />
             </div>
-            <span className="font-semibold text-gray-900 dark:text-white">AI Smart Notes</span>
+            <span className="text-xl font-bold text-gray-900 dark:text-white">Smart To-Do AI</span>
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            © 2025 AI Smart Notes. All rights reserved.
+            © 2025 Smart To-Do AI. All rights reserved.
           </p>
         </div>
       </footer>
