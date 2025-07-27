@@ -36,7 +36,20 @@ export function TaskDetailModal({ task, trigger, onClose }: TaskDetailModalProps
   const queryClient = useQueryClient();
 
   const updateTaskMutation = useMutation({
-    mutationFn: (updatedTask: any) => taskApi.update(task.id, updatedTask),
+    mutationFn: (updatedTask: any) => {
+      // Clean the data before sending
+      const cleanedTask = {
+        title: updatedTask.title,
+        description: updatedTask.description || null,
+        priority: updatedTask.priority,
+        category: updatedTask.category || null,
+        estimatedTime: updatedTask.estimatedTime ? parseInt(updatedTask.estimatedTime) : null,
+        dueDate: updatedTask.dueDate ? new Date(updatedTask.dueDate) : null,
+        tags: updatedTask.tags && updatedTask.tags.length > 0 ? updatedTask.tags : null,
+        completed: updatedTask.completed,
+      };
+      return taskApi.update(task.id, cleanedTask);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
       queryClient.invalidateQueries({ queryKey: ['/api/tasks/today'] });
@@ -46,7 +59,8 @@ export function TaskDetailModal({ task, trigger, onClose }: TaskDetailModalProps
         description: "Your changes have been saved.",
       });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Task update error:', error);
       toast({
         title: "Error",
         description: "Failed to update task. Please try again.",

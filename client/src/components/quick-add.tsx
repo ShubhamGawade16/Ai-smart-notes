@@ -10,6 +10,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Plus, Zap, Clock, ChevronDown, ChevronUp, Calendar, Flag, Tag, X } from "lucide-react";
 import { taskApi } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { SimpleTaskEditor } from "@/components/simple-task-editor";
 
 export function QuickAdd() {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -101,14 +102,33 @@ export function QuickAdd() {
     <Card className="w-full">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center justify-between">
-          <span>Create New Task</span>
-          <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
-            <CollapsibleTrigger asChild>
-              <Button variant="ghost" size="sm">
-                {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              </Button>
-            </CollapsibleTrigger>
-          </Collapsible>
+          <div className="flex items-center gap-2">
+            <Plus className="h-5 w-5" />
+            Quick Add Task
+            <Badge variant="secondary" className="ml-2">
+              <Zap className="h-3 w-3 mr-1" />
+              AI-Enhanced
+            </Badge>
+          </div>
+          <div className="flex items-center gap-2">
+            <SimpleTaskEditor
+              task={{} as any}
+              isCreating={true}
+              trigger={
+                <Button size="sm" variant="outline">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Advanced
+                </Button>
+              }
+            />
+            <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </Button>
+              </CollapsibleTrigger>
+            </Collapsible>
+          </div>
         </CardTitle>
       </CardHeader>
       

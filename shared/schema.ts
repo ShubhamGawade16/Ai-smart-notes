@@ -246,7 +246,14 @@ export const insertUserSchema = createInsertSchema(users).omit({
   lastActivityAt: true,
 });
 
-export const insertTaskSchema = createInsertSchema(tasks).omit({
+export const insertTaskSchema = createInsertSchema(tasks, {
+  estimatedTime: z.number().optional().nullable(),
+  dueDate: z.coerce.date().optional().nullable(),
+  scheduledAt: z.coerce.date().optional().nullable(),
+  tags: z.array(z.string()).optional().nullable(),
+  category: z.string().optional().nullable(),
+  description: z.string().optional().nullable(),
+}).omit({
   id: true,
   userId: true,
   createdAt: true,

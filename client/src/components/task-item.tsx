@@ -7,7 +7,7 @@ import { taskApi } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import type { Task } from "@shared/schema";
 import { cn } from "@/lib/utils";
-import { TaskDetailModal } from "@/components/expanded-views/task-detail-modal";
+import { SimpleTaskEditor } from "@/components/simple-task-editor";
 
 interface TaskItemProps {
   task: Task;
@@ -99,7 +99,7 @@ export function TaskItem({ task }: TaskItemProps) {
         
         <div className="flex-1 min-w-0 cursor-pointer" onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center justify-between mb-2">
-            <TaskDetailModal
+            <SimpleTaskEditor
               task={task as any}
               trigger={
                 <h3 className={cn(
@@ -111,7 +111,7 @@ export function TaskItem({ task }: TaskItemProps) {
               }
             />
             
-            <TaskDetailModal
+            <SimpleTaskEditor
               task={task as any}
               trigger={
                 <Button
