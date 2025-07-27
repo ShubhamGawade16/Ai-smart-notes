@@ -1,11 +1,16 @@
 import OpenAI from 'openai';
 
+if (!process.env.OPENROUTER_API_KEY) {
+  console.error('OPENROUTER_API_KEY environment variable is required');
+}
+
 const openai = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
   apiKey: process.env.OPENROUTER_API_KEY,
   defaultHeaders: {
     "HTTP-Referer": "https://gpt-do.replit.app",
     "X-Title": "GPT Do - AI Task Manager",
+    "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
   }
 });
 import { Task, InsertTask } from "@shared/schema";
@@ -210,9 +215,30 @@ Focus on:
 4. Habit formation tips
 `;
 
+  // Return fallback insights if AI service is unavailable
+  if (!process.env.OPENROUTER_API_KEY) {
+    console.log('OpenRouter API key not available, using fallback insights');
+    return [
+      {
+        type: "productivity_tip",
+        title: "Establish Consistent Work Blocks",
+        content: "Try scheduling 25-minute focused work sessions followed by 5-minute breaks. This technique can improve concentration and reduce mental fatigue.",
+        confidence: 0.85,
+        actionable: true
+      },
+      {
+        type: "time_optimization", 
+        title: "Batch Similar Tasks Together",
+        content: "Group similar activities like email responses, data entry, or creative work into dedicated time blocks to minimize context switching costs.",
+        confidence: 0.75,
+        actionable: true
+      }
+    ];
+  }
+
   try {
     const response = await openai.chat.completions.create({
-      model: "deepseek/deepseek-chat-v3-0324:free",
+      model: "deepseek/deepseek-chat",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.4,
       max_tokens: 800,
@@ -228,7 +254,23 @@ Focus on:
     ) : [];
   } catch (error) {
     console.error('Insight generation error:', error);
-    return [];
+    // Return fallback insights when API is unavailable
+    return [
+      {
+        type: "productivity_tip",
+        title: "Establish Consistent Work Blocks", 
+        content: "Try scheduling 25-minute focused work sessions followed by 5-minute breaks. This technique can improve concentration and reduce mental fatigue.",
+        confidence: 0.85,
+        actionable: true
+      },
+      {
+        type: "time_optimization",
+        title: "Batch Similar Tasks Together", 
+        content: "Group similar activities like email responses, data entry, or creative work into dedicated time blocks to minimize context switching costs.",
+        confidence: 0.75,
+        actionable: true
+      }
+    ];
   }
 }
 
