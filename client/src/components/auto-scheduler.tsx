@@ -3,10 +3,11 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, Zap, ExternalLink, CheckCircle, AlertCircle, Maximize2 } from 'lucide-react';
+import { Calendar, Clock, Zap, ExternalLink, CheckCircle, AlertCircle, Maximize2, RefreshCw, Loader2, Brain, Target, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { AIFeatureModal } from '@/components/expanded-views/ai-feature-modal';
+import { CalendarIntegration } from '@/components/calendar-integration';
 
 interface ScheduleOptimization {
   optimizedSchedule: Array<{
@@ -239,8 +240,11 @@ export default function AutoScheduler({ userTier = 'free' }: AutoSchedulerProps)
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Calendar Integration */}
+        <CalendarIntegration />
+        
         {/* Current Tasks Summary */}
-        <div className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+        <div className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg mt-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium">Pending Tasks</span>
             <Badge variant="outline">

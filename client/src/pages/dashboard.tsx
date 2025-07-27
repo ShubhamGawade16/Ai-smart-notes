@@ -4,6 +4,7 @@ import { QuickAdd } from "@/components/quick-add";
 import { TodaysPlan } from "@/components/todays-plan";
 import { RecentNotes } from "@/components/recent-notes";
 import { AIInsights } from "@/components/ai-insights";
+import { AIInsightsEnhanced } from "@/components/ai-insights-enhanced";
 import { ProgressStats } from "@/components/progress-stats";
 import { QuickActions } from "@/components/quick-actions";
 import { Categories } from "@/components/categories";
@@ -46,6 +47,7 @@ export default function Dashboard() {
       case 'ai':
         return (
           <div className="space-y-6">
+            <NotificationSystem />
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <FocusForecast />
               <TaskRefiner />
@@ -54,7 +56,7 @@ export default function Dashboard() {
               <AutoScheduler />
               <HabitGamification />
             </div>
-            <AIInsights />
+            <AIInsightsEnhanced />
             <ProgressStats />
           </div>
         );
@@ -103,7 +105,7 @@ export default function Dashboard() {
 
             {/* Sidebar */}
             <div className="space-y-6">
-              <AIInsights />
+              <AIInsightsEnhanced />
               <ProgressStats />
               <QuickActions />
               <Categories />
