@@ -4,7 +4,7 @@
 
 ### **Capacitor Cloud (Recommended)**
 
-**Why**: Fastest, simplest, gives you actual downloadable APK file
+**Why**: Faster builds (10-15 min vs 15-20 min), simpler setup, better free tier (100 vs 30 builds/month)
 
 ```bash
 # One-time setup (2 minutes)

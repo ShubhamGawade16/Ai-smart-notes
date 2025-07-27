@@ -101,10 +101,22 @@ eas build --platform android --profile preview
 eas build --platform android --profile production
 ```
 
-### **Step 5: Download APK**
-- Build completes in ~15-20 minutes
-- Download link sent to email
-- Direct download from EAS dashboard
+### **Step 5: Download Your APK File**
+After build completes (~15-20 minutes):
+
+1. **Email Link**: Download link sent to your email
+2. **EAS Dashboard**: Direct download from https://expo.dev/accounts/[username]/projects/[project]/builds
+3. **CLI Download**: 
+   ```bash
+   eas build:list
+   eas build:download [build-id]
+   ```
+
+**File Details**:
+- **Filename**: `ai-smart-notes.apk` 
+- **Size**: ~15-20MB
+- **Format**: Standard Android APK
+- **Install**: Transfer to device and tap to install
 
 ## 🔔 **Why Notifications Keep Working**
 
