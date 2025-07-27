@@ -176,7 +176,7 @@ export default function CleanAdvancedFeatures() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <CleanHeader />
       
       <div className="container mx-auto px-4 py-6 max-w-6xl">
         {/* Header */}
