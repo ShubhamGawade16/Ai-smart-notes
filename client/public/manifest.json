@@ -1,0 +1,37 @@
+{
+  "name": "GPT Do - AI Smart Task Manager",
+  "short_name": "GPT Do",
+  "description": "AI-powered task management and productivity app",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "orientation": "portrait",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icon-512x512.png", 
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Add Task",
+      "url": "/?action=add-task",
+      "description": "Quickly add a new task"
+    },
+    {
+      "name": "Today's Plan",
+      "url": "/?view=today",
+      "description": "View today's tasks"
+    }
+  ]
+}
