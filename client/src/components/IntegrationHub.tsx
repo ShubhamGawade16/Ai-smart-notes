@@ -1,451 +1,302 @@
-import React, { useState } from 'react';
-import { Link2, Calendar, Mail, Github, Slack, Trello, CheckCircle, AlertCircle, Settings, Plus, ExternalLink } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
-import { useToast } from '@/hooks/use-toast';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Label } from '@/components/ui/label';
+import { 
+  Calendar, 
+  Mail, 
+  Github, 
+  MessageSquare, 
+  Trello,
+  CheckCircle,
+  AlertCircle,
+  Loader2,
+  Settings,
+  Plus
+} from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { useUpgrade } from '@/hooks/useUpgrade';
+import { useToast } from '@/hooks/use-toast';
 
 interface Integration {
   id: string;
   name: string;
-  description: string;
   icon: React.ComponentType<any>;
-  status: 'connected' | 'disconnected' | 'error';
-  category: 'productivity' | 'communication' | 'calendar' | 'development';
-  tier: 'free' | 'pro' | 'advanced' | 'premium';
-  lastSync?: Date;
-  settings?: Record<string, any>;
+  description: string;
+  connected: boolean;
+  status: 'active' | 'inactive' | 'error';
+  config?: Record<string, any>;
 }
 
-interface WebhookEndpoint {
-  id: string;
-  name: string;
-  url: string;
-  events: string[];
-  active: boolean;
-  createdAt: Date;
-}
+const availableIntegrations: Integration[] = [
+  {
+    id: 'google-calendar',
+    name: 'Google Calendar',
+    icon: Calendar,
+    description: 'Sync tasks with your calendar events',
+    connected: false,
+    status: 'inactive'
+  },
+  {
+    id: 'gmail',
+    name: 'Gmail',
+    icon: Mail,
+    description: 'Create tasks from important emails',
+    connected: false,
+    status: 'inactive'
+  },
+  {
+    id: 'github',
+    name: 'GitHub',
+    icon: Github,
+    description: 'Track issues and pull requests',
+    connected: false,
+    status: 'inactive'
+  },
+  {
+    id: 'slack',
+    name: 'Slack',
+    icon: MessageSquare,
+    description: 'Get task notifications in Slack',
+    connected: false,
+    status: 'inactive'
+  },
+  {
+    id: 'trello',
+    name: 'Trello',
+    icon: Trello,
+    description: 'Import boards and sync cards',
+    connected: false,
+    status: 'inactive'
+  }
+];
 
-export const IntegrationHub: React.FC = () => {
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [showWebhooks, setShowWebhooks] = useState(false);
-  const [newWebhook, setNewWebhook] = useState({ name: '', url: '' });
-
+export function IntegrationHub() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { canUseFeature, showUpgradeModal, limits } = useUpgrade();
+  const [selectedIntegration, setSelectedIntegration] = useState<string | null>(null);
 
-  const { data: integrationsData, isLoading } = useQuery({
+  const { data: integrations = [], isLoading } = useQuery({
     queryKey: ['/api/integrations'],
-    enabled: canUseFeature('integrations'),
+    retry: false
   });
 
-  const { data: webhooksData } = useQuery({
-    queryKey: ['/api/integrations/webhooks'],
-    enabled: canUseFeature('webhooks') && showWebhooks,
-  });
-
-  const connectIntegrationMutation = useMutation({
-    mutationFn: async ({ integrationId, config }: { integrationId: string; config?: any }) => {
-      const response = await apiRequest('POST', `/api/integrations/${integrationId}/connect`, config);
-      return response;
+  const connectMutation = useMutation({
+    mutationFn: async (integrationId: string) => {
+      return await apiRequest('POST', `/api/integrations/${integrationId}/connect`, {});
     },
-    onSuccess: (_, { integrationId }) => {
+    onSuccess: (data, integrationId) => {
       queryClient.invalidateQueries({ queryKey: ['/api/integrations'] });
       toast({
         title: "Integration Connected",
-        description: "Successfully connected to the service.",
+        description: `Successfully connected ${availableIntegrations.find(i => i.id === integrationId)?.name}`,
       });
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         title: "Connection Failed",
-        description: "Failed to connect integration. Please check your credentials.",
+        description: error.message || "Failed to connect integration",
         variant: "destructive",
       });
-    },
+    }
   });
 
-  const createWebhookMutation = useMutation({
-    mutationFn: async (webhookData: any) => {
-      const response = await apiRequest('POST', '/api/integrations/webhooks', webhookData);
-      return response;
+  const disconnectMutation = useMutation({
+    mutationFn: async (integrationId: string) => {
+      return await apiRequest('DELETE', `/api/integrations/${integrationId}`, {});
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/integrations/webhooks'] });
-      setNewWebhook({ name: '', url: '' });
+    onSuccess: (data, integrationId) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/integrations'] });
       toast({
-        title: "Webhook Created",
-        description: "Webhook endpoint has been configured successfully.",
+        title: "Integration Disconnected",
+        description: `Successfully disconnected ${availableIntegrations.find(i => i.id === integrationId)?.name}`,
       });
     },
+    onError: (error: any) => {
+      toast({
+        title: "Disconnection Failed",
+        description: error.message || "Failed to disconnect integration",
+        variant: "destructive",
+      });
+    }
   });
 
-  const availableIntegrations: Integration[] = [
-    {
-      id: 'google-calendar',
-      name: 'Google Calendar',
-      description: 'Sync tasks with your Google Calendar events',
-      icon: Calendar,
-      status: 'disconnected',
-      category: 'calendar',
-      tier: 'pro',
-    },
-    {
-      id: 'gmail',
-      name: 'Gmail',
-      description: 'Create tasks from emails and send updates',
-      icon: Mail,
-      status: 'disconnected',
-      category: 'communication',
-      tier: 'pro',
-    },
-    {
-      id: 'github',
-      name: 'GitHub',
-      description: 'Sync with GitHub issues and pull requests',
-      icon: Github,
-      status: 'connected',
-      category: 'development',
-      tier: 'advanced',
-      lastSync: new Date(),
-    },
-    {
-      id: 'slack',
-      name: 'Slack',
-      description: 'Send task notifications to Slack channels',
-      icon: Slack,
-      status: 'disconnected',
-      category: 'communication',
-      tier: 'advanced',
-    },
-    {
-      id: 'trello',
-      name: 'Trello',
-      description: 'Import and sync Trello boards and cards',
-      icon: Trello,
-      status: 'error',
-      category: 'productivity',
-      tier: 'pro',
-    },
-  ];
+  const handleConnect = (integrationId: string) => {
+    connectMutation.mutate(integrationId);
+  };
 
-  const mockWebhooks: WebhookEndpoint[] = [
-    {
-      id: '1',
-      name: 'Task Completion Webhook',
-      url: 'https://api.example.com/task-completed',
-      events: ['task.completed', 'task.updated'],
-      active: true,
-      createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-    },
-    {
-      id: '2',
-      name: 'Daily Summary',
-      url: 'https://hooks.zapier.com/hooks/catch/123456/abcdef',
-      events: ['daily.summary'],
-      active: false,
-      createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
-    },
-  ];
+  const handleDisconnect = (integrationId: string) => {
+    disconnectMutation.mutate(integrationId);
+  };
 
-  if (!canUseFeature('integrations')) {
+  const getIntegrationStatus = (integrationId: string) => {
+    const serverIntegration = Array.isArray(integrations) ? 
+      integrations.find((i: any) => i.id === integrationId) : null;
+    
+    if (serverIntegration) {
+      return {
+        connected: serverIntegration.connected,
+        status: serverIntegration.status || 'active'
+      };
+    }
+    
+    return { connected: false, status: 'inactive' };
+  };
+
+  if (isLoading) {
     return (
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Link2 className="w-5 h-5 text-blue-600" />
-            Integration Hub
-            <Badge variant="outline">Pro</Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="text-center space-y-4">
-          <div className="p-6 border-2 border-dashed border-gray-300 rounded-lg">
-            <Link2 className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-            <h3 className="font-semibold text-lg mb-2">Connect Your Workflow</h3>
-            <p className="text-gray-600 mb-4">
-              Integrate with Google Calendar, Gmail, Slack, GitHub, and more to streamline your productivity across platforms.
-            </p>
-            <Button 
-              onClick={() => showUpgradeModal('integrations', 'Integrations require Pro subscription to connect external services.')}
-            >
-              Upgrade to Pro
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="space-y-6">
+        <div className="text-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading integrations...</p>
+        </div>
+      </div>
     );
   }
 
-  const getStatusIcon = (status: Integration['status']) => {
-    switch (status) {
-      case 'connected': return <CheckCircle className="w-4 h-4 text-green-600" />;
-      case 'error': return <AlertCircle className="w-4 h-4 text-red-600" />;
-      default: return <AlertCircle className="w-4 h-4 text-gray-400" />;
-    }
-  };
-
-  const getStatusColor = (status: Integration['status']) => {
-    switch (status) {
-      case 'connected': return 'text-green-600 bg-green-50';
-      case 'error': return 'text-red-600 bg-red-50';
-      default: return 'text-gray-600 bg-gray-50';
-    }
-  };
-
-  const getTierRequirement = (tier: Integration['tier']) => {
-    const tierMap = {
-      free: 'Free',
-      pro: 'Pro',
-      advanced: 'Advanced Pro',
-      premium: 'Premium Pro',
-    };
-    return tierMap[tier];
-  };
-
-  const canUseIntegration = (tier: Integration['tier']) => {
-    const currentTier = limits?.tier || 'free';
-    const tierLevels = { free: 0, basic_pro: 1, advanced_pro: 2, premium_pro: 3 };
-    const requiredLevels = { free: 0, pro: 1, advanced: 2, premium: 3 };
-    
-    return tierLevels[currentTier as keyof typeof tierLevels] >= requiredLevels[tier];
-  };
-
-  const categories = [
-    { id: 'all', name: 'All', count: availableIntegrations.length },
-    { id: 'productivity', name: 'Productivity', count: availableIntegrations.filter(i => i.category === 'productivity').length },
-    { id: 'communication', name: 'Communication', count: availableIntegrations.filter(i => i.category === 'communication').length },
-    { id: 'calendar', name: 'Calendar', count: availableIntegrations.filter(i => i.category === 'calendar').length },
-    { id: 'development', name: 'Development', count: availableIntegrations.filter(i => i.category === 'development').length },
-  ];
-
-  const filteredIntegrations = selectedCategory === 'all' 
-    ? availableIntegrations 
-    : availableIntegrations.filter(i => i.category === selectedCategory);
-
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Link2 className="w-5 h-5 text-blue-600" />
-            Integration Hub
-            <Badge variant="outline">
-              {availableIntegrations.filter(i => i.status === 'connected').length} connected
-            </Badge>
-          </div>
-          
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setShowWebhooks(!showWebhooks)}
-            >
-              <Settings className="w-4 h-4 mr-1" />
-              Webhooks
-            </Button>
-          </div>
-        </CardTitle>
-        
-        {/* Category Filter */}
-        <div className="flex flex-wrap gap-2 mt-4">
-          {categories.map(category => (
-            <Button
-              key={category.id}
-              size="sm"
-              variant={selectedCategory === category.id ? 'default' : 'outline'}
-              onClick={() => setSelectedCategory(category.id)}
-              className="text-xs"
-            >
-              {category.name} ({category.count})
-            </Button>
-          ))}
-        </div>
-      </CardHeader>
-      
-      <CardContent className="space-y-4">
-        {/* Webhooks Section */}
-        {showWebhooks && (
-          <div className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800/50 space-y-4">
-            <div className="flex items-center justify-between">
-              <h4 className="font-medium text-sm">Webhook Endpoints</h4>
-              {!canUseFeature('webhooks') && (
-                <Badge variant="outline">Advanced Pro</Badge>
-              )}
-            </div>
-            
-            {canUseFeature('webhooks') ? (
-              <>
-                {/* Add New Webhook */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                  <Input
-                    placeholder="Webhook name"
-                    value={newWebhook.name}
-                    onChange={(e) => setNewWebhook(prev => ({ ...prev, name: e.target.value }))}
-                  />
-                  <Input
-                    placeholder="https://api.example.com/webhook"
-                    value={newWebhook.url}
-                    onChange={(e) => setNewWebhook(prev => ({ ...prev, url: e.target.value }))}
-                  />
-                  <Button
-                    size="sm"
-                    onClick={() => createWebhookMutation.mutate(newWebhook)}
-                    disabled={!newWebhook.name || !newWebhook.url || createWebhookMutation.isPending}
-                  >
-                    <Plus className="w-4 h-4 mr-1" />
-                    Add
-                  </Button>
-                </div>
-                
-                {/* Existing Webhooks */}
-                <div className="space-y-2">
-                  {mockWebhooks.map(webhook => (
-                    <div key={webhook.id} className="flex items-center justify-between p-3 border rounded">
-                      <div className="flex-1">
-                        <div className="font-medium text-sm">{webhook.name}</div>
-                        <div className="text-xs text-gray-500 truncate">{webhook.url}</div>
-                        <div className="text-xs text-gray-400 mt-1">
-                          Events: {webhook.events.join(', ')}
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <Switch checked={webhook.active} />
-                        <Button size="sm" variant="ghost">
-                          <ExternalLink className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <div className="text-center py-4">
-                <p className="text-sm text-gray-600 mb-3">
-                  Webhook endpoints require Advanced Pro subscription
-                </p>
-                <Button 
-                  size="sm"
-                  onClick={() => showUpgradeModal('webhooks', 'Webhooks require Advanced Pro subscription for external API integration.')}
-                >
-                  Upgrade to Advanced Pro
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
+    <div className="space-y-6">
+      <div className="text-center mb-8">
+        <h2 className="text-2xl font-bold mb-2">Integration Hub</h2>
+        <p className="text-muted-foreground">
+          Connect your favorite tools to supercharge your productivity
+        </p>
+      </div>
 
-        {/* Integrations Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filteredIntegrations.map(integration => {
-            const IconComponent = integration.icon;
-            const canUse = canUseIntegration(integration.tier);
-            
-            return (
-              <div key={integration.id} className="p-4 border rounded-lg">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 border rounded-lg">
-                    <IconComponent className="w-5 h-5" />
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {availableIntegrations.map((integration) => {
+          const status = getIntegrationStatus(integration.id);
+          const Icon = integration.icon;
+          const isConnecting = connectMutation.isPending && selectedIntegration === integration.id;
+          const isDisconnecting = disconnectMutation.isPending && selectedIntegration === integration.id;
+
+          return (
+            <Card key={integration.id} className="relative">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-muted">
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-base">{integration.name}</CardTitle>
+                    </div>
                   </div>
                   
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-medium text-sm">{integration.name}</h4>
-                      <Badge className={getStatusColor(integration.status)}>
-                        {getStatusIcon(integration.status)}
-                        {integration.status}
+                  <div className="flex items-center gap-2">
+                    {status.connected ? (
+                      <Badge variant="secondary" className="text-xs">
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Connected
                       </Badge>
-                    </div>
-                    
-                    <p className="text-xs text-gray-600 mb-3">
-                      {integration.description}
-                    </p>
-                    
-                    <div className="flex items-center justify-between">
+                    ) : (
                       <Badge variant="outline" className="text-xs">
-                        {getTierRequirement(integration.tier)}
+                        <AlertCircle className="h-3 w-3 mr-1" />
+                        Not Connected
                       </Badge>
-                      
-                      {canUse ? (
-                        <div className="flex gap-1">
-                          {integration.status === 'connected' && (
-                            <Button size="sm" variant="outline">
-                              <Settings className="w-3 h-3" />
-                            </Button>
-                          )}
-                          
-                          <Button
-                            size="sm"
-                            onClick={() => connectIntegrationMutation.mutate({ integrationId: integration.id })}
-                            disabled={connectIntegrationMutation.isPending}
-                          >
-                            {integration.status === 'connected' ? 'Reconnect' : 'Connect'}
-                          </Button>
-                        </div>
-                      ) : (
-                        <Button
-                          size="sm"
-                          onClick={() => showUpgradeModal(
-                            'integrations_advanced', 
-                            `${integration.name} integration requires ${getTierRequirement(integration.tier)} subscription.`
-                          )}
-                        >
-                          Upgrade
-                        </Button>
-                      )}
-                    </div>
-                    
-                    {integration.lastSync && (
-                      <div className="text-xs text-gray-400 mt-2">
-                        Last sync: {integration.lastSync.toLocaleDateString()}
-                      </div>
                     )}
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              </CardHeader>
+              
+              <CardContent>
+                <CardDescription className="text-sm mb-4">
+                  {integration.description}
+                </CardDescription>
+                
+                <div className="flex justify-between items-center">
+                  {status.connected ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedIntegration(integration.id);
+                        handleDisconnect(integration.id);
+                      }}
+                      disabled={isDisconnecting}
+                    >
+                      {isDisconnecting && <Loader2 className="h-3 w-3 mr-2 animate-spin" />}
+                      Disconnect
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        setSelectedIntegration(integration.id);
+                        handleConnect(integration.id);
+                      }}
+                      disabled={isConnecting}
+                    >
+                      {isConnecting && <Loader2 className="h-3 w-3 mr-2 animate-spin" />}
+                      <Plus className="h-3 w-3 mr-2" />
+                      Connect
+                    </Button>
+                  )}
+                  
+                  {status.connected && (
+                    <Button variant="ghost" size="sm">
+                      <Settings className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
 
-        {/* Integration Stats */}
-        <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-          <div className="flex items-center gap-2 mb-3">
-            <Link2 className="w-4 h-4 text-blue-600" />
-            <span className="font-medium text-blue-800 dark:text-blue-200 text-sm">
-              Integration Overview
-            </span>
-          </div>
-          
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div>
-              <div className="text-2xl font-bold text-blue-600">
-                {availableIntegrations.filter(i => i.status === 'connected').length}
-              </div>
-              <div className="text-xs text-gray-600">Connected</div>
+      {/* Connection Instructions */}
+      <Card className="mt-8">
+        <CardHeader>
+          <CardTitle className="text-lg">Getting Started</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <h4 className="font-medium flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Calendar Sync
+              </h4>
+              <p className="text-sm text-muted-foreground">
+                Tasks with due dates automatically appear in your calendar
+              </p>
             </div>
             
-            <div>
-              <div className="text-2xl font-bold text-gray-600">
-                {availableIntegrations.filter(i => canUseIntegration(i.tier)).length}
-              </div>
-              <div className="text-xs text-gray-600">Available</div>
+            <div className="space-y-2">
+              <h4 className="font-medium flex items-center gap-2">
+                <Mail className="h-4 w-4" />
+                Email Integration
+              </h4>
+              <p className="text-sm text-muted-foreground">
+                Convert important emails into actionable tasks
+              </p>
             </div>
             
-            <div>
-              <div className="text-2xl font-bold text-red-600">
-                {availableIntegrations.filter(i => i.status === 'error').length}
-              </div>
-              <div className="text-xs text-gray-600">Issues</div>
+            <div className="space-y-2">
+              <h4 className="font-medium flex items-center gap-2">
+                <Github className="h-4 w-4" />
+                Development Workflow
+              </h4>
+              <p className="text-sm text-muted-foreground">
+                Track GitHub issues and pull requests as tasks
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <h4 className="font-medium flex items-center gap-2">
+                <MessageSquare className="h-4 w-4" />
+                Team Notifications
+              </h4>
+              <p className="text-sm text-muted-foreground">
+                Get task updates and reminders in Slack
+              </p>
             </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
-};
+}

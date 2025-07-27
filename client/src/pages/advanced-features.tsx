@@ -1,4 +1,24 @@
-import { Header } from '@/components/header';
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  ArrowLeft, 
+  Brain, 
+  Target, 
+  Calendar, 
+  BarChart3, 
+  Users, 
+  Settings,
+  Zap,
+  Clock,
+  Repeat,
+  Heart,
+  Trash2
+} from 'lucide-react';
+import { Link } from 'wouter';
+import { CleanHeader } from '@/components/clean-header';
 import { ConversationalRefiner } from '@/components/ConversationalRefiner';
 import { FocusForecast } from '@/components/FocusForecast';
 import { ProductivityInsights } from '@/components/ProductivityInsights';
@@ -8,148 +28,275 @@ import { HabitGamification } from '@/components/HabitGamification';
 import { IntegrationHub } from '@/components/IntegrationHub';
 import { SocialAccountability } from '@/components/SocialAccountability';
 import { SmartTaskInput } from '@/components/SmartTaskInput';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, Sparkles } from 'lucide-react';
-import { Link } from 'wouter';
+import { SmartReminderRecalibration } from '@/components/smart-reminder-recalibration';
+import { RecurringTaskGeneratorTuner } from '@/components/recurring-task-generator-tuner';
+import { TaskDecayDeclutter } from '@/components/task-decay-declutter';
+import { MoodAwareTaskSuggestions } from '@/components/mood-aware-task-suggestions';
 
-export default function AdvancedFeatures() {
+const aiFeatures = [
+  {
+    id: 'smart-input',
+    title: 'Smart Task Input',
+    description: 'AI analyzes and categorizes your tasks automatically',
+    icon: Brain,
+    color: 'text-purple-600',
+    component: SmartTaskInput
+  },
+  {
+    id: 'task-refiner',
+    title: 'AI Task Refiner',
+    description: 'Break down complex tasks with AI assistance',
+    icon: Target,
+    color: 'text-blue-600',
+    component: ConversationalRefiner
+  },
+  {
+    id: 'focus-forecast',
+    title: 'Focus Forecast',
+    description: 'Predict your optimal productivity windows',
+    icon: BarChart3,
+    color: 'text-green-600',
+    component: FocusForecast
+  },
+  {
+    id: 'insights',
+    title: 'Productivity Insights',
+    description: 'AI-powered analytics and bottleneck detection',
+    icon: Zap,
+    color: 'text-yellow-600',
+    component: ProductivityInsights
+  }
+];
+
+const productivityTools = [
+  {
+    id: 'scheduler',
+    title: 'Auto Scheduler',
+    description: 'Intelligent task scheduling and time blocking',
+    icon: Calendar,
+    color: 'text-indigo-600',
+    component: AutoScheduler
+  },
+  {
+    id: 'goals',
+    title: 'Goal Tracking',
+    description: 'Align tasks with your long-term objectives',
+    icon: Target,
+    color: 'text-orange-600',
+    component: GoalTracking
+  },
+  {
+    id: 'smart-reminders',
+    title: 'Smart Reminders',
+    description: 'Context-aware reminder optimization',
+    icon: Clock,
+    color: 'text-teal-600',
+    component: SmartReminderRecalibration
+  },
+  {
+    id: 'recurring-tasks',
+    title: 'Recurring Tasks',
+    description: 'Intelligent recurring task generation',
+    icon: Repeat,
+    color: 'text-cyan-600',
+    component: RecurringTaskGeneratorTuner
+  }
+];
+
+const lifestyleFeatures = [
+  {
+    id: 'mood-aware',
+    title: 'Mood-Aware Tasks',
+    description: 'Task suggestions based on your current mood',
+    icon: Heart,
+    color: 'text-pink-600',
+    component: MoodAwareTaskSuggestions
+  },
+  {
+    id: 'task-decay',
+    title: 'Task Cleanup',
+    description: 'Automated cleanup of outdated tasks',
+    icon: Trash2,
+    color: 'text-red-600',
+    component: TaskDecayDeclutter
+  },
+  {
+    id: 'gamification',
+    title: 'Achievement System',
+    description: 'Gamified productivity with rewards and streaks',
+    icon: Users,
+    color: 'text-emerald-600',
+    component: HabitGamification
+  },
+  {
+    id: 'social',
+    title: 'Social Accountability',
+    description: 'Share progress and stay motivated with friends',
+    icon: Users,
+    color: 'text-violet-600',
+    component: SocialAccountability
+  }
+];
+
+export default function CleanAdvancedFeatures() {
+  const [activeFeature, setActiveFeature] = useState<string | null>(null);
+
+  const renderFeatureComponent = (featureId: string) => {
+    const allFeatures = [...aiFeatures, ...productivityTools, ...lifestyleFeatures];
+    const feature = allFeatures.find(f => f.id === featureId);
+    if (!feature) return null;
+
+    const Component = feature.component;
+    return <Component />;
+  };
+
+  if (activeFeature) {
+    return (
+      <div className="min-h-screen bg-background">
+        <CleanHeader />
+        <div className="container mx-auto px-4 py-6 max-w-6xl">
+          <div className="mb-6">
+            <Button 
+              variant="ghost" 
+              onClick={() => setActiveFeature(null)}
+              className="mb-4"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Features
+            </Button>
+          </div>
+          
+          <div className="bg-card border rounded-xl p-6">
+            {renderFeatureComponent(activeFeature)}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="container mx-auto px-4 py-6 max-w-6xl">
+        {/* Header */}
         <div className="mb-8">
-          <Link href="/">
+          <Link href="/dashboard">
             <Button variant="ghost" className="mb-4">
-              <ArrowLeft className="w-4 h-4 mr-2" />
+              <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Dashboard
             </Button>
           </Link>
           
-          <div className="flex items-center gap-3 mb-4">
-            <Sparkles className="w-8 h-8 text-purple-600" />
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                Advanced AI Features
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-2">
-                Unlock the full power of AI-driven productivity with our comprehensive feature set
-              </p>
-            </div>
+          <div className="text-center">
+            <h1 className="text-3xl font-bold mb-2">AI-Powered Features</h1>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Unlock advanced productivity tools powered by artificial intelligence
+            </p>
+            <Badge className="mt-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white">
+              <Zap className="h-3 w-3 mr-1" />
+              All Features Free for Testing
+            </Badge>
           </div>
         </div>
 
-        <div className="space-y-8">
-          {/* Phase 3: Core AI Features */}
-          <section>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
-              Core AI Intelligence
-            </h2>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-              <SmartTaskInput />
-              <ProductivityInsights />
-            </div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <FocusForecast />
-              <ConversationalRefiner 
-                onTasksRefined={(tasks) => console.log('Tasks refined:', tasks)} 
-              />
-            </div>
-          </section>
+        <Tabs defaultValue="ai" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4 max-w-md mx-auto">
+            <TabsTrigger value="ai">AI Tools</TabsTrigger>
+            <TabsTrigger value="productivity">Planning</TabsTrigger>
+            <TabsTrigger value="lifestyle">Lifestyle</TabsTrigger>
+            <TabsTrigger value="integrations">Connect</TabsTrigger>
+          </TabsList>
 
-          {/* Phase 4: Advanced Scheduling & Organization */}
-          <section>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
-              Smart Scheduling & Goal Management
-            </h2>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <AutoScheduler />
-              <GoalTracking />
+          {/* AI Features */}
+          <TabsContent value="ai" className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              {aiFeatures.map((feature) => {
+                const Icon = feature.icon;
+                return (
+                  <Card 
+                    key={feature.id} 
+                    className="cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-[1.02]"
+                    onClick={() => setActiveFeature(feature.id)}
+                  >
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-muted">
+                          <Icon className={`h-5 w-5 ${feature.color}`} />
+                        </div>
+                        <CardTitle className="text-lg">{feature.title}</CardTitle>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground">{feature.description}</p>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
-          </section>
+          </TabsContent>
 
-          {/* Phase 5: Gamification & Motivation */}
-          <section>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
-              Gamification & Motivation
-            </h2>
-            
-            <div className="grid grid-cols-1 gap-6">
-              <HabitGamification />
+          {/* Productivity Tools */}
+          <TabsContent value="productivity" className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              {productivityTools.map((feature) => {
+                const Icon = feature.icon;
+                return (
+                  <Card 
+                    key={feature.id} 
+                    className="cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-[1.02]"
+                    onClick={() => setActiveFeature(feature.id)}
+                  >
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-muted">
+                          <Icon className={`h-5 w-5 ${feature.color}`} />
+                        </div>
+                        <CardTitle className="text-lg">{feature.title}</CardTitle>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground">{feature.description}</p>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
-          </section>
+          </TabsContent>
 
-          {/* Phase 6: Integrations & Workflow */}
-          <section>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
-              Integrations & Workflow
-            </h2>
-            
-            <div className="grid grid-cols-1 gap-6">
-              <IntegrationHub />
+          {/* Lifestyle Features */}
+          <TabsContent value="lifestyle" className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              {lifestyleFeatures.map((feature) => {
+                const Icon = feature.icon;
+                return (
+                  <Card 
+                    key={feature.id} 
+                    className="cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-[1.02]"
+                    onClick={() => setActiveFeature(feature.id)}
+                  >
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-muted">
+                          <Icon className={`h-5 w-5 ${feature.color}`} />
+                        </div>
+                        <CardTitle className="text-lg">{feature.title}</CardTitle>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground">{feature.description}</p>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
-          </section>
+          </TabsContent>
 
-          {/* Social Accountability */}
-          <section>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
-              Social Accountability
-            </h2>
-            
-            <div className="grid grid-cols-1 gap-6">
-              <SocialAccountability />
-            </div>
-          </section>
-
-          {/* Feature Overview */}
-          <section className="p-6 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-xl">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-              Complete Feature Ecosystem
-            </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="space-y-2">
-                <h4 className="font-semibold text-purple-800 dark:text-purple-200">
-                  AI-Powered Intelligence
-                </h4>
-                <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                  <li>• Natural language task parsing</li>
-                  <li>• Conversational task refinement</li>
-                  <li>• Productivity pattern analysis</li>
-                  <li>• Focus window prediction</li>
-                </ul>
-              </div>
-              
-              <div className="space-y-2">
-                <h4 className="font-semibold text-blue-800 dark:text-blue-200">
-                  Smart Organization
-                </h4>
-                <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                  <li>• Intelligent auto-scheduling</li>
-                  <li>• Goal tracking & alignment</li>
-                  <li>• Priority optimization</li>
-                  <li>• Burnout prevention</li>
-                </ul>
-              </div>
-              
-              <div className="space-y-2">
-                <h4 className="font-semibold text-green-800 dark:text-green-200">
-                  Motivation & Growth
-                </h4>
-                <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                  <li>• Achievement system</li>
-                  <li>• Streak tracking</li>
-                  <li>• Level progression</li>
-                  <li>• Social accountability</li>
-                  <li>• External integrations</li>
-                </ul>
-              </div>
-            </div>
-          </section>
-        </div>
+          {/* Integrations */}
+          <TabsContent value="integrations" className="space-y-4">
+            <IntegrationHub />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

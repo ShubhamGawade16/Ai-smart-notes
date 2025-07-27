@@ -1,27 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, CheckSquare, Clock, Target, Zap, Brain, Repeat, Trash, Heart, Award, BarChart, Menu } from "lucide-react";
+import { Plus, CheckSquare, Clock, Brain, Target, Settings, BarChart3 } from "lucide-react";
 import { SimpleTaskEditor } from "@/components/simple-task-editor";
-import { SmartReminderRecalibration } from "@/components/smart-reminder-recalibration";
-import { RecurringTaskGeneratorTuner } from "@/components/recurring-task-generator-tuner";
-import { TaskDecayDeclutter } from "@/components/task-decay-declutter";
-import { MoodAwareTaskSuggestions } from "@/components/mood-aware-task-suggestions";
-import { GoalTrackingAlignment } from "@/components/goal-tracking-alignment";
-import { UnifiedSidebar } from "@/components/unified-sidebar";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Header } from "@/components/header";
+import { CleanHeader } from "@/components/clean-header";
 import { TaskItem } from "@/components/task-item";
+import { Link } from "wouter";
 import type { Task } from "@shared/schema";
 
 export function SimplifiedDashboard() {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [userTier, setUserTier] = useState<'free' | 'pro'>('pro');
-  const [dailyAiCalls, setDailyAiCalls] = useState(999);
-  const [taskCount, setTaskCount] = useState(0);
+  const [activeView, setActiveView] = useState<'today' | 'all' | 'completed'>('today');
 
   const { data: tasks = [], isLoading } = useQuery<{tasks: Task[]}>({
     queryKey: ['/api/tasks'],
@@ -40,308 +30,151 @@ export function SimplifiedDashboard() {
   });
 
   const allTasks = (tasks as any)?.tasks || [];
-  const incompleteTasks = allTasks.filter((task: any) => !task.completed) || [];
-  const completedTasks = allTasks.filter((task: any) => task.completed) || [];
-
-  useEffect(() => {
-    setTaskCount(allTasks.length || 0);
-  }, [allTasks]);
-
-  const maxDailyAiCalls = userTier === 'free' ? 3 : 999;
+  const incompleteTasks = allTasks.filter((task: any) => !task.completed);
+  const completedTasks = allTasks.filter((task: any) => task.completed);
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background p-4">
-        <div className="max-w-6xl mx-auto space-y-6">
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-muted rounded w-1/3"></div>
-            <div className="h-32 bg-muted rounded"></div>
-            <div className="h-64 bg-muted rounded"></div>
+      <div className="min-h-screen bg-background">
+        <CleanHeader />
+        <div className="container mx-auto px-4 py-8">
+          <div className="animate-pulse space-y-6">
+            <div className="h-16 bg-muted rounded-xl"></div>
+            <div className="h-96 bg-muted rounded-xl"></div>
           </div>
         </div>
       </div>
     );
   }
 
+  const currentTasks = activeView === 'today' ? todaysTasks : 
+                     activeView === 'all' ? incompleteTasks : completedTasks;
+
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <CleanHeader />
       
-      <div className="flex">
-        <UnifiedSidebar
-          isCollapsed={sidebarCollapsed}
-          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-          dailyAiCalls={dailyAiCalls}
-          maxDailyAiCalls={maxDailyAiCalls}
-          userTier={userTier}
-        />
-
-        <div className="flex-1 overflow-hidden">
-          <div className="lg:hidden bg-card border-b sticky top-0 z-10">
-            <div className="px-4 py-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-xl font-bold text-foreground">Smart To-Do AI</h1>
-                  <p className="text-sm text-muted-foreground">AI-Powered Productivity</p>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                >
-                  <Menu className="h-5 w-5" />
+      {/* Main Container */}
+      <div className="container mx-auto px-4 py-6 max-w-4xl">
+        
+        {/* Header Section */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground mb-2">Your Tasks</h1>
+            <div className="flex items-center gap-3">
+              <Badge variant="secondary" className="text-xs">
+                {incompleteTasks.length} active
+              </Badge>
+              <Badge variant="outline" className="text-xs">
+                {completedTasks.length} completed
+              </Badge>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Link href="/advanced">
+              <Button variant="outline" size="sm">
+                <Brain className="h-4 w-4 mr-2" />
+                AI Tools
+              </Button>
+            </Link>
+            <SimpleTaskEditor
+              task={{} as any}
+              isCreating={true}
+              trigger={
+                <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Task
                 </Button>
-              </div>
-            </div>
+              }
+            />
           </div>
+        </div>
 
-          <div className="p-6 space-y-6 max-w-7xl mx-auto">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex items-center space-x-4">
-                <Badge variant="secondary" className="text-sm px-3 py-1">
-                  {incompleteTasks.length} active • {completedTasks.length} completed
-                </Badge>
-                <Badge className="bg-gradient-to-r from-green-600 to-emerald-600 text-white text-sm px-3 py-1">
-                  All Features Free for Testing
-                </Badge>
+        {/* Quick Stats */}
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          <Card className="cursor-pointer transition-colors hover:bg-muted/50" onClick={() => setActiveView('today')}>
+            <CardContent className="p-4 text-center">
+              <Clock className={`h-5 w-5 mx-auto mb-2 ${activeView === 'today' ? 'text-blue-600' : 'text-muted-foreground'}`} />
+              <div className="text-lg font-semibold">{todaysTasks.length}</div>
+              <div className="text-xs text-muted-foreground">Today</div>
+            </CardContent>
+          </Card>
+          
+          <Card className="cursor-pointer transition-colors hover:bg-muted/50" onClick={() => setActiveView('all')}>
+            <CardContent className="p-4 text-center">
+              <Target className={`h-5 w-5 mx-auto mb-2 ${activeView === 'all' ? 'text-orange-600' : 'text-muted-foreground'}`} />
+              <div className="text-lg font-semibold">{incompleteTasks.length}</div>
+              <div className="text-xs text-muted-foreground">All Tasks</div>
+            </CardContent>
+          </Card>
+          
+          <Card className="cursor-pointer transition-colors hover:bg-muted/50" onClick={() => setActiveView('completed')}>
+            <CardContent className="p-4 text-center">
+              <CheckSquare className={`h-5 w-5 mx-auto mb-2 ${activeView === 'completed' ? 'text-green-600' : 'text-muted-foreground'}`} />
+              <div className="text-lg font-semibold">{completedTasks.length}</div>
+              <div className="text-xs text-muted-foreground">Done</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Task List */}
+        <Card>
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg flex items-center gap-2">
+              {activeView === 'today' && <Clock className="h-5 w-5 text-blue-600" />}
+              {activeView === 'all' && <Target className="h-5 w-5 text-orange-600" />}
+              {activeView === 'completed' && <CheckSquare className="h-5 w-5 text-green-600" />}
+              {activeView === 'today' ? "Today's Focus" : 
+               activeView === 'all' ? "All Tasks" : "Completed Tasks"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {currentTasks.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                  {activeView === 'today' && <Clock className="h-8 w-8" />}
+                  {activeView === 'all' && <Target className="h-8 w-8" />}
+                  {activeView === 'completed' && <CheckSquare className="h-8 w-8" />}
+                </div>
+                <p className="text-sm">
+                  {activeView === 'today' ? "No tasks scheduled for today" :
+                   activeView === 'all' ? "No active tasks" : "No completed tasks yet"}
+                </p>
               </div>
-              <SimpleTaskEditor
-                task={{} as any}
-                isCreating={true}
-                trigger={
-                  <Button className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Task
-                  </Button>
-                }
-              />
-            </div>
+            ) : (
+              <div className="space-y-2">
+                {currentTasks.map((task: any, index: number) => (
+                  <div key={task.id || index} className="border rounded-lg p-3 hover:bg-muted/50 transition-colors">
+                    <TaskItem task={task} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-            <Tabs defaultValue="today" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="today" className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  Today's Focus
-                </TabsTrigger>
-                <TabsTrigger value="all" className="flex items-center gap-2">
-                  <CheckSquare className="h-4 w-4" />
-                  All Tasks
-                </TabsTrigger>
-                <TabsTrigger value="completed" className="flex items-center gap-2">
-                  <Award className="h-4 w-4" />
-                  Completed
-                </TabsTrigger>
-                <TabsTrigger value="ai-features" className="flex items-center gap-2">
-                  <Brain className="h-4 w-4" />
-                  AI Features
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="today" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Target className="h-5 w-5 text-blue-500" />
-                      Today's Priority Tasks
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {todaysTasks.length === 0 ? (
-                      <div className="text-center py-8 text-muted-foreground">
-                        <CheckSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                        <p>No tasks for today. Add one to get started!</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        {todaysTasks.map((task: any) => (
-                          <TaskItem key={task.id} task={task} />
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="all" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>All Tasks</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {incompleteTasks.length === 0 ? (
-                      <div className="text-center py-8 text-muted-foreground">
-                        <CheckSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                        <p>No tasks yet. Create your first task to get started!</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        {incompleteTasks.map((task: any) => (
-                          <TaskItem key={task.id} task={task} />
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="completed" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Award className="h-5 w-5 text-green-500" />
-                      Completed Tasks
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {completedTasks.length === 0 ? (
-                      <div className="text-center py-8 text-muted-foreground">
-                        <Award className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                        <p>No completed tasks yet. Complete some tasks to see them here!</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        {completedTasks.map((task: any) => (
-                          <TaskItem key={task.id} task={task} />
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="ai-features" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Brain className="h-5 w-5 text-purple-500" />
-                      AI-Powered Features
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" className="h-auto p-4 text-left justify-start">
-                            <div className="flex items-center gap-3">
-                              <Clock className="h-5 w-5 text-blue-500" />
-                              <div>
-                                <div className="font-medium">Smart Reminders</div>
-                                <div className="text-sm text-muted-foreground">AI-powered reminder optimization</div>
-                              </div>
-                            </div>
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-4xl">
-                          <DialogHeader>
-                            <DialogTitle>Smart Reminder Recalibration</DialogTitle>
-                          </DialogHeader>
-                          <SmartReminderRecalibration />
-                        </DialogContent>
-                      </Dialog>
-
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" className="h-auto p-4 text-left justify-start">
-                            <div className="flex items-center gap-3">
-                              <Repeat className="h-5 w-5 text-green-500" />
-                              <div>
-                                <div className="font-medium">Recurring Tasks</div>
-                                <div className="text-sm text-muted-foreground">Automatic task generation</div>
-                              </div>
-                            </div>
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-4xl">
-                          <DialogHeader>
-                            <DialogTitle>Recurring Task Generator</DialogTitle>
-                          </DialogHeader>
-                          <RecurringTaskGeneratorTuner />
-                        </DialogContent>
-                      </Dialog>
-
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" className="h-auto p-4 text-left justify-start">
-                            <div className="flex items-center gap-3">
-                              <Trash className="h-5 w-5 text-red-500" />
-                              <div>
-                                <div className="font-medium">Task Decay Cleanup</div>
-                                <div className="text-sm text-muted-foreground">Auto-archive old tasks</div>
-                              </div>
-                            </div>
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-4xl">
-                          <DialogHeader>
-                            <DialogTitle>Task Decay Declutter</DialogTitle>
-                          </DialogHeader>
-                          <TaskDecayDeclutter />
-                        </DialogContent>
-                      </Dialog>
-
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" className="h-auto p-4 text-left justify-start">
-                            <div className="flex items-center gap-3">
-                              <Heart className="h-5 w-5 text-pink-500" />
-                              <div>
-                                <div className="font-medium">Mood-Aware Tasks</div>
-                                <div className="text-sm text-muted-foreground">Tasks based on your mood</div>
-                              </div>
-                            </div>
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-4xl">
-                          <DialogHeader>
-                            <DialogTitle>Mood-Aware Task Suggestions</DialogTitle>
-                          </DialogHeader>
-                          <MoodAwareTaskSuggestions />
-                        </DialogContent>
-                      </Dialog>
-
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" className="h-auto p-4 text-left justify-start">
-                            <div className="flex items-center gap-3">
-                              <Target className="h-5 w-5 text-orange-500" />
-                              <div>
-                                <div className="font-medium">Goal Tracking</div>
-                                <div className="text-sm text-muted-foreground">Align tasks with objectives</div>
-                              </div>
-                            </div>
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-4xl">
-                          <DialogHeader>
-                            <DialogTitle>Goal Tracking & Alignment</DialogTitle>
-                          </DialogHeader>
-                          <GoalTrackingAlignment />
-                        </DialogContent>
-                      </Dialog>
-
-                      <Button 
-                        variant="outline" 
-                        className="h-auto p-4 text-left justify-start"
-                        onClick={() => window.open('/advanced', '_blank')}
-                      >
-                        <div className="flex items-center gap-3">
-                          <BarChart className="h-5 w-5 text-indigo-500" />
-                          <div>
-                            <div className="font-medium">Advanced Features</div>
-                            <div className="text-sm text-muted-foreground">All AI productivity tools</div>
-                          </div>
-                        </div>
-                      </Button>
-                    </div>
-                    
-                    <p className="text-sm text-blue-600 dark:text-blue-400 font-medium mt-4">
-                      All AI features are temporarily unlocked for testing. Try them out and share your feedback!
-                    </p>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
-          </div>
+        {/* Quick Actions */}
+        <div className="mt-8 grid grid-cols-2 gap-4">
+          <Link href="/advanced">
+            <Card className="cursor-pointer hover:bg-muted/50 transition-colors">
+              <CardContent className="p-4 text-center">
+                <Brain className="h-6 w-6 mx-auto mb-2 text-purple-600" />
+                <div className="font-medium text-sm mb-1">AI Features</div>
+                <div className="text-xs text-muted-foreground">Smart reminders, insights & more</div>
+              </CardContent>
+            </Card>
+          </Link>
+          
+          <Link href="/settings">
+            <Card className="cursor-pointer hover:bg-muted/50 transition-colors">
+              <CardContent className="p-4 text-center">
+                <Settings className="h-6 w-6 mx-auto mb-2 text-gray-600" />
+                <div className="font-medium text-sm mb-1">Settings</div>
+                <div className="text-xs text-muted-foreground">Preferences & integrations</div>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
       </div>
     </div>
