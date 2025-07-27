@@ -26,8 +26,8 @@ export function SimplifiedDashboard() {
     queryKey: ['/api/analytics/stats'],
   });
 
-  const incompleteTasks = tasks.tasks?.filter(task => !task.completed) || [];
-  const completedTasks = tasks.tasks?.filter(task => task.completed) || [];
+  const incompleteTasks = tasks?.tasks?.filter((task: any) => !task.completed) || [];
+  const completedTasks = tasks?.tasks?.filter((task: any) => task.completed) || [];
 
   if (isLoading) {
     return (
@@ -153,7 +153,7 @@ export function SimplifiedDashboard() {
                   </CardHeader>
                   <CardContent className="space-y-3">
                     {incompleteTasks.length > 0 ? (
-                      incompleteTasks.map((task) => (
+                      incompleteTasks.map((task: any) => (
                         <TaskItem key={task.id} task={task} />
                       ))
                     ) : (
@@ -174,7 +174,7 @@ export function SimplifiedDashboard() {
                   </CardHeader>
                   <CardContent className="space-y-3">
                     {todaysTasks.length > 0 ? (
-                      todaysTasks.map((task) => (
+                      todaysTasks.map((task: any) => (
                         <TaskItem key={task.id} task={task} />
                       ))
                     ) : (
@@ -195,7 +195,7 @@ export function SimplifiedDashboard() {
                   </CardHeader>
                   <CardContent className="space-y-3">
                     {completedTasks.length > 0 ? (
-                      completedTasks.map((task) => (
+                      completedTasks.map((task: any) => (
                         <TaskItem key={task.id} task={task} />
                       ))
                     ) : (
@@ -212,18 +212,56 @@ export function SimplifiedDashboard() {
           </div>
         </div>
 
-        {/* AI Features - Minimized */}
-        <Card className="border-dashed">
+        {/* AI Features - Now Available for Testing */}
+        <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Zap className="h-4 w-4" />
-              AI Features Available
-              <Badge variant="outline" className="text-xs">Pro</Badge>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Zap className="h-5 w-5" />
+              AI Features (Testing Mode)
+              <Badge variant="secondary" className="text-xs">Free Testing</Badge>
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Upgrade to unlock smart reminders, recurring task generation, productivity insights, and more AI-powered features.
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <Button variant="outline" className="h-auto p-4 text-left justify-start">
+                <div>
+                  <div className="font-medium">Smart Reminders</div>
+                  <div className="text-sm text-muted-foreground">AI-optimized reminder timing</div>
+                </div>
+              </Button>
+              <Button variant="outline" className="h-auto p-4 text-left justify-start">
+                <div>
+                  <div className="font-medium">Recurring Tasks</div>
+                  <div className="text-sm text-muted-foreground">Auto-generate task patterns</div>
+                </div>
+              </Button>
+              <Button variant="outline" className="h-auto p-4 text-left justify-start">
+                <div>
+                  <div className="font-medium">Task Cleanup</div>
+                  <div className="text-sm text-muted-foreground">Identify stale tasks</div>
+                </div>
+              </Button>
+              <Button variant="outline" className="h-auto p-4 text-left justify-start">
+                <div>
+                  <div className="font-medium">Mood Suggestions</div>
+                  <div className="text-sm text-muted-foreground">Context-aware recommendations</div>
+                </div>
+              </Button>
+              <Button variant="outline" className="h-auto p-4 text-left justify-start">
+                <div>
+                  <div className="font-medium">Goal Tracking</div>
+                  <div className="text-sm text-muted-foreground">Align tasks with objectives</div>
+                </div>
+              </Button>
+              <Button variant="outline" className="h-auto p-4 text-left justify-start">
+                <div>
+                  <div className="font-medium">Insights Dashboard</div>
+                  <div className="text-sm text-muted-foreground">Productivity analytics</div>
+                </div>
+              </Button>
+            </div>
+            <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">
+              All AI features are temporarily unlocked for testing. Try them out and share your feedback!
             </p>
           </CardContent>
         </Card>

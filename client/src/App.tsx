@@ -30,20 +30,15 @@ function Router() {
     <Switch>
       <Route path="/auth/callback" component={AuthCallback} />
       <Route path="/setup" component={Setup} />
-      {!isAuthenticated ? (
-        <>
-          <Route path="/" component={Landing} />
-          <Route path="/login" component={Login} />
-          <Route path="/register" component={Register} />
-        </>
-      ) : (
-        <>
-          <Route path="/" component={SimplifiedDashboard} />
-          <Route path="/dashboard" component={Dashboard} />
-          <Route path="/advanced" component={Dashboard} />
-          <Route path="/settings" component={SettingsPage} />
-        </>
-      )}
+      <>
+        <Route path="/" component={SimplifiedDashboard} />
+        <Route path="/dashboard" component={Dashboard} />
+        <Route path="/advanced" component={Dashboard} />
+        <Route path="/settings" component={SettingsPage} />
+        <Route path="/login" component={Login} />
+        <Route path="/register" component={Register} />
+        <Route path="/landing" component={Landing} />
+      </>
       <Route component={NotFound} />
     </Switch>
   );
