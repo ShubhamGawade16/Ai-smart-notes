@@ -74,7 +74,7 @@ export class MemStorage implements IStorage {
         monthlyTaskCount: 0,
         monthlyTaskCountResetAt: new Date(),
         totalXp: 1250,
-        level: 8,
+        lastActivityAt: null,
         currentStreak: 7,
         longestStreak: 14,
         createdAt: new Date(),
@@ -103,14 +103,14 @@ export class MemStorage implements IStorage {
       subscriptionCurrentPeriodEnd: insertUser.subscriptionCurrentPeriodEnd || null,
       trialEndsAt: insertUser.trialEndsAt || null,
       isTrialUsed: insertUser.isTrialUsed || false,
-      dailyAiCalls: insertUser.dailyAiCalls || 0,
-      dailyAiCallsResetAt: insertUser.dailyAiCallsResetAt || new Date(),
-      monthlyTaskCount: insertUser.monthlyTaskCount || 0,
-      monthlyTaskCountResetAt: insertUser.monthlyTaskCountResetAt || new Date(),
-      totalXp: insertUser.totalXp || 0,
-      currentStreak: insertUser.currentStreak || 0,
-      longestStreak: insertUser.longestStreak || 0,
-      lastActivityAt: insertUser.lastActivityAt || null,
+      dailyAiCalls: 0,
+      dailyAiCallsResetAt: new Date(),
+      monthlyTaskCount: 0,
+      monthlyTaskCountResetAt: new Date(),
+      totalXp: 0,
+      currentStreak: 0,
+      longestStreak: 0,
+      lastActivityAt: null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -139,7 +139,7 @@ export class MemStorage implements IStorage {
       // Create new user
       const newUser: User = {
         id: upsertData.id,
-        email: upsertData.email || null,
+        email: upsertData.email || 'unknown@example.com',
         passwordHash: null,
         firstName: upsertData.firstName || null,
         lastName: upsertData.lastName || null,
@@ -201,15 +201,16 @@ export class MemStorage implements IStorage {
       category: insertTask.category || null,
       tags: insertTask.tags || [],
       estimatedTime: insertTask.estimatedTime || null,
-      actualTime: insertTask.actualTime || null,
+      actualTime: null,
       dueDate: insertTask.dueDate || null,
       scheduledAt: insertTask.scheduledAt || null,
-      completedAt: insertTask.completedAt || null,
-      aiSuggestions: insertTask.aiSuggestions || null,
-      xpValue: insertTask.xpValue || 10,
-      difficultyScore: insertTask.difficultyScore || 1.0,
-      createdAt: insertTask.createdAt || new Date(),
-      updatedAt: insertTask.updatedAt || new Date(),
+      completedAt: null,
+      aiSuggestions: null,
+      parentTaskId: insertTask.parentTaskId || null,
+      contextSwitchCost: insertTask.contextSwitchCost || null,
+      xpReward: insertTask.xpReward || 10,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
     this.tasks.push(task);
     return task;
@@ -257,9 +258,9 @@ export class MemStorage implements IStorage {
       content: insertNote.content,
       category: insertNote.category || null,
       tags: insertNote.tags || [],
-      aiSummary: insertNote.aiSummary || null,
-      createdAt: insertNote.createdAt || new Date(),
-      updatedAt: insertNote.updatedAt || new Date(),
+      aiSummary: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
     this.notes.push(note);
     return note;
@@ -294,34 +295,61 @@ export class MemStorage implements IStorage {
   async resetDailyLimits(userId: string): Promise<void> {
     const userIndex = this.users.findIndex(user => user.id === userId);
     if (userIndex !== -1) {
-      this.users[userIndex].dailyAiCalls = 0;
-      this.users[userIndex].dailyAiCallsResetAt = new Date();
+      this.users[userIndex] = {
+        ...this.users[userIndex],
+        dailyAiCalls: 0,
+        dailyAiCallsResetAt: new Date()
+      };
     }
   }
 
   async resetMonthlyLimits(userId: string): Promise<void> {
     const userIndex = this.users.findIndex(user => user.id === userId);
     if (userIndex !== -1) {
-      this.users[userIndex].monthlyTaskCount = 0;
-      this.users[userIndex].monthlyTaskCountResetAt = new Date();
+      this.users[userIndex] = {
+        ...this.users[userIndex],
+        monthlyTaskCount: 0,
+        monthlyTaskCountResetAt: new Date()
+      };
     }
   }
 
   async incrementDailyAiCalls(userId: string): Promise<void> {
     const userIndex = this.users.findIndex(user => user.id === userId);
     if (userIndex !== -1) {
-      this.users[userIndex].dailyAiCalls += 1;
-      this.users[userIndex].updatedAt = new Date();
+      this.users[userIndex] = {
+        ...this.users[userIndex],
+        dailyAiCalls: this.users[userIndex].dailyAiCalls + 1,
+        updatedAt: new Date()
+      };
     }
   }
 
   async incrementMonthlyTaskCount(userId: string): Promise<void> {
     const userIndex = this.users.findIndex(user => user.id === userId);
     if (userIndex !== -1) {
-      this.users[userIndex].monthlyTaskCount += 1;
-      this.users[userIndex].updatedAt = new Date();
+      this.users[userIndex] = {
+        ...this.users[userIndex],
+        monthlyTaskCount: this.users[userIndex].monthlyTaskCount + 1,
+        updatedAt: new Date()
+      };
     }
   }
 }
 
-export const storage = new MemStorage();
+import { DatabaseStorage } from "./database-storage";
+
+// Use DatabaseStorage for production-ready persistent storage
+// Fallback to MemStorage for development if database is unavailable
+let storageInstance: IStorage;
+
+try {
+  // Try to initialize database storage
+  storageInstance = new DatabaseStorage();
+  console.log("✅ Using DatabaseStorage - all user data will be persisted");
+} catch (error) {
+  console.warn("⚠️  Database unavailable, falling back to MemStorage:", error);
+  storageInstance = new MemStorage();
+}
+
+export const storage = storageInstance;
