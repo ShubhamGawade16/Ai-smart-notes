@@ -61,10 +61,30 @@ npx cap cloud build android
 npx cap cloud build ios
 ```
 
-### **Step 5: Download APK**
-- Build completes in ~10-15 minutes
-- Download APK directly from Capacitor Cloud dashboard
-- Install on any Android device
+### **Step 5: Download Your APK File**
+After build completes (~10-15 minutes):
+
+1. **Dashboard Download**: 
+   - Go to https://dashboard.capacitorjs.com
+   - Click your project → Builds tab
+   - Click "Download APK" button
+   - Get `app-release.apk` file (15-20MB)
+
+2. **CLI Download**:
+   ```bash
+   npx cap cloud download android [build-id]
+   ```
+
+3. **Direct Install**:
+   - Transfer APK to Android device
+   - Enable "Install from Unknown Sources"
+   - Tap APK file to install
+
+**File Details**:
+- **Filename**: `ai-smart-notes-release.apk`
+- **Size**: ~15-20MB
+- **Format**: Standard Android APK
+- **Compatible**: Android 5.0+ devices
 
 ## 🔔 **Notification Features Included**
 
