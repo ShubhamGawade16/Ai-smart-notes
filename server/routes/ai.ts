@@ -5,7 +5,7 @@ import { storage } from '../storage';
 import * as aiService from '../services/ai-service';
 
 const router = express.Router();
-const aiService = new AIService();
+const legacyAiService = new AIService();
 
 // Natural Language Task Parsing - Core Phase 3 feature
 router.post('/parse-task', authenticateToken, async (req: AuthRequest, res) => {

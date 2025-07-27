@@ -285,7 +285,6 @@ export const insertHabitSchema = createInsertSchema(habits).omit({
 
 // Update schemas
 export const updateTaskSchema = insertTaskSchema.partial().extend({
-  id: z.string(),
   completed: z.boolean().optional(),
   completedAt: z.date().optional(),
   actualTime: z.number().optional(),
@@ -293,7 +292,6 @@ export const updateTaskSchema = insertTaskSchema.partial().extend({
 });
 
 export const updateNoteSchema = insertNoteSchema.partial().extend({
-  id: z.string(),
   aiSummary: z.string().optional(),
 });
 
