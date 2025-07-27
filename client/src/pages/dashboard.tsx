@@ -12,12 +12,13 @@ import { NotificationSystem } from "@/components/notification-system";
 import { MobileNav } from "@/components/mobile-nav";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { SmartReminderSystem } from "@/components/smart-reminder-system";
-import { RecurringTaskGenerator } from "@/components/recurring-task-generator";
-import { TaskDecayCleanup } from "@/components/task-decay-cleanup";
+
+import { ProductivityInsightsDashboard } from "@/components/productivity-insights-dashboard";
+import { SmartReminderRecalibration } from "@/components/smart-reminder-recalibration";
+import { RecurringTaskGeneratorTuner } from "@/components/recurring-task-generator-tuner";
+import { TaskDecayDeclutter } from "@/components/task-decay-declutter";
 import { MoodAwareTaskSuggestions } from "@/components/mood-aware-suggestions";
 import { GoalTrackingAlignment } from "@/components/goal-tracking-alignment";
-import { ProductivityInsightsDashboard } from "@/components/productivity-insights-dashboard";
 import { useIsMobile } from "@/hooks/use-mobile";
 import FocusForecast from "@/components/focus-forecast";
 import TaskRefiner from "@/components/task-refiner";
@@ -55,11 +56,29 @@ export default function Dashboard() {
           <div className="space-y-6">
             <ProductivityInsightsDashboard />
             <NotificationSystem />
-            <SmartReminderSystem />
-            <RecurringTaskGenerator />
-            <TaskDecayCleanup />
-            <MoodAwareTaskSuggestions />
-            <GoalTrackingAlignment />
+            
+            {/* Core AI Features Section */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                Smart AI Features
+              </h3>
+              
+              {/* Smart Reminder Recalibration */}
+              <SmartReminderRecalibration />
+              
+              {/* Recurring Task Generator & Tuner */}
+              <RecurringTaskGeneratorTuner />
+              
+              {/* Task Decay & Declutter */}
+              <TaskDecayDeclutter />
+              
+              {/* Mood-Aware Task Suggestions */}
+              <MoodAwareTaskSuggestions />  
+              
+              {/* Goal Tracking & Alignment */}
+              <GoalTrackingAlignment />
+            </div>
+            
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <FocusForecast />
               <TaskRefiner />

@@ -1,276 +1,173 @@
-import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Save, Trash2, FileText, Tag } from "lucide-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
-
-interface Note {
-  id: string;
-  title: string;
-  content: string;
-  category?: string;
-  tags?: string[];
-  createdAt: string;
-  updatedAt: string;
-}
+import { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { useMutation } from '@tanstack/react-query';
+import { apiRequest, queryClient } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
+import { Save, Sparkles } from 'lucide-react';
 
 interface NotesModalProps {
-  note?: Note;
-  trigger: React.ReactNode;
-  onClose?: () => void;
   isCreating?: boolean;
+  trigger: React.ReactNode;
+  note?: {
+    id: string;
+    title: string;
+    content: string;
+    category?: string;
+    tags?: string[];
+  };
 }
 
-export function NotesModal({ note, trigger, onClose, isCreating = false }: NotesModalProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [editedNote, setEditedNote] = useState(note || {
-    title: '',
-    content: '',
-    category: '',
-    tags: []
-  } as Partial<Note>);
-  const [isEditing, setIsEditing] = useState(isCreating);
+export function NotesModal({ isCreating = false, trigger, note }: NotesModalProps) {
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState(note?.title || '');
+  const [content, setContent] = useState(note?.content || '');
+  const [category, setCategory] = useState(note?.category || '');
+  const [tags, setTags] = useState(note?.tags?.join(', ') || '');
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
-  // Mock API functions - replace with actual API calls
-  const createNote = async (noteData: Partial<Note>) => {
-    // Simulate API call
-    return { ...noteData, id: Date.now().toString(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
-  };
-
-  const updateNote = async (id: string, noteData: Partial<Note>) => {
-    // Simulate API call
-    return { ...noteData, id, updatedAt: new Date().toISOString() };
-  };
-
-  const deleteNote = async (id: string) => {
-    // Simulate API call
-    return { success: true };
-  };
-
+  // Create/update note mutation
   const saveNoteMutation = useMutation({
-    mutationFn: (data: Partial<Note>) => 
-      isCreating ? createNote(data) : updateNote(note!.id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/notes'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/notes/recent'] });
-      setIsEditing(false);
-      if (isCreating) {
-        setIsOpen(false);
-      }
-      toast({
-        title: isCreating ? "Note created" : "Note updated",
-        description: "Your changes have been saved.",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: `Failed to ${isCreating ? 'create' : 'update'} note. Please try again.`,
-        variant: "destructive",
-      });
-    },
-  });
+    mutationFn: async () => {
+      const noteData = {
+        title,
+        content,
+        category: category || undefined,
+        tags: tags ? tags.split(',').map(tag => tag.trim()).filter(Boolean) : [],
+      };
 
-  const deleteNoteMutation = useMutation({
-    mutationFn: () => deleteNote(note!.id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/notes'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/notes/recent'] });
-      setIsOpen(false);
-      toast({
-        title: "Note deleted",
-        description: "The note has been removed.",
-      });
+      if (isCreating) {
+        return apiRequest('/api/notes', {
+          method: 'POST',
+          body: JSON.stringify(noteData),
+        });
+      } else {
+        return apiRequest(`/api/notes/${note?.id}`, {
+          method: 'PATCH',
+          body: JSON.stringify(noteData),
+        });
+      }
     },
-    onError: () => {
+    onSuccess: () => {
       toast({
-        title: "Error",
-        description: "Failed to delete note. Please try again.",
-        variant: "destructive",
+        title: isCreating ? "Note Created" : "Note Updated",
+        description: "Your note has been saved successfully.",
       });
+      queryClient.invalidateQueries({ queryKey: ['/api/notes/recent'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/notes'] });
+      setOpen(false);
+      
+      // Reset form if creating
+      if (isCreating) {
+        setTitle('');
+        setContent('');
+        setCategory('');
+        setTags('');
+      }
     },
   });
 
   const handleSave = () => {
-    if (!editedNote.title?.trim()) {
+    if (!title.trim() || !content.trim()) {
       toast({
-        title: "Title required",
-        description: "Please enter a title for your note.",
+        title: "Missing Information",
+        description: "Please provide both a title and content for your note.",
         variant: "destructive",
       });
       return;
     }
-
-    saveNoteMutation.mutate(editedNote);
-  };
-
-  const handleDelete = () => {
-    if (confirm("Are you sure you want to delete this note?")) {
-      deleteNoteMutation.mutate();
-    }
-  };
-
-  const handleClose = () => {
-    setIsOpen(false);
-    setIsEditing(isCreating);
-    if (!isCreating && note) {
-      setEditedNote(note);
-    }
-    onClose?.();
+    saveNoteMutation.mutate();
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger}
       </DialogTrigger>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleClose}
-              className="h-8 w-8 p-0"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <DialogTitle className="text-xl">
-              {isCreating ? 'Create Note' : 'Note Details'}
-            </DialogTitle>
-          </div>
-          <div className="flex items-center gap-2">
-            {isEditing ? (
-              <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    if (isCreating) {
-                      handleClose();
-                    } else {
-                      setIsEditing(false);
-                      setEditedNote(note!);
-                    }
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={handleSave}
-                  disabled={saveNoteMutation.isPending}
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  {isCreating ? 'Create' : 'Save'}
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsEditing(true)}
-                >
-                  Edit
-                </Button>
-                {!isCreating && (
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={handleDelete}
-                    disabled={deleteNoteMutation.isPending}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
-              </>
-            )}
-          </div>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            {isCreating ? 'Create New Note' : 'Edit Note'}
+            <Badge variant="secondary" className="ml-2">
+              <Sparkles className="h-3 w-3 mr-1" />
+              AI-Enhanced
+            </Badge>
+          </DialogTitle>
         </DialogHeader>
-
-        <div className="space-y-6">
+        
+        <div className="space-y-4">
           {/* Title */}
-          <div>
-            <label className="text-sm font-medium mb-2 block">Title</label>
-            {isEditing ? (
-              <Input
-                value={editedNote.title || ''}
-                onChange={(e) => setEditedNote({ ...editedNote, title: e.target.value })}
-                placeholder="Note title..."
-              />
-            ) : (
-              <h2 className="text-lg font-medium">{note?.title}</h2>
-            )}
+          <div className="space-y-2">
+            <Label htmlFor="title">Title</Label>
+            <Input
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter note title..."
+            />
           </div>
 
           {/* Content */}
-          <div>
-            <label className="text-sm font-medium mb-2 block">Content</label>
-            {isEditing ? (
-              <Textarea
-                value={editedNote.content || ''}
-                onChange={(e) => setEditedNote({ ...editedNote, content: e.target.value })}
-                placeholder="Write your note content here..."
-                rows={12}
-                className="min-h-[300px]"
-              />
-            ) : (
-              <div className="prose dark:prose-invert max-w-none">
-                <p className="whitespace-pre-wrap">{note?.content || 'No content provided.'}</p>
-              </div>
-            )}
+          <div className="space-y-2">
+            <Label htmlFor="content">Content</Label>
+            <Textarea
+              id="content"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Write your note content here..."
+              rows={8}
+            />
           </div>
 
-          {/* Category and Tags */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Category</label>
-              {isEditing ? (
-                <Input
-                  value={editedNote.category || ''}
-                  onChange={(e) => setEditedNote({ ...editedNote, category: e.target.value })}
-                  placeholder="Category..."
-                />
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  {note?.category || 'No category'}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-2 block">Tags</label>
-              {note?.tags && note.tags.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {note.tags.map((tag, index) => (
-                    <Badge key={index} variant="secondary">
-                      <Tag className="h-3 w-3 mr-1" />
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">No tags assigned</p>
-              )}
-            </div>
+          {/* Category */}
+          <div className="space-y-2">
+            <Label htmlFor="category">Category</Label>
+            <Select value={category} onValueChange={setCategory}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a category (optional)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Work">Work</SelectItem>
+                <SelectItem value="Personal">Personal</SelectItem>
+                <SelectItem value="Ideas">Ideas</SelectItem>
+                <SelectItem value="Meeting Notes">Meeting Notes</SelectItem>
+                <SelectItem value="Learning">Learning</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* Metadata */}
-          {note && !isCreating && (
-            <div className="pt-4 border-t space-y-2">
-              <div className="flex items-center justify-between text-sm text-muted-foreground">
-                <span>Created: {new Date(note.createdAt).toLocaleDateString()}</span>
-                <span>Updated: {new Date(note.updatedAt).toLocaleDateString()}</span>
-              </div>
-            </div>
-          )}
+          {/* Tags */}
+          <div className="space-y-2">
+            <Label htmlFor="tags">Tags</Label>
+            <Input
+              id="tags"
+              value={tags}
+              onChange={(e) => setTags(e.target.value)}
+              placeholder="Enter tags separated by commas..."
+            />
+            <p className="text-xs text-muted-foreground">
+              Separate multiple tags with commas (e.g., "important, project, deadline")
+            </p>
+          </div>
+
+          {/* Actions */}
+          <div className="flex justify-end gap-2 pt-4">
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSave} 
+              disabled={saveNoteMutation.isPending}
+            >
+              <Save className="h-4 w-4 mr-2" />
+              {saveNoteMutation.isPending ? 'Saving...' : (isCreating ? 'Create Note' : 'Update Note')}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
