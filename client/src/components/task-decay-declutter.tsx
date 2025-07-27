@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Trash2, Clock, FileText, AlertTriangle, CheckCircle2, Zap, RotateCcw } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Trash2, AlertTriangle, Archive, RefreshCw, Clock, TrendingDown } from 'lucide-react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
@@ -11,266 +11,336 @@ import { useToast } from '@/hooks/use-toast';
 interface StaleTask {
   id: string;
   title: string;
-  description?: string;
-  daysSinceLastInteraction: number;
-  freshnessScore: number;
-  priority: string;
-  suggestedAction: 'delete' | 'defer' | 'convert';
-  reasoning: string;
+  createdDate: string;
+  lastModified: string;
+  daysSinceCreated: number;
+  daysSinceModified: number;
+  decayScore: number;
+  category: string;
+  reason: string;
+  suggestedAction: 'delete' | 'archive' | 'refresh';
+}
+
+interface DecaySettings {
+  aggressiveness: 'conservative' | 'balanced' | 'aggressive';
+  autoArchiveAfter: number;
+  autoDeleteAfter: number;
 }
 
 export function TaskDecayDeclutter() {
+  const [settings, setSettings] = useState<DecaySettings>({
+    aggressiveness: 'balanced',
+    autoArchiveAfter: 30,
+    autoDeleteAfter: 90
+  });
   const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
   const { toast } = useToast();
 
-  // Get stale tasks
+  // Get stale tasks analysis
   const { data: staleTasks, isLoading } = useQuery({
     queryKey: ['/api/ai/stale-tasks'],
     queryFn: async () => {
-      const response = await apiRequest('/api/ai/stale-tasks');
-      return response as StaleTask[];
+      // Mock stale tasks data
+      return [
+        {
+          id: '1',
+          title: 'Review Q3 marketing metrics',
+          createdDate: '2024-09-15',
+          lastModified: '2024-09-20',
+          daysSinceCreated: 45,
+          daysSinceModified: 40,
+          decayScore: 85,
+          category: 'Work',
+          reason: 'Task created 45 days ago with no recent updates. Likely no longer relevant.',
+          suggestedAction: 'delete'
+        },
+        {
+          id: '2',
+          title: 'Plan weekend hiking trip',
+          createdDate: '2024-10-01',
+          lastModified: '2024-10-01',
+          daysSinceCreated: 30,
+          daysSinceModified: 30,
+          decayScore: 65,
+          category: 'Personal',
+          reason: 'Old personal task that might still be relevant but needs review.',
+          suggestedAction: 'refresh'
+        },
+        {
+          id: '3',
+          title: 'Research new productivity apps',
+          createdDate: '2024-09-10',
+          lastModified: '2024-09-15',
+          daysSinceCreated: 50,
+          daysSinceModified: 45,
+          decayScore: 75,
+          category: 'Learning',
+          reason: 'Learning task that may still be valuable but shows low activity.',
+          suggestedAction: 'archive'
+        },
+        {
+          id: '4',
+          title: 'Follow up on client proposal',
+          createdDate: '2024-08-20',
+          lastModified: '2024-08-25',
+          daysSinceCreated: 70,
+          daysSinceModified: 65,
+          decayScore: 95,
+          category: 'Work',
+          reason: 'Very old work task with no updates. Proposal likely decided already.',
+          suggestedAction: 'delete'
+        }
+      ] as StaleTask[];
     },
-    refetchInterval: 600000, // Check every 10 minutes
+    refetchInterval: 3600000, // Check every hour
   });
 
   // Bulk action mutation
   const bulkActionMutation = useMutation({
-    mutationFn: async ({ action, taskIds }: { action: string; taskIds: string[] }) => {
-      return apiRequest('/api/ai/bulk-task-action', {
+    mutationFn: async ({ taskIds, action }: { taskIds: string[], action: string }) => {
+      return apiRequest('/api/tasks/bulk-action', {
         method: 'POST',
-        body: JSON.stringify({ action, taskIds }),
+        body: JSON.stringify({ taskIds, action })
       });
     },
-    onSuccess: (data) => {
+    onSuccess: (_, { action }) => {
       toast({
         title: "Tasks Updated",
-        description: `Successfully processed ${data.processed} tasks. Your task list is now cleaner!`,
+        description: `Successfully ${action}d ${selectedTasks.length} tasks`
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/ai/stale-tasks'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
       setSelectedTasks([]);
-    },
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/ai/stale-tasks'] });
+    }
   });
 
-  const getFreshnessColor = (score: number) => {
-    if (score <= 0.3) return 'text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900';
-    if (score <= 0.6) return 'text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900';
-    return 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900';
+  // Individual action mutation
+  const taskActionMutation = useMutation({
+    mutationFn: async ({ taskId, action }: { taskId: string, action: string }) => {
+      if (action === 'delete') {
+        return apiRequest(`/api/tasks/${taskId}`, { method: 'DELETE' });
+      } else if (action === 'archive') {
+        return apiRequest(`/api/tasks/${taskId}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ archived: true })
+        });
+      } else if (action === 'refresh') {
+        return apiRequest(`/api/tasks/${taskId}/refresh`, { method: 'POST' });
+      }
+    },
+    onSuccess: (_, { action }) => {
+      toast({
+        title: "Task Updated",
+        description: `Task ${action}d successfully`
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/ai/stale-tasks'] });
+    }
+  });
+
+  const toggleTaskSelection = (taskId: string) => {
+    setSelectedTasks(prev => 
+      prev.includes(taskId) 
+        ? prev.filter(id => id !== taskId)
+        : [...prev, taskId]
+    );
   };
 
   const getActionIcon = (action: string) => {
     switch (action) {
       case 'delete': return <Trash2 className="h-4 w-4 text-red-500" />;
-      case 'defer': return <Clock className="h-4 w-4 text-yellow-500" />;
-      case 'convert': return <FileText className="h-4 w-4 text-blue-500" />;
-      default: return <AlertTriangle className="h-4 w-4 text-gray-500" />;
+      case 'archive': return <Archive className="h-4 w-4 text-yellow-500" />;
+      case 'refresh': return <RefreshCw className="h-4 w-4 text-blue-500" />;
+      default: return <Clock className="h-4 w-4" />;
     }
   };
 
-  const getActionLabel = (action: string) => {
+  const getActionColor = (action: string) => {
     switch (action) {
-      case 'delete': return 'Delete';
-      case 'defer': return 'Defer';
-      case 'convert': return 'Convert to Note';
-      default: return 'Unknown';
+      case 'delete': return 'text-red-600 bg-red-50';
+      case 'archive': return 'text-yellow-600 bg-yellow-50';
+      case 'refresh': return 'text-blue-600 bg-blue-50';
+      default: return 'text-gray-600 bg-gray-50';
     }
   };
-
-  const handleTaskSelection = (taskId: string, checked: boolean) => {
-    if (checked) {
-      setSelectedTasks([...selectedTasks, taskId]);
-    } else {
-      setSelectedTasks(selectedTasks.filter(id => id !== taskId));
-    }
-  };
-
-  const handleSelectAll = () => {
-    if (selectedTasks.length === staleTasks?.length) {
-      setSelectedTasks([]);
-    } else {
-      setSelectedTasks(staleTasks?.map(task => task.id) || []);
-    }
-  };
-
-  const handleBulkAction = (action: string) => {
-    if (selectedTasks.length === 0) return;
-    bulkActionMutation.mutate({ action, taskIds: selectedTasks });
-  };
-
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <RotateCcw className="h-5 w-5 animate-spin" />
-            Analyzing Task Freshness...
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="animate-pulse space-y-4">
-            <div className="h-16 bg-muted rounded"></div>
-            <div className="h-16 bg-muted rounded"></div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <RotateCcw className="h-5 w-5 text-primary" />
-          Task Decay & Declutter
-          <Badge variant="secondary" className="ml-2">
-            <Zap className="h-3 w-3 mr-1" />
-            Smart Cleanup
-          </Badge>
-        </CardTitle>
-        <p className="text-sm text-muted-foreground">
-          AI identifies stale tasks that are cluttering your workflow and suggests cleanup actions
-        </p>
-      </CardHeader>
-      
-      <CardContent className="space-y-6">
-        {/* Stale Tasks */}
-        {staleTasks && staleTasks.length > 0 ? (
-          <div className="space-y-4">
+    <div className="space-y-6">
+      {/* Summary Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <TrendingDown className="h-5 w-5 text-orange-500" />
+              <div>
+                <p className="text-sm text-muted-foreground">Stale Tasks</p>
+                <p className="text-2xl font-bold">{staleTasks?.length || 0}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-red-500" />
+              <div>
+                <p className="text-sm text-muted-foreground">High Decay Score</p>
+                <p className="text-2xl font-bold">
+                  {staleTasks?.filter(t => t.decayScore > 80).length || 0}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <Clock className="h-5 w-5 text-blue-500" />
+              <div>
+                <p className="text-sm text-muted-foreground">Avg Age (days)</p>
+                <p className="text-2xl font-bold">
+                  {staleTasks ? Math.round(staleTasks.reduce((sum, t) => sum + t.daysSinceCreated, 0) / staleTasks.length) : 0}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Bulk Actions */}
+      {selectedTasks.length > 0 && (
+        <Card>
+          <CardContent className="p-4">
             <div className="flex items-center justify-between">
-              <h4 className="font-medium flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                Stale Tasks Found ({staleTasks.length})
-              </h4>
-              <div className="flex gap-2">
-                <Button 
-                  size="sm" 
+              <span className="text-sm font-medium">
+                {selectedTasks.length} tasks selected
+              </span>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
                   variant="outline"
-                  onClick={handleSelectAll}
+                  onClick={() => bulkActionMutation.mutate({ taskIds: selectedTasks, action: 'archive' })}
                 >
-                  {selectedTasks.length === staleTasks.length ? 'Deselect All' : 'Select All'}
+                  <Archive className="h-4 w-4 mr-2" />
+                  Archive All
+                </Button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => bulkActionMutation.mutate({ taskIds: selectedTasks, action: 'delete' })}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete All
                 </Button>
               </div>
             </div>
-            
-            <div className="space-y-3">
-              {staleTasks.map((task) => (
-                <div key={task.id} className="p-4 border rounded-lg space-y-3">
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Stale Tasks List */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Trash2 className="h-5 w-5" />
+            Task Decay Analysis
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {isLoading ? (
+            <div className="text-center py-8">
+              <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
+              <p>Analyzing task decay patterns...</p>
+            </div>
+          ) : staleTasks?.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Trash2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>No stale tasks detected!</p>
+              <p className="text-sm">Your task list is clean and up-to-date.</p>
+            </div>
+          ) : (
+            staleTasks?.map((task) => (
+              <div key={task.id} className="border rounded-lg p-4 space-y-3">
+                <div className="flex items-start justify-between">
                   <div className="flex items-start gap-3">
-                    <Checkbox
+                    <input
+                      type="checkbox"
                       checked={selectedTasks.includes(task.id)}
-                      onCheckedChange={(checked) => 
-                        handleTaskSelection(task.id, checked as boolean)
-                      }
+                      onChange={() => toggleTaskSelection(task.id)}
                       className="mt-1"
                     />
-                    
                     <div className="flex-1">
-                      <div className="flex items-center justify-between mb-2">
-                        <h5 className="font-medium">{task.title}</h5>
-                        <div className="flex items-center gap-2">
-                          <Badge className={getFreshnessColor(task.freshnessScore)}>
-                            {Math.round(task.freshnessScore * 100)}% fresh
-                          </Badge>
-                          <Badge variant="outline">
-                            {task.daysSinceLastInteraction} days old
-                          </Badge>
-                        </div>
-                      </div>
-                      
-                      {task.description && (
-                        <p className="text-sm text-muted-foreground mb-2">
-                          {task.description}
-                        </p>
-                      )}
-                      
-                      <div className="p-3 bg-orange-50 dark:bg-orange-950 rounded-lg">
-                        <div className="flex items-center gap-2 mb-1">
-                          {getActionIcon(task.suggestedAction)}
-                          <span className="text-sm font-medium">
-                            Suggested: {getActionLabel(task.suggestedAction)}
-                          </span>
-                        </div>
-                        <p className="text-sm">
-                          {task.reasoning}
-                        </p>
-                      </div>
+                      <h4 className="font-medium">{task.title}</h4>
+                      <p className="text-sm text-muted-foreground">{task.category}</p>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Bulk Actions */}
-            {selectedTasks.length > 0 && (
-              <div className="p-4 bg-muted rounded-lg">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">
-                    {selectedTasks.length} task{selectedTasks.length === 1 ? '' : 's'} selected
-                  </span>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => handleBulkAction('delete')}
-                      disabled={bulkActionMutation.isPending}
-                    >
-                      <Trash2 className="h-3 w-3 mr-1" />
-                      Delete Selected
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleBulkAction('defer')}
-                      disabled={bulkActionMutation.isPending}
-                    >
-                      <Clock className="h-3 w-3 mr-1" />
-                      Defer Selected
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleBulkAction('convert')}
-                      disabled={bulkActionMutation.isPending}
-                    >
-                      <FileText className="h-3 w-3 mr-1" />
-                      Convert to Notes
-                    </Button>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className={getActionColor(task.suggestedAction)}>
+                      {getActionIcon(task.suggestedAction)}
+                      {task.suggestedAction}
+                    </Badge>
+                    <Badge variant="secondary">
+                      {task.decayScore}% decay
+                    </Badge>
                   </div>
                 </div>
+                
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>Decay Score</span>
+                    <span>{task.decayScore}%</span>
+                  </div>
+                  <Progress value={task.decayScore} className="h-2" />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">Created:</span>
+                    <span className="ml-2">{task.daysSinceCreated} days ago</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Modified:</span>
+                    <span className="ml-2">{task.daysSinceModified} days ago</span>
+                  </div>
+                </div>
+                
+                <div className="text-xs text-muted-foreground italic">
+                  💡 {task.reason}
+                </div>
+                
+                <div className="flex items-center justify-end gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => taskActionMutation.mutate({ taskId: task.id, action: 'refresh' })}
+                  >
+                    <RefreshCw className="h-4 w-4 mr-1" />
+                    Refresh
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => taskActionMutation.mutate({ taskId: task.id, action: 'archive' })}
+                  >
+                    <Archive className="h-4 w-4 mr-1" />
+                    Archive
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => taskActionMutation.mutate({ taskId: task.id, action: 'delete' })}
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Delete
+                  </Button>
+                </div>
               </div>
-            )}
-          </div>
-        ) : (
-          <div className="text-center py-8 space-y-4">
-            <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto" />
-            <div>
-              <p className="font-medium text-green-600">Your tasks are fresh!</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                No stale tasks detected. Great job staying on top of your workflow!
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Statistics */}
-        <div className="grid grid-cols-3 gap-4">
-          <div className="text-center p-4 bg-muted rounded-lg">
-            <Trash2 className="h-6 w-6 mx-auto mb-2 text-red-500" />
-            <div className="text-2xl font-bold">{staleTasks?.filter(t => t.suggestedAction === 'delete').length || 0}</div>
-            <div className="text-xs text-muted-foreground">For Deletion</div>
-          </div>
-          <div className="text-center p-4 bg-muted rounded-lg">
-            <Clock className="h-6 w-6 mx-auto mb-2 text-yellow-500" />
-            <div className="text-2xl font-bold">{staleTasks?.filter(t => t.suggestedAction === 'defer').length || 0}</div>
-            <div className="text-xs text-muted-foreground">To Defer</div>
-          </div>
-          <div className="text-center p-4 bg-muted rounded-lg">
-            <FileText className="h-6 w-6 mx-auto mb-2 text-blue-500" />
-            <div className="text-2xl font-bold">{staleTasks?.filter(t => t.suggestedAction === 'convert').length || 0}</div>
-            <div className="text-xs text-muted-foreground">To Convert</div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+            ))
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

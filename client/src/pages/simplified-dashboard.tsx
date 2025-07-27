@@ -3,10 +3,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, CheckSquare, Clock, Target, Zap } from "lucide-react";
+import { Plus, CheckSquare, Clock, Target, Zap, Brain, Repeat, Trash, Heart, Award, BarChart } from "lucide-react";
 import { QuickAdd } from "@/components/quick-add";
 import { TaskItem } from "@/components/task-item";
 import { SimpleTaskEditor } from "@/components/simple-task-editor";
+import { SmartReminderRecalibration } from "@/components/smart-reminder-recalibration";
+import { RecurringTaskGeneratorTuner } from "@/components/recurring-task-generator-tuner";
+import { TaskDecayDeclutter } from "@/components/task-decay-declutter";
+import { MoodAwareTaskSuggestions } from "@/components/mood-aware-task-suggestions";
+import { GoalTrackingAlignment } from "@/components/goal-tracking-alignment";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import type { Task } from "@shared/schema";
 
 export function SimplifiedDashboard() {
@@ -223,40 +229,117 @@ export function SimplifiedDashboard() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <Button variant="outline" className="h-auto p-4 text-left justify-start">
-                <div>
-                  <div className="font-medium">Smart Reminders</div>
-                  <div className="text-sm text-muted-foreground">AI-optimized reminder timing</div>
-                </div>
-              </Button>
-              <Button variant="outline" className="h-auto p-4 text-left justify-start">
-                <div>
-                  <div className="font-medium">Recurring Tasks</div>
-                  <div className="text-sm text-muted-foreground">Auto-generate task patterns</div>
-                </div>
-              </Button>
-              <Button variant="outline" className="h-auto p-4 text-left justify-start">
-                <div>
-                  <div className="font-medium">Task Cleanup</div>
-                  <div className="text-sm text-muted-foreground">Identify stale tasks</div>
-                </div>
-              </Button>
-              <Button variant="outline" className="h-auto p-4 text-left justify-start">
-                <div>
-                  <div className="font-medium">Mood Suggestions</div>
-                  <div className="text-sm text-muted-foreground">Context-aware recommendations</div>
-                </div>
-              </Button>
-              <Button variant="outline" className="h-auto p-4 text-left justify-start">
-                <div>
-                  <div className="font-medium">Goal Tracking</div>
-                  <div className="text-sm text-muted-foreground">Align tasks with objectives</div>
-                </div>
-              </Button>
-              <Button variant="outline" className="h-auto p-4 text-left justify-start">
-                <div>
-                  <div className="font-medium">Insights Dashboard</div>
-                  <div className="text-sm text-muted-foreground">Productivity analytics</div>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="h-auto p-4 text-left justify-start">
+                    <div className="flex items-center gap-3">
+                      <Brain className="h-5 w-5 text-blue-500" />
+                      <div>
+                        <div className="font-medium">Smart Reminders</div>
+                        <div className="text-sm text-muted-foreground">AI-optimized reminder timing</div>
+                      </div>
+                    </div>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl">
+                  <DialogHeader>
+                    <DialogTitle>Smart Reminder Recalibration</DialogTitle>
+                  </DialogHeader>
+                  <SmartReminderRecalibration />
+                </DialogContent>
+              </Dialog>
+
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="h-auto p-4 text-left justify-start">
+                    <div className="flex items-center gap-3">
+                      <Repeat className="h-5 w-5 text-green-500" />
+                      <div>
+                        <div className="font-medium">Recurring Tasks</div>
+                        <div className="text-sm text-muted-foreground">Auto-generate task patterns</div>
+                      </div>
+                    </div>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl">
+                  <DialogHeader>
+                    <DialogTitle>Recurring Task Generator & Tuner</DialogTitle>
+                  </DialogHeader>
+                  <RecurringTaskGeneratorTuner />
+                </DialogContent>
+              </Dialog>
+
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="h-auto p-4 text-left justify-start">
+                    <div className="flex items-center gap-3">
+                      <Trash className="h-5 w-5 text-orange-500" />
+                      <div>
+                        <div className="font-medium">Task Cleanup</div>
+                        <div className="text-sm text-muted-foreground">Identify stale tasks</div>
+                      </div>
+                    </div>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl">
+                  <DialogHeader>
+                    <DialogTitle>Task Decay & Declutter</DialogTitle>
+                  </DialogHeader>
+                  <TaskDecayDeclutter />
+                </DialogContent>
+              </Dialog>
+
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="h-auto p-4 text-left justify-start">
+                    <div className="flex items-center gap-3">
+                      <Heart className="h-5 w-5 text-pink-500" />
+                      <div>
+                        <div className="font-medium">Mood Suggestions</div>
+                        <div className="text-sm text-muted-foreground">Context-aware recommendations</div>
+                      </div>
+                    </div>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl">
+                  <DialogHeader>
+                    <DialogTitle>Mood-Aware Task Suggestions</DialogTitle>
+                  </DialogHeader>
+                  <MoodAwareTaskSuggestions />
+                </DialogContent>
+              </Dialog>
+
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="h-auto p-4 text-left justify-start">
+                    <div className="flex items-center gap-3">
+                      <Award className="h-5 w-5 text-purple-500" />
+                      <div>
+                        <div className="font-medium">Goal Tracking</div>
+                        <div className="text-sm text-muted-foreground">Align tasks with objectives</div>
+                      </div>
+                    </div>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl">
+                  <DialogHeader>
+                    <DialogTitle>Goal Tracking & Alignment</DialogTitle>
+                  </DialogHeader>
+                  <GoalTrackingAlignment />
+                </DialogContent>
+              </Dialog>
+
+              <Button 
+                variant="outline" 
+                className="h-auto p-4 text-left justify-start"
+                onClick={() => window.open('/advanced', '_blank')}
+              >
+                <div className="flex items-center gap-3">
+                  <BarChart className="h-5 w-5 text-indigo-500" />
+                  <div>
+                    <div className="font-medium">Insights Dashboard</div>
+                    <div className="text-sm text-muted-foreground">Productivity analytics</div>
+                  </div>
                 </div>
               </Button>
             </div>
