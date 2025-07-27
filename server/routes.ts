@@ -6,6 +6,8 @@ import {
   type AuthRequest 
 } from "./auth";
 import aiRoutes from "./routes/ai";
+import gamificationRoutes from "./routes/gamification";
+import integrationRoutes from "./routes/integrations";
 import { 
   insertTaskSchema, 
   updateTaskSchema,
@@ -424,6 +426,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // AI Routes
   app.use('/api/ai', aiRoutes);
+  
+  // Gamification Routes
+  app.use('/api/gamification', gamificationRoutes);
+  
+  // Integration Routes
+  app.use('/api/integrations', integrationRoutes);
 
   const httpServer = createServer(app);
   return httpServer;

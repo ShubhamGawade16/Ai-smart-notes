@@ -16,6 +16,7 @@ import NotFound from "@/pages/not-found";
 import { SettingsPage } from "@/pages/settings";
 import OnboardingPage from "@/pages/onboarding";
 import TaskRefiner from "@/pages/task-refiner";
+import AdvancedFeatures from "@/pages/advanced-features";
 
 function Router() {
   // Check if user has completed onboarding
@@ -35,7 +36,7 @@ function Router() {
         {!hasCompletedOnboarding ? <OnboardingPage /> : <SimplifiedDashboard />}
       </Route>
       <Route path="/dashboard" component={Dashboard} />
-      <Route path="/advanced" component={Dashboard} />
+      <Route path="/advanced" component={AdvancedFeatures} />
       <Route path="/task-refiner" component={TaskRefiner} />
       <Route path="/settings" component={SettingsPage} />
       <Route component={NotFound} />
