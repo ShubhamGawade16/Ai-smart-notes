@@ -15,6 +15,13 @@ buildscript {
     }
 }
 
+// Set Java version globally
+allprojects {
+    tasks.withType(JavaCompile).configureEach {
+        options.release = 21
+    }
+}
+
 apply from: "variables.gradle"
 
 allprojects {

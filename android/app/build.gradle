@@ -3,6 +3,12 @@ apply plugin: 'com.android.application'
 android {
     namespace "com.aismartnotes.app"
     compileSdk rootProject.ext.compileSdkVersion
+    
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+    
     defaultConfig {
         applicationId "com.aismartnotes.app"
         minSdkVersion rootProject.ext.minSdkVersion
