@@ -419,9 +419,10 @@ export default function OnboardingPage() {
   const handleComplete = (finalPreferences: any) => {
     // Store preferences in localStorage for now (would be saved to DB in real app)
     localStorage.setItem('userPreferences', JSON.stringify(finalPreferences));
+    localStorage.setItem('onboardingCompleted', 'true');
     
-    // Redirect to main dashboard
-    setLocation('/');
+    // Force page reload to trigger route change
+    window.location.href = '/';
   };
 
   return (

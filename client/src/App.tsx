@@ -18,7 +18,7 @@ import OnboardingPage from "@/pages/onboarding";
 
 function Router() {
   // Check if user has completed onboarding
-  const hasCompletedOnboarding = localStorage.getItem('userPreferences');
+  const hasCompletedOnboarding = localStorage.getItem('onboardingCompleted') === 'true';
   
   return (
     <Switch>
