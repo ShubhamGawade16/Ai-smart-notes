@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Zap } from "lucide-react";
 import { taskApi, aiApi } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/queryClient";
 
 export function TodaysPlan() {
   const { toast } = useToast();
@@ -126,8 +127,14 @@ export function TodaysPlan() {
                         });
                         
                         if (response.ok) {
-                          // Refresh tasks
-                          window.location.reload();
+                          // Invalidate queries to refresh data
+                          queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
+                          queryClient.invalidateQueries({ queryKey: ['/api/tasks/today'] });
+                          queryClient.invalidateQueries({ queryKey: ['/api/analytics/stats'] });
+                          toast({
+                            title: "Task added!",
+                            description: `"${sampleTask}" has been added to your tasks.`,
+                          });
                         }
                       } catch (error) {
                         console.error('Failed to add sample task:', error);

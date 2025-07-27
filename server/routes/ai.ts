@@ -1,7 +1,8 @@
 import express from 'express';
 import { AIService } from '../ai';
-import { authenticateToken, type AuthRequest } from '../auth';
+import { authenticateToken, optionalAuth, type AuthRequest } from '../auth';
 import { storage } from '../storage';
+import * as aiService from '../services/ai-service';
 
 const router = express.Router();
 const aiService = new AIService();
@@ -178,6 +179,51 @@ router.get('/focus-forecast', authenticateToken, async (req: AuthRequest, res) =
     });
   } catch (error) {
     console.error('Focus forecast error:', error);
+    res.status(500).json({ error: 'Failed to generate focus forecast' });
+  }
+});
+
+// Productivity Insights - Core AI feature
+router.get('/insights', optionalAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.userId || 'demo-user';
+    const tasks = await storage.getTasks(userId);
+    const notes = await storage.getNotes(userId);
+    
+    // Use the AI service for real insights
+    const insights = await aiService.generateProductivityInsights(tasks, notes, 'basic_pro');
+    
+    res.json({ success: true, insights, generatedAt: new Date().toISOString() });
+  } catch (error) {
+    console.error('Error generating insights:', error);
+    res.status(500).json({ error: 'Failed to generate insights' });
+  }
+});
+
+// Focus forecast endpoint
+router.get('/focus-forecast3', optionalAuth, async (req: AuthRequest, res) => {
+  try {
+    const mockData = {
+      peakFocusWindows: [
+        {
+          start: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+          end: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(),
+          confidence: 0.85
+        }
+      ],
+      suggestedBreaks: [
+        { time: '15:00', duration: 10, reason: 'Afternoon energy refresh' }
+      ],
+      burnoutRisk: {
+        level: 'low' as const,
+        factors: ['Consistent work patterns'],
+        recommendations: ['Maintain current pace']
+      }
+    };
+    
+    res.json(mockData);
+  } catch (error) {
+    console.error('Error generating focus forecast:', error);
     res.status(500).json({ error: 'Failed to generate focus forecast' });
   }
 });
