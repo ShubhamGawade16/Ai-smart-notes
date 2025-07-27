@@ -112,13 +112,25 @@ export function TodaysPlan() {
                     variant="ghost"
                     size="sm"
                     className="text-left justify-start h-auto p-3 text-wrap"
-                    onClick={() => {
-                      // Add sample task functionality
-                      const quickAddInput = document.querySelector('input[placeholder*="What would you like to add"]') as HTMLInputElement;
-                      if (quickAddInput) {
-                        quickAddInput.value = sampleTask;
-                        quickAddInput.focus();
-                        quickAddInput.scrollIntoView({ behavior: 'smooth' });
+                    onClick={async () => {
+                      try {
+                        const response = await fetch('/api/tasks', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            title: sampleTask,
+                            priority: 'medium',
+                            category: 'Sample',
+                            description: 'Auto-generated sample task'
+                          })
+                        });
+                        
+                        if (response.ok) {
+                          // Refresh tasks
+                          window.location.reload();
+                        }
+                      } catch (error) {
+                        console.error('Failed to add sample task:', error);
                       }
                     }}
                   >

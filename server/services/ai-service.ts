@@ -1,11 +1,12 @@
 import OpenAI from 'openai';
 
-if (!process.env.OPENAI_API_KEY) {
-  console.error('OPENAI_API_KEY environment variable is required');
+if (!process.env.OPENROUTER_API_KEY) {
+  console.error('OPENROUTER_API_KEY environment variable is required');
 }
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  baseURL: "https://openrouter.ai/api/v1",
+  apiKey: process.env.OPENROUTER_API_KEY,
 });
 import { Task, InsertTask } from "@shared/schema";
 

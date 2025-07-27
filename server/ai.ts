@@ -1,9 +1,10 @@
 import OpenAI from "openai";
 import type { Task, Note, User } from "@shared/schema";
 
-// Use OpenAI API for AI features
+// Use OpenRouter with DeepSeek for cost-effective AI processing
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  baseURL: "https://openrouter.ai/api/v1",
+  apiKey: process.env.OPENROUTER_API_KEY,
 });
 
 export interface AIInsight {
@@ -39,7 +40,7 @@ export class AIService {
     const dailyLimit = userTier === 'free' ? 3 : 999;
     
     try {
-      const model = userTier === 'free' ? "gpt-4o-mini" : "gpt-4o";
+      const model = userTier === 'free' ? "deepseek/deepseek-chat-v3-0324:free" : "deepseek/deepseek-chat";
       
       const response = await openai.chat.completions.create({
         model,
@@ -94,7 +95,7 @@ export class AIService {
     dueDate?: Date;
   }> {
     try {
-      const model = userTier === 'free' ? "gpt-4o-mini" : "gpt-4o";
+      const model = userTier === 'free' ? "deepseek/deepseek-chat-v3-0324:free" : "deepseek/deepseek-chat";
       
       const response = await openai.chat.completions.create({
         model,
@@ -226,7 +227,7 @@ export class AIService {
 
     try {
       const response = await openai.chat.completions.create({
-        model: "gpt-4o", // High-quality model for paid users
+        model: "deepseek/deepseek-chat", // High-quality model for paid users
         messages: [
           {
             role: "system",
@@ -264,8 +265,8 @@ export class AIService {
     try {
       const response = await openai.chat.completions.create({
         model: userTier === 'advanced_pro' || userTier === 'premium_pro' 
-          ? "gpt-4o" 
-          : "gpt-4o-mini",
+          ? "deepseek/deepseek-chat" 
+          : "deepseek/deepseek-chat-v3-0324:free",
         messages: [
           {
             role: "system",
@@ -322,7 +323,7 @@ export class AIService {
       const response = await openai.chat.completions.create({
         model: userTier === 'premium_pro' 
           ? "anthropic/claude-3.5-sonnet" 
-          : "openai/gpt-4o-mini",
+          : "openai/deepseek/deepseek-chat-v3-0324:free",
         messages: [
           {
             role: "system",
@@ -363,7 +364,7 @@ export class AIService {
       }));
 
       const response = await openai.chat.completions.create({
-        model: "gpt-4o",
+        model: "deepseek/deepseek-chat",
         messages: [
           {
             role: "system",
@@ -402,7 +403,7 @@ export class AIService {
 
     try {
       const response = await openai.chat.completions.create({
-        model: "gpt-4o",
+        model: "deepseek/deepseek-chat",
         messages: [
           {
             role: "system",
