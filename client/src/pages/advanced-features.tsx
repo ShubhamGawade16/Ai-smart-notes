@@ -6,6 +6,7 @@ import { AutoScheduler } from '@/components/AutoScheduler';
 import { GoalTracking } from '@/components/GoalTracking';
 import { HabitGamification } from '@/components/HabitGamification';
 import { IntegrationHub } from '@/components/IntegrationHub';
+import { SocialAccountability } from '@/components/SocialAccountability';
 import { SmartTaskInput } from '@/components/SmartTaskInput';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Sparkles } from 'lucide-react';
@@ -92,6 +93,17 @@ export default function AdvancedFeatures() {
             </div>
           </section>
 
+          {/* Social Accountability */}
+          <section>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
+              Social Accountability
+            </h2>
+            
+            <div className="grid grid-cols-1 gap-6">
+              <SocialAccountability />
+            </div>
+          </section>
+
           {/* Feature Overview */}
           <section className="p-6 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-xl">
             <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
@@ -131,6 +143,7 @@ export default function AdvancedFeatures() {
                   <li>• Achievement system</li>
                   <li>• Streak tracking</li>
                   <li>• Level progression</li>
+                  <li>• Social accountability</li>
                   <li>• External integrations</li>
                 </ul>
               </div>
