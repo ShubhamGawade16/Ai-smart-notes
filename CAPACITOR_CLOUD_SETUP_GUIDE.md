@@ -2,30 +2,27 @@
 
 ## 🚀 **Step-by-Step Instructions**
 
-### **Step 1: Initialize Capacitor Cloud**
-```bash
-npx cap cloud login
-```
-- Opens browser for GitHub authentication
-- Sign in with your GitHub account
-- Returns to terminal when complete
+### **Step 1: Access Capacitor Cloud Dashboard**
+**Go to**: https://dashboard.capacitorjs.com
 
-### **Step 2: Connect Your Project**
-```bash
-npx cap cloud init
-```
-- Select "Create new app" 
+- Click "Sign in with GitHub"
+- Authorize Capacitor Cloud access
+- You'll see the dashboard interface
+
+### **Step 2: Connect Your Repository**
+In the dashboard:
+- Click "New App"
+- Connect your GitHub repository
 - App Name: `AI Smart Notes`
 - App ID: `com.aismartnotes.app`
-- Choose your GitHub repository
+- Select the repository containing your project
 
-### **Step 3: Build Your APK**
-```bash
-npx cap cloud build android
-```
-- Build starts automatically
-- Takes 10-15 minutes
-- Shows progress in terminal
+### **Step 3: Trigger Build**
+In the dashboard:
+- Go to your app → Builds tab
+- Click "Create Build"
+- Platform: Android
+- Build starts automatically (10-15 minutes)
 
 ### **Step 4: Download APK**
 When build completes:
