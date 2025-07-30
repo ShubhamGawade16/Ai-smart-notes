@@ -10,7 +10,7 @@ const openai = new OpenAI({
 });
 
 // Available GPT models - you can change this to use different models
-const GPT_MODEL = "gpt-4o"; // Options: gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-3.5-turbo
+const GPT_MODEL = "gpt-4o-mini"; // Options: gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-3.5-turbo
 
 // Helper function to clean AI responses
 function cleanJsonResponse(content: string): string {
