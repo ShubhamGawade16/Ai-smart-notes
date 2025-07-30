@@ -17,6 +17,7 @@ import { SettingsPage } from "@/pages/settings";
 import OnboardingPage from "@/pages/onboarding";
 import TaskRefiner from "@/pages/task-refiner";
 import AdvancedFeatures from "@/pages/advanced-features";
+import AIControlCenter from "@/pages/ai-control-center";
 
 function Router() {
   // Check if user has completed onboarding
@@ -35,6 +36,7 @@ function Router() {
       <Route path="/" component={SimplifiedDashboard} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/advanced" component={AdvancedFeatures} />
+      <Route path="/ai-brain" component={AIControlCenter} />
       <Route path="/task-refiner" component={TaskRefiner} />
       <Route path="/settings" component={SettingsPage} />
       <Route component={NotFound} />

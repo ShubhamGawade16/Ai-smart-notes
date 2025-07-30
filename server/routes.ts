@@ -398,6 +398,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // AI Routes
   app.use('/api/ai', aiRoutes);
   
+  // AI Brain - Central AI controller
+  const { registerAIBrainRoutes } = await import("./routes/ai-brain");
+  registerAIBrainRoutes(app);
+  
   // ============================================================================
   // NOTIFICATION ROUTES
   // ============================================================================
@@ -441,14 +445,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Gamification Routes
-  app.use('/api/gamification', gamificationRoutes);
-  
-  // Integration Routes
-  app.use('/api/integrations', integrationRoutes);
-  
-  // Social Routes
-  app.use('/api/social', socialRoutes);
+  // NOTE: Removed unwanted features per user request:
+  // - Auto Scheduler 
+  // - Social Accountability (gamificationRoutes, socialRoutes)
+  // - Achievement System 
+  // - Integration Hub (integrationRoutes)
 
   const httpServer = createServer(app);
   return httpServer;
