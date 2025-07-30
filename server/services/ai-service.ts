@@ -11,6 +11,11 @@ const openai = new OpenAI({
 
 // Available GPT models - you can change this to use different models
 const GPT_MODEL = "gpt-4o"; // Options: gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-3.5-turbo
+
+// Helper function to clean AI responses
+function cleanJsonResponse(content: string): string {
+  return content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+}
 import { Task, InsertTask } from "@shared/schema";
 
 export interface TaskAnalysis {
@@ -42,7 +47,7 @@ export async function parseNaturalLanguageTask(input: string): Promise<TaskAnaly
 Analyze this task description and extract structured information:
 "${input}"
 
-Provide a JSON response with the following structure:
+Return ONLY a valid JSON object with this exact structure (no markdown, no code blocks, no additional text):
 {
   "title": "Clear, actionable task title",
   "description": "Additional context if needed",
@@ -62,6 +67,7 @@ Rules:
 - Tags: 3-5 relevant keywords
 - ContextSwitchCost: 1 (easy switch) to 10 (requires deep focus)
 - If due date mentioned (today, tomorrow, Friday, etc.), calculate actual date
+- Return ONLY the JSON object, no other text or formatting
 `;
 
   try {
@@ -77,8 +83,8 @@ Rules:
       throw new Error("No response from AI");
     }
 
-    // Parse JSON response
-    const analysis = JSON.parse(content);
+    // Parse JSON response (clean markdown if present)
+    const analysis = JSON.parse(cleanJsonResponse(content));
     
     // Validate and sanitize response
     return {
@@ -195,7 +201,7 @@ Completion Patterns:
 - Common bottlenecks: ${userPatterns.bottlenecks || 'None identified'}
 - Streak: ${userPatterns.currentStreak || 0} days
 
-Generate 2-3 personalized insights as JSON:
+Return ONLY a valid JSON array of insights (no markdown, no code blocks, no additional text):
 [
   {
     "type": "productivity_tip|bottleneck_analysis|time_optimization",
@@ -245,7 +251,7 @@ Focus on:
     const content = response.choices[0]?.message?.content;
     if (!content) return [];
 
-    const insights = JSON.parse(content);
+    const insights = JSON.parse(cleanJsonResponse(content));
     
     return Array.isArray(insights) ? insights.filter(insight => 
       insight.title && insight.content && typeof insight.confidence === 'number'
