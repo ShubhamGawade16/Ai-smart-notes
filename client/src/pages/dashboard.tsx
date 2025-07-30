@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { Header } from "@/components/header";
-import { QuickAdd } from "@/components/quick-add";
-import { TodaysPlan } from "@/components/todays-plan";
+import { ModernTaskList } from "@/components/modern-task-list";
 import { RecentNotes } from "@/components/recent-notes";
 import { ProductivityInsights } from "@/components/productivity-insights";
 import { FocusForecast } from "@/components/focus-forecast-simple";
 import { AIBrainDashboard } from "@/components/ai-brain-dashboard";
 import { MobileNav } from "@/components/mobile-nav";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Brain } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Link } from "wouter";
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('today');
@@ -27,8 +27,7 @@ export default function Dashboard() {
       case 'tasks':
         return (
           <div className="space-y-6">
-            <QuickAdd />
-            <TodaysPlan />
+            <ModernTaskList />
           </div>
         );
       case 'notes':
@@ -61,15 +60,30 @@ export default function Dashboard() {
             <MobileNav activeTab={activeTab} onTabChange={setActiveTab} />
           </>
         ) : (
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            {/* Left Column - Tasks */}
-            <div className="xl:col-span-2 space-y-6">
-              <QuickAdd />
-              <TodaysPlan />
+          <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+            {/* Main Column - Modern Task List */}
+            <div className="xl:col-span-3">
+              <ModernTaskList />
             </div>
             
-            {/* Right Column - AI Features */}
-            <div className="space-y-6">
+            {/* Right Sidebar - AI Features */}
+            <div className="space-y-4">
+              {/* AI Features Quick Access */}
+              <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-950/20 dark:to-blue-950/20 rounded-xl p-4 border border-purple-100 dark:border-purple-900">
+                <div className="flex items-center gap-2 mb-3">
+                  <Brain className="w-5 h-5 text-purple-600" />
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100">AI Features</h3>
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                  Enhance your productivity with AI-powered tools
+                </p>
+                <Link href="/advanced-features">
+                  <Button className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
+                    Explore AI Tools
+                  </Button>
+                </Link>
+              </div>
+              
               <ProductivityInsights />
               <FocusForecast />
               <RecentNotes />
