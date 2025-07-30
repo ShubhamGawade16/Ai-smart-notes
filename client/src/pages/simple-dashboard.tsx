@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ModernTaskList } from "@/components/modern-task-list";
+import { AdvancedTaskView } from "@/components/advanced-task-view";
 import { SimpleTaskInput } from "@/components/simple-task-input";
 import { ModernAIRefiner } from "@/components/modern-ai-refiner";
 import { 
@@ -13,10 +14,13 @@ import {
   Eye
 } from "lucide-react";
 import { Link } from "wouter";
+import type { Task } from "@shared/schema";
 
 export default function SimpleDashboard() {
   const [showSmartInput, setShowSmartInput] = useState(false);
   const [showAIRefiner, setShowAIRefiner] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [isAdvancedViewOpen, setIsAdvancedViewOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -25,11 +29,11 @@ export default function SimpleDashboard() {
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center">
-                <Brain className="w-5 h-5 text-white" />
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-teal-600 to-cyan-600 flex items-center justify-center">
+                <img src="@assets/Planify_1753900917508.png" alt="Planify" className="w-6 h-6" />
               </div>
               <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                GPT Do
+                Planify
               </h1>
             </div>
             
@@ -91,7 +95,12 @@ export default function SimpleDashboard() {
             )}
 
             {/* Task List */}
-            <ModernTaskList />
+            <ModernTaskList 
+              onAdvancedView={(task) => {
+                setSelectedTask(task);
+                setIsAdvancedViewOpen(true);
+              }}
+            />
           </div>
 
           {/* AI Features Sidebar */}
@@ -162,6 +171,20 @@ export default function SimpleDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Advanced Task View Dialog */}
+      <AdvancedTaskView
+        task={selectedTask}
+        isOpen={isAdvancedViewOpen}
+        onClose={() => {
+          setIsAdvancedViewOpen(false);
+          setSelectedTask(null);
+        }}
+        onUpdate={(updatedTask) => {
+          // Handle task update here
+          console.log('Task updated:', updatedTask);
+        }}
+      />
     </div>
   );
 }

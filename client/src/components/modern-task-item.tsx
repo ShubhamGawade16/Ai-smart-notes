@@ -14,7 +14,8 @@ import {
   Check,
   X,
   MoreHorizontal,
-  Brain
+  Brain,
+  Eye
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -30,9 +31,12 @@ import { useLocation } from "wouter";
 
 interface ModernTaskItemProps {
   task: Task;
+  onUpdate?: (task: Task) => void;
+  onDelete?: (id: string) => void;
+  onAdvancedView?: (task: Task) => void;
 }
 
-export function ModernTaskItem({ task }: ModernTaskItemProps) {
+export function ModernTaskItem({ task, onUpdate, onDelete, onAdvancedView }: ModernTaskItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(task.title);
   const [isHovered, setIsHovered] = useState(false);
@@ -254,6 +258,21 @@ export function ModernTaskItem({ task }: ModernTaskItemProps) {
         "flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity",
         isHovered && "opacity-100"
       )}>
+        {onAdvancedView && (
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAdvancedView(task);
+            }}
+            className="px-2 h-7 text-xs text-teal-600 hover:text-teal-700 hover:bg-teal-50 dark:hover:bg-teal-950"
+          >
+            <Eye className="w-3 h-3 mr-1" />
+            Advanced
+          </Button>
+        )}
+        
         <Button
           size="sm"
           variant="ghost"

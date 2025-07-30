@@ -16,7 +16,11 @@ import { ModernTaskItem } from "./modern-task-item";
 import { SmartTaskInput } from "./SmartTaskInput";
 import type { Task } from "@shared/schema";
 
-export function ModernTaskList() {
+interface ModernTaskListProps {
+  onAdvancedView?: (task: Task) => void;
+}
+
+export function ModernTaskList({ onAdvancedView }: ModernTaskListProps) {
   const [activeTab, setActiveTab] = useState("today");
   const [showSmartInput, setShowSmartInput] = useState(false);
 
@@ -33,6 +37,15 @@ export function ModernTaskList() {
 
   const incompleteTasks = allTasks.filter((task: Task) => !task.completed);
   const completedTasks = allTasks.filter((task: Task) => task.completed);
+
+  // Add task update and delete handlers
+  const handleUpdateTask = (updatedTask: Task) => {
+    console.log('Task updated:', updatedTask);
+  };
+
+  const handleDeleteTask = (taskId: string) => {
+    console.log('Task deleted:', taskId);
+  };
 
   const getTasksForTab = () => {
     switch (activeTab) {
@@ -184,7 +197,13 @@ export function ModernTaskList() {
             {safeTaskList.length > 0 ? (
               <div className="space-y-1">
                 {safeTaskList.map((task: Task) => (
-                  <ModernTaskItem key={task.id} task={task} />
+                  <ModernTaskItem 
+                    key={task.id} 
+                    task={task}
+                    onUpdate={handleUpdateTask}
+                    onDelete={handleDeleteTask}
+                    onAdvancedView={onAdvancedView}
+                  />
                 ))}
               </div>
             ) : (
