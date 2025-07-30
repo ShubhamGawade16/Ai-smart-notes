@@ -67,9 +67,14 @@ export function AdvancedTaskView({ task, isOpen, onClose, onUpdate, onAIRefine }
   const queryClient = useQueryClient();
 
   const updateTaskMutation = useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: Partial<Task> }) =>
-      apiRequest(`/api/tasks/${id}`, 'PATCH', updates),
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<Task> }) => {
+      console.log('Making API request to update task:', id, updates);
+      const response = await apiRequest(`/api/tasks/${id}`, 'PATCH', updates);
+      console.log('API response:', response);
+      return response.task || response;
+    },
     onSuccess: (updatedTask) => {
+      console.log('Update successful:', updatedTask);
       queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
       queryClient.invalidateQueries({ queryKey: ['/api/tasks/today'] });
       onUpdate(updatedTask);
@@ -80,9 +85,10 @@ export function AdvancedTaskView({ task, isOpen, onClose, onUpdate, onAIRefine }
       });
     },
     onError: (error) => {
+      console.error('Update failed:', error);
       toast({
         title: "Error",
-        description: "Failed to update task. Please try again.",
+        description: `Failed to update task: ${error.message}`,
         variant: "destructive",
       });
     },
@@ -107,6 +113,7 @@ export function AdvancedTaskView({ task, isOpen, onClose, onUpdate, onAIRefine }
   const handleSave = () => {
     if (!task) return;
     
+    console.log('Saving task with updates:', editForm);
     updateTaskMutation.mutate({
       id: task.id,
       updates: editForm
