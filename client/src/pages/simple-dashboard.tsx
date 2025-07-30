@@ -24,37 +24,43 @@ export default function SimpleDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Simple Header */}
+      {/* Centered Header */}
       <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <div className="w-10 h-10 rounded-lg overflow-hidden">
-                <img src="@assets/Planify_1753901415287.png" alt="Planify" className="w-full h-full object-cover" />
-              </div>
+        <div className="max-w-6xl mx-auto px-4 py-6">
+          {/* Centered Logo and Brand */}
+          <div className="flex flex-col items-center justify-center mb-6">
+            <div className="w-16 h-16 rounded-2xl overflow-hidden mb-3 shadow-lg">
+              <img src="@assets/Planify_1753901415287.png" alt="Planify" className="w-full h-full object-cover" />
             </div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
+              Planify
+            </h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              Smart AI Task Management
+            </p>
+          </div>
+          
+          {/* Action Buttons */}
+          <div className="flex items-center justify-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowSmartInput(!showSmartInput)}
+              className="flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Add Task
+            </Button>
             
-            <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowSmartInput(!showSmartInput)}
-                className="flex items-center gap-2"
-              >
-                <Plus className="w-4 h-4" />
-                Add Task
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowAIRefiner(!showAIRefiner)}
-                className="flex items-center gap-2"
-              >
-                <MessageCircle className="w-4 h-4" />
-                AI Refiner
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowAIRefiner(!showAIRefiner)}
+              className="flex items-center gap-2"
+            >
+              <MessageCircle className="w-4 h-4" />
+              AI Refiner
+            </Button>
           </div>
         </div>
       </header>
