@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 // import { useAuth } from "@/hooks/useAuth"; // Disabled for public testing
 import Dashboard from "@/pages/dashboard";
 import { SimplifiedDashboard } from "@/pages/simplified-dashboard";
+import SimpleDashboard from "@/pages/simple-dashboard";
 import Landing from "@/pages/landing";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
@@ -34,9 +35,10 @@ function Router() {
       <Route path="/setup" component={Setup} />
       
       {/* Main app routes - always show dashboard for testing */}
-      <Route path="/" component={SimplifiedDashboard} />
+      <Route path="/" component={SimpleDashboard} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/advanced-features" component={ModernAdvancedFeatures} />
+      <Route path="/advanced" component={ModernAdvancedFeatures} />
       <Route path="/ai-brain" component={AIControlCenter} />
       <Route path="/task-refiner" component={TaskRefiner} />
       <Route path="/settings" component={SettingsPage} />
