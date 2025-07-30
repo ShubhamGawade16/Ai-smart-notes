@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { useUpgrade } from '@/hooks/useUpgrade';
+// import { useUpgrade } from '@/hooks/useUpgrade';
 
 interface TaskRefinement {
   refinedTasks: Array<{
@@ -43,11 +43,15 @@ export const ConversationalRefiner: React.FC<ConversationalRefinerProps> = ({
   }>>([]);
   
   const { toast } = useToast();
-  const { canUseFeature, hasReachedLimit, handleApiError, limits } = useUpgrade();
+  // Mock upgrade hooks for testing (no limitations)
+  const canUseFeature = () => true;
+  const hasReachedLimit = () => false;
+  const handleApiError = (error: Error) => false;
+  const limits = null;
 
   const refineMutation = useMutation({
     mutationFn: async ({ task, query }: { task: string; query: string }) => {
-      const response = await apiRequest('POST', '/api/ai/refine-task', {
+      const response = await apiRequest('/api/ai/refine-task', 'POST', {
         originalTask: task,
         userQuery: query,
         context: {

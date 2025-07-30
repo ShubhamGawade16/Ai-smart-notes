@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { useUpgrade } from '@/hooks/useUpgrade';
+// import { useUpgrade } from '@/hooks/useUpgrade';
 
 interface TaskAnalysis {
   title: string;
@@ -33,12 +33,16 @@ export const SmartTaskInput: React.FC<SmartTaskInputProps> = ({ onTaskCreated })
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { canUseFeature, hasReachedLimit, handleApiError, limits } = useUpgrade();
+  // Mock upgrade hooks for testing (no limitations)
+  const canUseFeature = () => true;
+  const hasReachedLimit = () => false;
+  const handleApiError = (error: Error) => false;
+  const limits = null;
 
   // AI Task Parsing Mutation
   const parseTaskMutation = useMutation({
     mutationFn: async (taskInput: string) => {
-      const response = await apiRequest('POST', '/api/ai/parse-task', { input: taskInput });
+      const response = await apiRequest('/api/ai/parse-task', 'POST', { input: taskInput });
       return response;
     },
     onSuccess: (data) => {
@@ -64,7 +68,7 @@ export const SmartTaskInput: React.FC<SmartTaskInputProps> = ({ onTaskCreated })
   // Task Creation Mutation
   const createTaskMutation = useMutation({
     mutationFn: async (taskData: any) => {
-      const response = await apiRequest('POST', '/api/tasks', taskData);
+      const response = await apiRequest('/api/tasks', 'POST', taskData);
       return response;
     },
     onSuccess: () => {

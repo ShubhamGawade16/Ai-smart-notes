@@ -20,13 +20,9 @@ import {
 import { Link } from 'wouter';
 import { CleanHeader } from '@/components/clean-header';
 import { ConversationalRefiner } from '@/components/ConversationalRefiner';
-import { FocusForecast } from '@/components/FocusForecast';
-import { ProductivityInsights } from '@/components/ProductivityInsights';
-import { AutoScheduler } from '@/components/AutoScheduler';
-import { GoalTracking } from '@/components/GoalTracking';
-import { HabitGamification } from '@/components/HabitGamification';
+import { FocusForecast } from '@/components/focus-forecast-simple';
+import { ProductivityInsights } from '@/components/productivity-insights';
 import { IntegrationHub } from '@/components/IntegrationHub';
-import { SocialAccountability } from '@/components/SocialAccountability';
 import { SmartTaskInput } from '@/components/SmartTaskInput';
 import { SmartReminderRecalibration } from '@/components/smart-reminder-recalibration';
 import { RecurringTaskGeneratorTuner } from '@/components/recurring-task-generator-tuner';
@@ -70,22 +66,6 @@ const aiFeatures = [
 
 const productivityTools = [
   {
-    id: 'scheduler',
-    title: 'Auto Scheduler',
-    description: 'Intelligent task scheduling and time blocking',
-    icon: Calendar,
-    color: 'text-indigo-600',
-    component: AutoScheduler
-  },
-  {
-    id: 'goals',
-    title: 'Goal Tracking',
-    description: 'Align tasks with your long-term objectives',
-    icon: Target,
-    color: 'text-orange-600',
-    component: GoalTracking
-  },
-  {
     id: 'smart-reminders',
     title: 'Smart Reminders',
     description: 'Context-aware reminder optimization',
@@ -119,22 +99,6 @@ const lifestyleFeatures = [
     icon: Trash2,
     color: 'text-red-600',
     component: TaskDecayDeclutter
-  },
-  {
-    id: 'gamification',
-    title: 'Achievement System',
-    description: 'Gamified productivity with rewards and streaks',
-    icon: Users,
-    color: 'text-emerald-600',
-    component: HabitGamification
-  },
-  {
-    id: 'social',
-    title: 'Social Accountability',
-    description: 'Share progress and stay motivated with friends',
-    icon: Users,
-    color: 'text-violet-600',
-    component: SocialAccountability
   }
 ];
 

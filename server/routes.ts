@@ -81,7 +81,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================================================
 
   // Natural Language Task Entry - Parse user input into structured task (FREE for testing)
-  app.post("/api/ai/parse-task", async (req: AuthRequest, res) => {
+  app.post("/api/ai/parse-task", optionalAuth, async (req: AuthRequest, res) => {
       try {
         const { input } = req.body;
         if (!input || typeof input !== 'string') {
@@ -146,7 +146,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   );
 
   // Conversational Task Refiner (FREE for testing)
-  app.post("/api/ai/refine-task", async (req: AuthRequest, res) => {
+  app.post("/api/ai/refine-task", optionalAuth, async (req: AuthRequest, res) => {
       try {
         const { originalTask, userQuery, context } = req.body;
         
@@ -154,7 +154,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ error: "Original task and user query are required" });
         }
 
+        // Use the refineTask function instead of aiBrain (which isn't imported)
         const refinement = await refineTask(originalTask, userQuery, context || {});
+        
         res.json(refinement);
       } catch (error) {
         console.error("Task refinement error:", error);
