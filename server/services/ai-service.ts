@@ -1,13 +1,16 @@
 import OpenAI from 'openai';
 
-if (!process.env.OPENROUTER_API_KEY) {
-  console.error('OPENROUTER_API_KEY environment variable is required');
+// Configure for OpenAI GPT models
+if (!process.env.OPENAI_API_KEY) {
+  console.error('OPENAI_API_KEY environment variable is required');
 }
 
 const openai = new OpenAI({
-  baseURL: "https://openrouter.ai/api/v1",
-  apiKey: process.env.OPENROUTER_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY,
 });
+
+// Available GPT models - you can change this to use different models
+const GPT_MODEL = "gpt-4o"; // Options: gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-3.5-turbo
 import { Task, InsertTask } from "@shared/schema";
 
 export interface TaskAnalysis {
@@ -63,7 +66,7 @@ Rules:
 
   try {
     const response = await openai.chat.completions.create({
-      model: "deepseek/deepseek-chat",
+      model: GPT_MODEL,
       messages: [{ role: "user", content: prompt }],
       temperature: 0.3,
       max_tokens: 500,
@@ -137,7 +140,7 @@ Respond with JSON array of task indices in optimal order:
 
   try {
     const response = await openai.chat.completions.create({
-      model: "deepseek/deepseek-chat",
+      model: GPT_MODEL,
       messages: [{ role: "user", content: prompt }],
       temperature: 0.2,
       max_tokens: 200,
@@ -211,8 +214,8 @@ Focus on:
 `;
 
   // Return fallback insights if AI service is unavailable
-  if (!process.env.OPENROUTER_API_KEY) {
-    console.log('OpenRouter API key not available, using fallback insights');
+  if (!process.env.OPENAI_API_KEY) {
+    console.log('OpenAI API key not available, using fallback insights');
     return [
       {
         type: "productivity_tip",
@@ -233,15 +236,10 @@ Focus on:
 
   try {
     const response = await openai.chat.completions.create({
-      model: "deepseek/deepseek-chat",
+      model: GPT_MODEL,
       messages: [{ role: "user", content: prompt }],
       temperature: 0.4,
       max_tokens: 800,
-    }, {
-      headers: {
-        "HTTP-Referer": "https://replit.com",
-        "X-Title": "GPT-Do-AI-App"
-      }
     });
 
     const content = response.choices[0]?.message?.content;
@@ -324,7 +322,7 @@ Examples of refinement:
 
   try {
     const response = await openai.chat.completions.create({
-      model: "deepseek/deepseek-chat",
+      model: GPT_MODEL,
       messages: [{ role: "user", content: prompt }],
       temperature: 0.3,
       max_tokens: 1000,
