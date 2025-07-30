@@ -20,6 +20,7 @@ import TaskRefiner from "@/pages/task-refiner";
 import AdvancedFeatures from "@/pages/advanced-features";
 import ModernAdvancedFeatures from "@/pages/modern-advanced-features";
 import AIControlCenter from "@/pages/ai-control-center";
+import MindMapPage from "@/pages/mind-map";
 
 function Router() {
   // Check if user has completed onboarding
@@ -41,6 +42,7 @@ function Router() {
       <Route path="/advanced" component={ModernAdvancedFeatures} />
       <Route path="/ai-brain" component={AIControlCenter} />
       <Route path="/task-refiner" component={TaskRefiner} />
+      <Route path="/mind-map" component={MindMapPage} />
       <Route path="/settings" component={SettingsPage} />
       <Route component={NotFound} />
     </Switch>

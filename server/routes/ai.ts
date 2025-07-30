@@ -228,4 +228,29 @@ router.get('/focus-forecast3', optionalAuth, async (req: AuthRequest, res) => {
   }
 });
 
+// Mind Map AI Chat endpoint
+router.post('/mind-map-chat', optionalAuth, async (req, res) => {
+  try {
+    const { tasks, query } = req.body;
+    
+    if (!tasks || !query) {
+      return res.status(400).json({ 
+        error: "tasks and query are required" 
+      });
+    }
+
+    // Import the analyzeMindMap function
+    const { analyzeMindMap } = await import("../services/openai-service");
+    const advice = await analyzeMindMap(tasks, query);
+    
+    res.json({ advice });
+  } catch (error) {
+    console.error("Error analyzing mind map:", error);
+    res.status(500).json({ 
+      error: "Failed to analyze mind map",
+      details: error instanceof Error ? error.message : "Unknown error"
+    });
+  }
+});
+
 export default router;

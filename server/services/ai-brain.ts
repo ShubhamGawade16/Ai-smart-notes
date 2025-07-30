@@ -5,7 +5,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const GPT_MODEL = "gpt-4o-mini";
+const GPT_MODEL = "gpt-4o-mini"; // Most cost-effective OpenAI model
 
 // Helper function to clean AI responses
 function cleanJsonResponse(content: string): string {

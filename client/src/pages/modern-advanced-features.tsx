@@ -18,6 +18,7 @@ import { ProductivityInsights } from "@/components/productivity-insights";
 import { FocusForecast } from "@/components/focus-forecast-simple";
 import { SmartTaskInput } from "@/components/SmartTaskInput";
 import { ModernAIRefiner } from "@/components/modern-ai-refiner";
+import { TaskMindMap } from "@/components/task-mind-map";
 
 interface FeatureCard {
   id: string;
@@ -61,6 +62,14 @@ const aiFeatures: FeatureCard[] = [
     icon: TrendingUp,
     color: "text-orange-600",
     badge: "Analytics"
+  },
+  {
+    id: "mind-map",
+    title: "Task Mind Map",
+    description: "Visualize task connections and get AI strategy advice for optimal execution.",
+    icon: Target,
+    color: "text-indigo-600",
+    badge: "Interactive AI"
   }
 ];
 
@@ -125,6 +134,18 @@ export default function ModernAdvancedFeatures() {
             <div className="max-w-2xl mx-auto">
               <ProductivityInsights />
             </div>
+          </div>
+        );
+      case 'mind-map':
+        return (
+          <div className="space-y-6">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-bold">Task Mind Map</h2>
+              <p className="text-gray-600 dark:text-gray-400">
+                Visualize task connections and get AI strategy advice
+              </p>
+            </div>
+            <TaskMindMap />
           </div>
         );
       default:
