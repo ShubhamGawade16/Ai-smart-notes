@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   Dialog,
   DialogContent,
@@ -27,6 +28,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import type { Task } from "@shared/schema";
 
 interface AdvancedTaskViewProps {
@@ -60,6 +63,31 @@ export function AdvancedTaskView({ task, isOpen, onClose, onUpdate, onAIRefine }
     tags: task?.tags || []
   });
 
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const updateTaskMutation = useMutation({
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<Task> }) =>
+      apiRequest(`/api/tasks/${id}`, 'PATCH', updates),
+    onSuccess: (updatedTask) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks/today'] });
+      onUpdate(updatedTask);
+      setIsEditing(false);
+      toast({
+        title: "Task updated",
+        description: "Your task has been successfully updated.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update task. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Update form when task changes
   useEffect(() => {
     if (task) {
@@ -77,11 +105,12 @@ export function AdvancedTaskView({ task, isOpen, onClose, onUpdate, onAIRefine }
   if (!task) return null;
 
   const handleSave = () => {
-    onUpdate({
-      ...task,
-      ...editForm
+    if (!task) return;
+    
+    updateTaskMutation.mutate({
+      id: task.id,
+      updates: editForm
     });
-    setIsEditing(false);
   };
 
   const handleCancel = () => {
@@ -143,7 +172,12 @@ export function AdvancedTaskView({ task, isOpen, onClose, onUpdate, onAIRefine }
                 </Button>
               ) : (
                 <div className="flex gap-1">
-                  <Button size="sm" onClick={handleSave} className="h-8">
+                  <Button 
+                    size="sm" 
+                    onClick={handleSave} 
+                    className="h-8"
+                    disabled={updateTaskMutation.isPending}
+                  >
                     <Save className="w-4 h-4 mr-1" />
                     Save
                   </Button>
