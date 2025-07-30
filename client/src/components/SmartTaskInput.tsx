@@ -34,10 +34,15 @@ export const SmartTaskInput: React.FC<SmartTaskInputProps> = ({ onTaskCreated })
   const { toast } = useToast();
   const queryClient = useQueryClient();
   // Mock upgrade hooks for testing (no limitations)
-  const canUseFeature = () => true;
-  const hasReachedLimit = () => false;
-  const handleApiError = (error: Error) => false;
-  const limits = null;
+  const canUseFeature = (_feature: string) => true;
+  const hasReachedLimit = (_limitType: string) => false;
+  const handleApiError = (_error: Error) => false;
+  const limits = {
+    tier: 'premium_pro' as const,
+    unlimited: true,
+    dailyAiCalls: { limit: -1, used: 0, remaining: -1 },
+    monthlyTasks: { limit: -1, used: 0, remaining: -1 }
+  };
 
   // AI Task Parsing Mutation
   const parseTaskMutation = useMutation({

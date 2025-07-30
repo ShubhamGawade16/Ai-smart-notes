@@ -44,10 +44,13 @@ export const ConversationalRefiner: React.FC<ConversationalRefinerProps> = ({
   
   const { toast } = useToast();
   // Mock upgrade hooks for testing (no limitations)
-  const canUseFeature = () => true;
-  const hasReachedLimit = () => false;
-  const handleApiError = (error: Error) => false;
-  const limits = null;
+  const canUseFeature = (_feature: string) => true;
+  const hasReachedLimit = (_limitType: string) => false;
+  const handleApiError = (_error: Error) => false;
+  const limits = {
+    tier: 'premium_pro' as const,
+    dailyAiCalls: { remaining: -1 }
+  };
 
   const refineMutation = useMutation({
     mutationFn: async ({ task, query }: { task: string; query: string }) => {
@@ -111,7 +114,7 @@ export const ConversationalRefiner: React.FC<ConversationalRefinerProps> = ({
 
   const canRefine = canUseFeature('basic_tasks');
   const remainingCalls = limits?.dailyAiCalls ? limits.dailyAiCalls.remaining : 0;
-  const isFreeTier = limits?.tier === 'free';
+  const isFreeTier = false; // Always premium for testing
 
   const exampleQueries = [
     "Break this down into smaller steps",
