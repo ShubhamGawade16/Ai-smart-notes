@@ -13,7 +13,8 @@ import {
   Grip,
   Check,
   X,
-  MoreHorizontal
+  MoreHorizontal,
+  Brain
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -25,6 +26,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Task } from "@shared/schema";
 import { cn } from "@/lib/utils";
+import { useLocation } from "wouter";
 
 interface ModernTaskItemProps {
   task: Task;
@@ -34,6 +36,7 @@ export function ModernTaskItem({ task }: ModernTaskItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(task.title);
   const [isHovered, setIsHovered] = useState(false);
+  const [, setLocation] = useLocation();
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -251,6 +254,16 @@ export function ModernTaskItem({ task }: ModernTaskItemProps) {
         "flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity",
         isHovered && "opacity-100"
       )}>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => setLocation(`/task-refiner?task=${encodeURIComponent(task.title)}`)}
+          className="px-2 h-7 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:hover:bg-purple-950"
+        >
+          <Brain className="w-3 h-3 mr-1" />
+          AI View
+        </Button>
+        
         <Button
           size="sm"
           variant="ghost"

@@ -13,6 +13,7 @@ import {
   Sparkles,
   MessageCircle
 } from "lucide-react";
+import { useLocation } from "wouter";
 import { ProductivityInsights } from "@/components/productivity-insights";
 import { FocusForecast } from "@/components/focus-forecast-simple";
 import { SmartTaskInput } from "@/components/SmartTaskInput";
@@ -65,6 +66,7 @@ const aiFeatures: FeatureCard[] = [
 
 export default function ModernAdvancedFeatures() {
   const [activeFeature, setActiveFeature] = useState<string | null>(null);
+  const [, setLocation] = useLocation();
 
   const renderFeature = () => {
     switch (activeFeature) {
@@ -153,7 +155,18 @@ export default function ModernAdvancedFeatures() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
+        {/* Header with Back Button */}
+        <div className="flex items-center justify-between mb-8">
+          <Button
+            variant="outline"
+            onClick={() => setLocation('/')}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Dashboard
+          </Button>
+        </div>
+        
         <div className="text-center space-y-4 mb-12">
           <div className="flex items-center justify-center gap-3 mb-4">
             <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center">
