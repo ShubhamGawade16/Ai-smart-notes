@@ -29,8 +29,8 @@ export default function SimpleDashboard() {
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-teal-600 to-cyan-600 flex items-center justify-center">
-                <img src="@assets/Planify_1753900917508.png" alt="Planify" className="w-6 h-6" />
+              <div className="w-8 h-8 rounded-lg overflow-hidden">
+                <img src="@assets/Planify_1753901415287.png" alt="Planify" className="w-full h-full object-cover" />
               </div>
               <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
                 Planify
