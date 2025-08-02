@@ -85,7 +85,17 @@ export default function AuthPage() {
           
           <div className="text-center mb-8">
             <div className="mb-4 flex justify-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-teal-400 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
+              <img 
+                src="/attached_assets/Planify_imresizer_1754161747016.jpg"
+                alt="Planify Logo"
+                className="w-16 h-16 rounded-xl shadow-lg"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                  if (nextElement) nextElement.style.display = 'flex';
+                }}
+              />
+              <div className="w-16 h-16 bg-gradient-to-br from-teal-400 to-teal-600 rounded-xl flex items-center justify-center shadow-lg" style={{display: 'none'}}>
                 <span className="text-white font-bold text-2xl">P</span>
               </div>
             </div>

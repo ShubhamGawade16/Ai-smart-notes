@@ -99,7 +99,17 @@ export default function SimpleDashboard() {
           <div className="flex items-center justify-between">
             {/* Logo and Brand */}
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-teal-400 to-teal-600 rounded-lg flex items-center justify-center shadow-sm">
+              <img 
+                src="/attached_assets/Planify_imresizer_1754161747016.jpg"
+                alt="Planify"
+                className="w-8 h-8 rounded-lg"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                  if (nextElement) nextElement.style.display = 'flex';
+                }}
+              />
+              <div className="w-8 h-8 bg-gradient-to-br from-teal-400 to-teal-600 rounded-lg flex items-center justify-center shadow-sm" style={{display: 'none'}}>
                 <span className="text-white font-bold text-sm">P</span>
               </div>
               <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">

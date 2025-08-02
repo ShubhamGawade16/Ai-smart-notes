@@ -104,7 +104,17 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-teal-400 to-teal-600 rounded-lg flex items-center justify-center shadow-sm">
+              <img 
+                src="/attached_assets/Planify_imresizer_1754161747016.jpg"
+                alt="Planify"
+                className="w-8 h-8 rounded-lg"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                  if (nextElement) nextElement.style.display = 'flex';
+                }}
+              />
+              <div className="w-8 h-8 bg-gradient-to-br from-teal-400 to-teal-600 rounded-lg flex items-center justify-center shadow-sm" style={{display: 'none'}}>
                 <span className="text-white font-bold text-sm">P</span>
               </div>
               <span className="text-xl font-bold text-gray-900 dark:text-white">Planify</span>
@@ -131,7 +141,17 @@ export default function LandingPage() {
       <section className="pt-32 pb-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <div className="mb-8 flex justify-center">
-            <div className="w-20 h-20 bg-gradient-to-br from-teal-400 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
+            <img 
+              src="/attached_assets/Planify_imresizer_1754161747016.jpg"
+              alt="Planify Logo"
+              className="w-20 h-20 rounded-xl shadow-lg"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                if (nextElement) nextElement.style.display = 'flex';
+              }}
+            />
+            <div className="w-20 h-20 bg-gradient-to-br from-teal-400 to-teal-600 rounded-xl flex items-center justify-center shadow-lg" style={{display: 'none'}}>
               <span className="text-white font-bold text-3xl">P</span>
             </div>
           </div>
@@ -145,7 +165,7 @@ export default function LandingPage() {
           <div className="flex justify-center mb-12">
             <Link href="/auth?mode=signup">
               <Button size="lg" className="text-lg px-8">
-                Start Free - 3 AI requests/day
+                Start Free
               </Button>
             </Link>
           </div>
