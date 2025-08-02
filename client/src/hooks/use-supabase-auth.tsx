@@ -104,6 +104,13 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       if (session?.user) {
         setSupabaseUser(session.user);
         await syncUserData(session.user);
+        
+        // Handle redirect after auth state change
+        if (event === 'SIGNED_IN' && window.location.pathname === '/auth') {
+          setTimeout(() => {
+            window.location.href = '/onboarding';
+          }, 500);
+        }
       } else {
         setSupabaseUser(null);
         setUser(null);
@@ -168,7 +175,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       // Force navigation after successful login
       setTimeout(() => {
         window.location.href = "/onboarding";
-      }, 1000);
+      }, 500);
 
     } catch (error: any) {
       console.error('Login error:', error);

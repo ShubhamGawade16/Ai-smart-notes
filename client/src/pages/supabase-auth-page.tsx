@@ -27,14 +27,17 @@ export default function SupabaseAuthPage() {
   // Redirect if already logged in
   useEffect(() => {
     if (!isLoading && user) {
-      // Check if user has completed onboarding
-      if (user.onboardingCompleted) {
-        navigate("/dashboard");
-      } else {
-        navigate("/onboarding");
-      }
+      console.log('User found, redirecting...', user);
+      // Force redirect using window.location for better reliability
+      setTimeout(() => {
+        if (user.onboardingCompleted) {
+          window.location.href = "/dashboard";
+        } else {
+          window.location.href = "/onboarding";
+        }
+      }, 100);
     }
-  }, [user, isLoading, navigate]);
+  }, [user, isLoading]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
