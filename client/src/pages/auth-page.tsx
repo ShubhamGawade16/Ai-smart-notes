@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Brain, Target, Zap, Mail, Lock, User } from "lucide-react";
+import { Loader2, Brain, Target, Zap, Mail, Lock, User, Home, ArrowLeft } from "lucide-react";
+import { Link } from "wouter";
 
 export default function AuthPage() {
   const { user, isLoading, signIn, signUp } = useAuth();
@@ -69,6 +70,19 @@ export default function AuthPage() {
       {/* Left Column - Auth Forms */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
+          {/* Back to Home Button */}
+          <div className="mb-6">
+            <Link href="/">
+              <Button 
+                variant="ghost" 
+                className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to Home
+              </Button>
+            </Link>
+          </div>
+          
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Welcome to Planify</h1>
             <p className="text-gray-600 dark:text-gray-300">Your AI-powered productivity companion</p>
