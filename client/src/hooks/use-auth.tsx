@@ -47,12 +47,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             email: session.user.email || '',
             firstName: session.user.user_metadata?.first_name,
             lastName: session.user.user_metadata?.last_name,
-            onboardingCompleted: false,
+            onboardingCompleted: true, // Skip onboarding for now
           };
-          
-          // For now, skip user sync to avoid database issues
-          // We'll set onboardingCompleted to true to go directly to dashboard
-          userData.onboardingCompleted = true;
           
           setUser(userData);
         }
@@ -82,17 +78,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               email: session.user.email || '',
               firstName: session.user.user_metadata?.first_name,
               lastName: session.user.user_metadata?.last_name,
-              onboardingCompleted: false,
+              onboardingCompleted: true, // Skip onboarding for now
             };
-            
-            // For now, skip user sync to avoid database issues
-            // We'll set onboardingCompleted to true to go directly to dashboard
-            userData.onboardingCompleted = true;
             
             setUser(userData);
             
             if (event === 'SIGNED_IN' && userData.email) {
-              console.log('User signed in, redirecting to onboarding...');
+              console.log('User signed in, redirecting to dashboard...');
             }
           } else {
             // Clear token on logout
