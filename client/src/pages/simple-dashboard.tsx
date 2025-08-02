@@ -58,7 +58,8 @@ export default function SimpleDashboard() {
 
   const deleteAccountMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest('/api/auth/delete-account', 'DELETE');
+      const response = await apiRequest('DELETE', '/api/auth/delete-account');
+      return await response.json();
     },
     onSuccess: () => {
       toast({

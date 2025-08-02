@@ -24,28 +24,31 @@ export function SimpleTaskInput({ onTaskCreated, onUpgradeRequired }: SimpleTask
     mutationFn: async (taskData: any) => {
       if (isSmartMode) {
         // Use AI to enhance the task
-        const aiResponse = await apiRequest("/api/ai/parse-task", "POST", {
+        const aiResponse = await apiRequest("POST", "/api/ai/parse-task", {
           input: taskInput
         });
+        const aiData = await aiResponse.json();
         
-        return apiRequest("/api/tasks", "POST", {
-          title: aiResponse.title || taskInput,
-          description: aiResponse.description || "",
-          priority: aiResponse.priority || "medium",
-          category: aiResponse.category || "general",
-          tags: aiResponse.tags || [],
-          timeEstimate: aiResponse.timeEstimate || null,
-          dueDate: aiResponse.dueDate || null,
+        const taskResponse = await apiRequest("POST", "/api/tasks", {
+          title: aiData.title || taskInput,
+          description: aiData.description || "",
+          priority: aiData.priority || "medium",
+          category: aiData.category || "general",
+          tags: aiData.tags || [],
+          timeEstimate: aiData.timeEstimate || null,
+          dueDate: aiData.dueDate || null,
         });
+        return await taskResponse.json();
       } else {
         // Simple task creation
-        return apiRequest("/api/tasks", "POST", {
+        const taskResponse = await apiRequest("POST", "/api/tasks", {
           title: taskInput,
           description: "",
           priority: "medium",
           category: "general",
           tags: [],
         });
+        return await taskResponse.json();
       }
     },
     onSuccess: () => {

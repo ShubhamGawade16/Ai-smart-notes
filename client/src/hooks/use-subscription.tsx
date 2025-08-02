@@ -32,6 +32,8 @@ export function useSubscription() {
       if (response.ok) {
         const data = await response.json();
         setSubscriptionStatus(data);
+      } else {
+        console.error("Failed to fetch subscription status:", response.status, response.statusText);
       }
     } catch (error) {
       console.error("Failed to fetch subscription status:", error);
@@ -53,6 +55,8 @@ export function useSubscription() {
           canUseAi: data.canUseAi
         }));
         return data.canUseAi;
+      } else {
+        console.error("Failed to increment AI usage:", response.status, response.statusText);
       }
     } catch (error) {
       console.error("Failed to increment AI usage:", error);

@@ -46,8 +46,10 @@ export function ModernTaskItem({ task, onUpdate, onDelete, onAdvancedView }: Mod
   const queryClient = useQueryClient();
 
   const updateTaskMutation = useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: Partial<Task> }) =>
-      apiRequest(`/api/tasks/${id}`, 'PATCH', updates),
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<Task> }) => {
+      const response = await apiRequest('PATCH', `/api/tasks/${id}`, updates);
+      return await response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
       queryClient.invalidateQueries({ queryKey: ['/api/tasks/today'] });
@@ -63,7 +65,10 @@ export function ModernTaskItem({ task, onUpdate, onDelete, onAdvancedView }: Mod
   });
 
   const deleteTaskMutation = useMutation({
-    mutationFn: (id: string) => apiRequest(`/api/tasks/${id}`, 'DELETE'),
+    mutationFn: async (id: string) => {
+      const response = await apiRequest('DELETE', `/api/tasks/${id}`);
+      return await response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
       queryClient.invalidateQueries({ queryKey: ['/api/tasks/today'] });

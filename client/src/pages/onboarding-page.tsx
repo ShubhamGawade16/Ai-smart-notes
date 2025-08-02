@@ -56,7 +56,8 @@ export default function OnboardingPage() {
 
   const saveOnboardingMutation = useMutation({
     mutationFn: async (data: { primaryGoal: string; customGoals: string }) => {
-      return apiRequest("/api/user/onboarding", "POST", data);
+      const response = await apiRequest("POST", "/api/user/onboarding", data);
+      return await response.json();
     },
     onSuccess: () => {
       toast({

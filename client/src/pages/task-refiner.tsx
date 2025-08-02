@@ -13,10 +13,12 @@ interface TaskRefinement {
   originalTask: string;
   refinedTasks: Array<{
     title: string;
-    description: string;
-    priority: 'low' | 'medium' | 'high';
+    description?: string;
+    priority: 'low' | 'medium' | 'high' | 'urgent';
     estimatedTime: number;
     category: string;
+    tags?: string[];
+    subtasks?: string[];
   }>;
   suggestions: string[];
   createdAt: Date;
@@ -29,9 +31,10 @@ export default function TaskRefiner() {
 
   const createTasksMutation = useMutation({
     mutationFn: async (tasks: any[]) => {
-      const promises = tasks.map(task => 
-        apiRequest('POST', '/api/tasks', task)
-      );
+      const promises = tasks.map(async task => {
+        const response = await apiRequest('POST', '/api/tasks', task);
+        return await response.json();
+      });
       return Promise.all(promises);
     },
     onSuccess: (data) => {

@@ -54,14 +54,14 @@ export const ConversationalRefiner: React.FC<ConversationalRefinerProps> = ({
 
   const refineMutation = useMutation({
     mutationFn: async ({ task, query }: { task: string; query: string }) => {
-      const response = await apiRequest('/api/ai/refine-task', 'POST', {
+      const response = await apiRequest('POST', '/api/ai/refine-task', {
         originalTask: task,
         userQuery: query,
         context: {
           conversationHistory: conversation.map(c => c.content).slice(-4), // Last 4 messages
         },
       });
-      return response;
+      return await response.json();
     },
     onSuccess: (data: TaskRefinement) => {
       setConversation(prev => [...prev, 

@@ -51,7 +51,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "User ID not found in token" });
       }
 
-      const user = await storage.getUser(req.userId);
+      let user = req.user;
+      if (!user) {
+        user = await storage.getUser(req.userId);
+      }
+      
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }

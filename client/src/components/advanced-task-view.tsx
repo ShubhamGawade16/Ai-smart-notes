@@ -69,9 +69,10 @@ export function AdvancedTaskView({ task, isOpen, onClose, onUpdate, onAIRefine }
   const updateTaskMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Task> }) => {
       console.log('Making API request to update task:', id, updates);
-      const response = await apiRequest(`/api/tasks/${id}`, 'PATCH', updates);
+      const response = await apiRequest('PATCH', `/api/tasks/${id}`, updates);
       console.log('API response:', response);
-      return response.task || response;
+      const data = await response.json();
+      return data.task || data;
     },
     onSuccess: (updatedTask) => {
       console.log('Update successful:', updatedTask);
@@ -100,7 +101,7 @@ export function AdvancedTaskView({ task, isOpen, onClose, onUpdate, onAIRefine }
       setEditForm({
         title: task.title,
         description: task.description || "",
-        priority: task.priority,
+        priority: task.priority || "medium",
         category: task.category || "",
         estimatedTime: task.estimatedTime || 30,
         tags: task.tags || []
@@ -124,7 +125,7 @@ export function AdvancedTaskView({ task, isOpen, onClose, onUpdate, onAIRefine }
     setEditForm({
       title: task.title,
       description: task.description || "",
-      priority: task.priority,
+      priority: task.priority || "medium",
       category: task.category || "",
       estimatedTime: task.estimatedTime || 30,
       tags: task.tags || []
@@ -134,19 +135,21 @@ export function AdvancedTaskView({ task, isOpen, onClose, onUpdate, onAIRefine }
 
   const getPriorityMeterWidth = () => {
     switch (task.priority) {
-      case 'high': return '100%';
-      case 'medium': return '66%';
-      case 'low': return '33%';
-      default: return '0%';
+      case 'urgent': return '100%';
+      case 'high': return '75%';
+      case 'medium': return '50%';
+      case 'low': return '25%';
+      default: return '25%';
     }
   };
 
   const getPriorityMeterColor = () => {
     switch (task.priority) {
+      case 'urgent': return 'bg-red-600';
       case 'high': return 'bg-red-500';
       case 'medium': return 'bg-yellow-500';
       case 'low': return 'bg-green-500';
-      default: return 'bg-gray-300';
+      default: return 'bg-green-500';
     }
   };
 
@@ -219,8 +222,8 @@ export function AdvancedTaskView({ task, isOpen, onClose, onUpdate, onAIRefine }
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Priority Level
               </label>
-              <Badge className={cn("text-xs", priorityColors[task.priority])}>
-                {task.priority}
+              <Badge className={cn("text-xs", priorityColors[task.priority || "medium"])}>
+                {task.priority || "medium"}
               </Badge>
             </div>
             

@@ -47,8 +47,8 @@ export const SmartTaskInput: React.FC<SmartTaskInputProps> = ({ onTaskCreated })
   // AI Task Parsing Mutation
   const parseTaskMutation = useMutation({
     mutationFn: async (taskInput: string) => {
-      const response = await apiRequest('/api/ai/parse-task', 'POST', { input: taskInput });
-      return response;
+      const response = await apiRequest('POST', '/api/ai/parse-task', { input: taskInput });
+      return await response.json();
     },
     onSuccess: (data) => {
       setAnalysis(data.analysis);
@@ -73,8 +73,8 @@ export const SmartTaskInput: React.FC<SmartTaskInputProps> = ({ onTaskCreated })
   // Task Creation Mutation
   const createTaskMutation = useMutation({
     mutationFn: async (taskData: any) => {
-      const response = await apiRequest('/api/tasks', 'POST', taskData);
-      return response;
+      const response = await apiRequest('POST', '/api/tasks', taskData);
+      return await response.json();
     },
     onSuccess: () => {
       setInput('');

@@ -5,7 +5,8 @@ import { Task, Note, AIInsight, User } from "@shared/schema";
 export const taskApi = {
   getToday: async (): Promise<Task[]> => {
     try {
-      return await apiRequest('/api/tasks/today');
+      const response = await apiRequest('GET', '/api/tasks/today');
+      return await response.json();
     } catch (error) {
       console.error('Error fetching today tasks:', error);
       return [];
@@ -14,33 +15,36 @@ export const taskApi = {
 
   getAll: async (): Promise<Task[]> => {
     try {
-      return await apiRequest('/api/tasks');
+      const response = await apiRequest('GET', '/api/tasks');
+      return await response.json();
     } catch (error) {
       console.error('Error fetching tasks:', error);
       return [];
     }
   },
 
-  create: (task: Partial<Task>) => apiRequest('/api/tasks', {
-    method: 'POST',
-    body: JSON.stringify(task),
-  }),
+  create: async (task: Partial<Task>) => {
+    const response = await apiRequest('POST', '/api/tasks', task);
+    return await response.json();
+  },
 
-  update: (id: string, updates: Partial<Task>) => apiRequest(`/api/tasks/${id}`, {
-    method: 'PATCH',
-    body: JSON.stringify(updates),
-  }),
+  update: async (id: string, updates: Partial<Task>) => {
+    const response = await apiRequest('PATCH', `/api/tasks/${id}`, updates);
+    return await response.json();
+  },
 
-  delete: (id: string) => apiRequest(`/api/tasks/${id}`, {
-    method: 'DELETE',
-  }),
+  delete: async (id: string) => {
+    const response = await apiRequest('DELETE', `/api/tasks/${id}`);
+    return await response.json();
+  },
 };
 
 // Notes API
 export const noteApi = {
   getRecent: async (): Promise<Note[]> => {
     try {
-      return await apiRequest('/api/notes/recent');
+      const response = await apiRequest('GET', '/api/notes/recent');
+      return await response.json();
     } catch (error) {
       console.error('Error fetching recent notes:', error);
       return [];
@@ -49,33 +53,36 @@ export const noteApi = {
 
   getAll: async (): Promise<Note[]> => {
     try {
-      return await apiRequest('/api/notes');
+      const response = await apiRequest('GET', '/api/notes');
+      return await response.json();
     } catch (error) {
       console.error('Error fetching notes:', error);
       return [];
     }
   },
 
-  create: (note: Partial<Note>) => apiRequest('/api/notes', {
-    method: 'POST',
-    body: JSON.stringify(note),
-  }),
+  create: async (note: Partial<Note>) => {
+    const response = await apiRequest('POST', '/api/notes', note);
+    return await response.json();
+  },
 
-  update: (id: string, updates: Partial<Note>) => apiRequest(`/api/notes/${id}`, {
-    method: 'PATCH',
-    body: JSON.stringify(updates),
-  }),
+  update: async (id: string, updates: Partial<Note>) => {
+    const response = await apiRequest('PATCH', `/api/notes/${id}`, updates);
+    return await response.json();
+  },
 
-  delete: (id: string) => apiRequest(`/api/notes/${id}`, {
-    method: 'DELETE',
-  }),
+  delete: async (id: string) => {
+    const response = await apiRequest('DELETE', `/api/notes/${id}`);
+    return await response.json();
+  },
 };
 
 // AI API
 export const aiApi = {
   getBottlenecks: async () => {
     try {
-      return await apiRequest('/api/ai/bottlenecks');
+      const response = await apiRequest('GET', '/api/ai/bottlenecks');
+      return await response.json();
     } catch (error) {
       console.error('Error fetching AI bottlenecks:', error);
       return [];
@@ -84,35 +91,36 @@ export const aiApi = {
 
   getInsights: async () => {
     try {
-      return await apiRequest('/api/ai/insights');
+      const response = await apiRequest('GET', '/api/ai/insights');
+      return await response.json();
     } catch (error) {
       console.error('Error fetching AI insights:', error);
       return [];
     }
   },
 
-  optimizeDay: (data: any) => apiRequest('/api/ai/optimize-day', {
-    method: 'POST',
-    body: JSON.stringify(data),
-  }),
+  optimizeDay: async (data: any) => {
+    const response = await apiRequest('POST', '/api/ai/optimize-day', data);
+    return await response.json();
+  },
 
-  categorizeTask: (title: string, description?: string) => 
-    apiRequest('/api/ai/categorize', {
-      method: 'POST',
-      body: JSON.stringify({ title, description }),
-    }),
+  categorizeTask: async (title: string, description?: string) => {
+    const response = await apiRequest('POST', '/api/ai/categorize', { title, description });
+    return await response.json();
+  },
 
-  chat: (message: string) => apiRequest('/api/ai/chat', {
-    method: 'POST',
-    body: JSON.stringify({ message }),
-  }),
+  chat: async (message: string) => {
+    const response = await apiRequest('POST', '/api/ai/chat', { message });
+    return await response.json();
+  },
 };
 
 // Analytics API
 export const analyticsApi = {
   getStats: async () => {
     try {
-      return await apiRequest('/api/analytics/stats');
+      const response = await apiRequest('GET', '/api/analytics/stats');
+      return await response.json();
     } catch (error) {
       console.error('Error fetching analytics stats:', error);
       return {
@@ -129,16 +137,23 @@ export const analyticsApi = {
     }
   },
 
-  getWeeklyProgress: () => apiRequest('/api/analytics/weekly'),
+  getWeeklyProgress: async () => {
+    const response = await apiRequest('GET', '/api/analytics/weekly');
+    return await response.json();
+  },
   
-  getCategoryBreakdown: () => apiRequest('/api/analytics/categories'),
+  getCategoryBreakdown: async () => {
+    const response = await apiRequest('GET', '/api/analytics/categories');
+    return await response.json();
+  },
 };
 
 // Categories API
 export const categoriesApi = {
   getAll: async (): Promise<string[]> => {
     try {
-      return await apiRequest('/api/categories');
+      const response = await apiRequest('GET', '/api/categories');
+      return await response.json();
     } catch (error) {
       console.error('Error fetching categories:', error);
       return ['Work', 'Personal', 'Learning', 'Health'];

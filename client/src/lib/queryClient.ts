@@ -8,11 +8,11 @@ async function throwIfResNotOk(res: Response) {
 }
 
 export async function apiRequest(
+  method: string,
   url: string,
-  method: string = 'GET',
   body?: any,
   options: RequestInit = {},
-): Promise<any> {
+): Promise<Response> {
   try {
     // Get auth token from localStorage
     const token = localStorage.getItem('auth_token');
@@ -30,8 +30,7 @@ export async function apiRequest(
       headers,
     });
 
-    await throwIfResNotOk(res);
-    return await res.json();
+    return res;
   } catch (error) {
     console.error('API request error:', error);
     throw error;
