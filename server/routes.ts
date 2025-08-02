@@ -6,6 +6,7 @@ import {
   optionalAuth,
   type AuthRequest 
 } from "./auth";
+import authRoutes from "./routes/auth";
 import aiRoutes from "./routes/ai";
 import gamificationRoutes from "./routes/gamification";
 import integrationRoutes from "./routes/integrations";
@@ -31,8 +32,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================================================
   // AUTHENTICATION ROUTES
   // ============================================================================
+  
+  // Mount auth routes
+  app.use("/api/auth", authRoutes);
 
-  // Supabase user sync endpoint
+  // Supabase user sync endpoint (kept for compatibility)
   app.post("/api/auth/sync", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const { email, firstName, lastName, profileImageUrl } = req.body;
@@ -73,6 +77,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get user error:", error);
       res.status(500).json({ error: "Failed to get user" });
+    }
+  });
+
+  // Onboarding endpoint
+  app.post("/api/user/onboarding", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      if (!req.userId) {
+        return res.status(401).json({ error: "User ID not found in token" });
+      }
+
+      const { primaryGoal, customGoals } = req.body;
+      
+      const user = await storage.updateUser(req.userId, {
+        primaryGoal,
+        customGoals,
+        onboardingCompleted: true,
+      });
+
+      res.json({ user });
+    } catch (error) {
+      console.error("Onboarding error:", error);
+      res.status(500).json({ error: "Failed to save onboarding data" });
     }
   });
 

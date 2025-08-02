@@ -1,5 +1,5 @@
-import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
 import { User } from '@shared/schema';
 
 export interface AuthRequest extends Request {
@@ -7,7 +7,9 @@ export interface AuthRequest extends Request {
   userId?: string;
 }
 
-// Supabase JWT authentication middleware
+const JWT_SECRET = process.env.JWT_SECRET || "planify-secret-key-change-in-production";
+
+// JWT authentication middleware
 export const authenticateToken = async (
   req: AuthRequest,
   res: Response,
@@ -21,19 +23,15 @@ export const authenticateToken = async (
   }
 
   try {
-    // For Supabase JWT tokens, we can decode without verification for user ID
-    // Supabase handles the verification on their end
-    const decoded = jwt.decode(token) as any;
+    // Verify JWT token
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
     
-    if (!decoded || !decoded.sub) {
-      return res.status(401).json({ error: 'Invalid token format' });
-    }
-
-    // Store the user ID from Supabase JWT (sub field)
-    req.userId = decoded.sub;
+    // Add user ID to request
+    req.userId = decoded.userId;
     next();
   } catch (error) {
-    return res.status(401).json({ error: 'Invalid access token' });
+    console.error('Token verification failed:', error);
+    return res.status(401).json({ error: 'Invalid or expired token' });
   }
 };
 

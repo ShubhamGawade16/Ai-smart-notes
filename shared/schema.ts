@@ -54,6 +54,10 @@ export const users = pgTable("users", {
   currentStreak: integer("current_streak").default(0),
   longestStreak: integer("longest_streak").default(0),
   lastActivityAt: timestamp("last_activity_at"),
+  // Onboarding data
+  primaryGoal: varchar("primary_goal", { length: 50 }),
+  customGoals: text("custom_goals"),
+  onboardingCompleted: boolean("onboarding_completed").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

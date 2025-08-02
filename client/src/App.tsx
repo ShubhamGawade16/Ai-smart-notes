@@ -1,49 +1,65 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
-// import { useAuth } from "@/hooks/useAuth"; // Disabled for public testing
-import Dashboard from "@/pages/dashboard";
-import { SimplifiedDashboard } from "@/pages/simplified-dashboard";
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import SimpleDashboard from "@/pages/simple-dashboard";
-import Landing from "@/pages/landing";
-import Login from "@/pages/login";
-import Register from "@/pages/register";
-import Setup from "@/pages/setup";
-import AuthCallback from "@/pages/auth/callback";
+import LandingPage from "@/pages/landing-page";
+import AuthPage from "@/pages/auth-page";
+import OnboardingPage from "@/pages/onboarding-page";
 import NotFound from "@/pages/not-found";
-import { SettingsPage } from "@/pages/settings";
-import OnboardingPage from "@/pages/onboarding";
-import TaskRefiner from "@/pages/task-refiner";
-import AdvancedFeatures from "@/pages/advanced-features";
-import ModernAdvancedFeatures from "@/pages/modern-advanced-features";
-import AIControlCenter from "@/pages/ai-control-center";
-import MindMapPage from "@/pages/mind-map";
+import { Loader2 } from "lucide-react";
+
+function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Redirect to="/" />;
+  }
+
+  // Check if user needs onboarding
+  if (!user.onboardingCompleted) {
+    return <Redirect to="/onboarding" />;
+  }
+
+  return <Component />;
+}
 
 function Router() {
-  // Check if user has completed onboarding
-  const hasCompletedOnboarding = localStorage.getItem('onboardingCompleted') === 'true';
+  const { user, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
+      </div>
+    );
+  }
   
   return (
     <Switch>
-      <Route path="/onboarding" component={OnboardingPage} />
-      <Route path="/landing" component={Landing} />
-      <Route path="/login" component={Login} />
-      <Route path="/register" component={Register} />
-      <Route path="/auth/callback" component={AuthCallback} />
-      <Route path="/setup" component={Setup} />
+      {/* Public routes */}
+      <Route path="/" component={user ? () => <Redirect to="/dashboard" /> : LandingPage} />
+      <Route path="/auth" component={user ? () => <Redirect to="/dashboard" /> : AuthPage} />
       
-      {/* Main app routes - always show dashboard for testing */}
-      <Route path="/" component={SimpleDashboard} />
-      <Route path="/dashboard" component={Dashboard} />
-      <Route path="/advanced-features" component={ModernAdvancedFeatures} />
-      <Route path="/advanced" component={ModernAdvancedFeatures} />
-      <Route path="/ai-brain" component={AIControlCenter} />
-      <Route path="/task-refiner" component={TaskRefiner} />
-      <Route path="/mind-map" component={MindMapPage} />
-      <Route path="/settings" component={SettingsPage} />
+      {/* Onboarding route */}
+      <Route path="/onboarding">
+        {user && !user.onboardingCompleted ? <OnboardingPage /> : <Redirect to="/dashboard" />}
+      </Route>
+      
+      {/* Protected routes */}
+      <Route path="/dashboard" component={() => <ProtectedRoute component={SimpleDashboard} />} />
+      
       <Route component={NotFound} />
     </Switch>
   );
@@ -52,12 +68,14 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
-      </ThemeProvider>
+      <AuthProvider>
+        <ThemeProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </ThemeProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
