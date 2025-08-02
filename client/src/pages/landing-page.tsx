@@ -39,34 +39,6 @@ const testimonials = [
     image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Lisa",
     content: "Planify's goal breakdown feature turned my creative chaos into organized success. I'm completing projects 50% faster now.",
     rating: 5
-  },
-  {
-    name: "James Wilson",
-    role: "Sales Manager",
-    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=James",
-    content: "The predictive scheduling is incredible. Planify knows when I'm most productive and schedules my important calls accordingly.",
-    rating: 5
-  },
-  {
-    name: "Maria Garcia",
-    role: "Content Creator",
-    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Maria",
-    content: "From scattered ideas to structured content calendar - Planify's AI insights helped me triple my content output while reducing stress.",
-    rating: 5
-  },
-  {
-    name: "Alex Johnson",
-    role: "Remote Worker",
-    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Alex",
-    content: "Working from home was chaotic until Planify. Now I have clear daily structure and achieve more in 6 hours than I used to in 10.",
-    rating: 5
-  },
-  {
-    name: "Rachel Brown",
-    role: "Project Coordinator",
-    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Rachel",
-    content: "Managing multiple team projects is seamless with Planify. The AI automatically adjusts priorities when deadlines shift.",
-    rating: 5
   }
 ];
 
@@ -105,8 +77,8 @@ export default function LandingPage() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
-    }, 3000);
+      setCurrentTestimonial((prev) => (prev + 1) % (testimonials.length - 2));
+    }, 4000);
     return () => clearInterval(interval);
   }, []);
   return (
@@ -116,17 +88,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-2">
-              <img 
-                src="/attached_assets/Planify_1754160399413.png"
-                alt="Planify"
-                className="w-8 h-8 rounded-lg"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
-                  if (nextElement) nextElement.style.display = 'flex';
-                }}
-              />
-              <div className="w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center" style={{display: 'none'}}>
+              <div className="w-8 h-8 bg-gradient-to-br from-teal-400 to-teal-600 rounded-lg flex items-center justify-center shadow-sm">
                 <span className="text-white font-bold text-sm">P</span>
               </div>
               <span className="text-xl font-bold text-gray-900 dark:text-white">Planify</span>
@@ -153,18 +115,8 @@ export default function LandingPage() {
       <section className="pt-32 pb-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <div className="mb-8 flex justify-center">
-            <img 
-              src="/attached_assets/Planify_1754160399413.png"
-              alt="Planify Logo"
-              className="w-20 h-20 rounded-xl shadow-lg"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-                const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
-                if (nextElement) nextElement.style.display = 'flex';
-              }}
-            />
-            <div className="w-20 h-20 bg-teal-600 rounded-xl flex items-center justify-center shadow-lg" style={{display: 'none'}}>
-              <span className="text-white font-bold text-2xl">P</span>
+            <div className="w-20 h-20 bg-gradient-to-br from-teal-400 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
+              <span className="text-white font-bold text-3xl">P</span>
             </div>
           </div>
           <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 dark:text-white mb-6">
@@ -174,15 +126,12 @@ export default function LandingPage() {
           <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
             Transform your daily chaos into organized success. Planify uses advanced AI to understand your work style and optimize your productivity like never before.
           </p>
-          <div className="flex gap-4 justify-center mb-12">
+          <div className="flex justify-center mb-12">
             <Link href="/auth?mode=signup">
               <Button size="lg" className="text-lg px-8">
                 Start Free - 3 AI requests/day
               </Button>
             </Link>
-            <Button size="lg" variant="outline" className="text-lg px-8">
-              Watch Demo
-            </Button>
           </div>
 
           {/* Stats */}
@@ -225,34 +174,59 @@ export default function LandingPage() {
           <h2 className="text-3xl font-bold text-center mb-12 text-gray-900 dark:text-white">
             Loved by Thousands of Productive People
           </h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <Card key={index} className="p-6">
-                <div className="flex items-center gap-4 mb-4">
-                  <img 
-                    src={testimonial.image} 
-                    alt={testimonial.name}
-                    className="w-12 h-12 rounded-full"
-                  />
-                  <div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white">
-                      {testimonial.name}
-                    </h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {testimonial.role}
-                    </p>
+          <div className="relative max-w-4xl mx-auto">
+            <div className="overflow-hidden">
+              <div 
+                className="flex transition-transform duration-500 ease-in-out"
+                style={{
+                  transform: `translateX(-${currentTestimonial * (100 / 3)}%)`,
+                  width: `${(testimonials.length * 100) / 3}%`
+                }}
+              >
+                {testimonials.map((testimonial, index) => (
+                  <div key={index} className="w-1/3 px-4">
+                    <Card className="p-6 h-full">
+                      <div className="flex items-center gap-4 mb-4">
+                        <img 
+                          src={testimonial.image} 
+                          alt={testimonial.name}
+                          className="w-12 h-12 rounded-full"
+                        />
+                        <div>
+                          <h4 className="font-semibold text-gray-900 dark:text-white">
+                            {testimonial.name}
+                          </h4>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {testimonial.role}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-1 mb-3">
+                        {Array.from({ length: testimonial.rating }).map((_, i) => (
+                          <Star key={i} className="w-4 h-4 fill-yellow-500 text-yellow-500" />
+                        ))}
+                      </div>
+                      <p className="text-gray-700 dark:text-gray-300 italic text-sm">
+                        "{testimonial.content}"
+                      </p>
+                    </Card>
                   </div>
-                </div>
-                <div className="flex gap-1 mb-3">
-                  {Array.from({ length: testimonial.rating }).map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-yellow-500 text-yellow-500" />
-                  ))}
-                </div>
-                <p className="text-gray-700 dark:text-gray-300 italic">
-                  "{testimonial.content}"
-                </p>
-              </Card>
-            ))}
+                ))}
+              </div>
+            </div>
+            
+            {/* Dots indicator */}
+            <div className="flex justify-center gap-2 mt-8">
+              {Array.from({ length: testimonials.length - 2 }).map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentTestimonial(index)}
+                  className={`w-2 h-2 rounded-full transition-colors ${
+                    currentTestimonial === index ? 'bg-teal-600' : 'bg-gray-300'
+                  }`}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </section>
