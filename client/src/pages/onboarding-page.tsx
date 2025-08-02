@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSupabaseAuth } from "@/hooks/use-supabase-auth";
+import { useAuth } from "@/hooks/use-simple-auth";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -40,7 +40,7 @@ const goals = [
 ];
 
 export default function OnboardingPage() {
-  const { user } = useSupabaseAuth();
+  const { user } = useAuth();
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [step, setStep] = useState(1);
