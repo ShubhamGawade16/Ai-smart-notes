@@ -151,9 +151,10 @@ export function ModernTaskItem({ task, onUpdate, onDelete, onAdvancedView }: Mod
     <div 
       className={cn(
         "group flex items-center gap-3 p-4 rounded-xl transition-all duration-200",
-        "hover:bg-gray-50 dark:hover:bg-gray-900/50",
-        "border border-transparent hover:border-gray-200 dark:hover:border-gray-800",
-        task.completed && "opacity-60"
+        "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700",
+        "hover:bg-gray-50 dark:hover:bg-gray-750 hover:border-gray-300 dark:hover:border-gray-600",
+        "hover:shadow-sm",
+        task.completed && "opacity-70 bg-gray-50 dark:bg-gray-850"
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}

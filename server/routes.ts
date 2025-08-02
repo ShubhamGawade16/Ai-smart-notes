@@ -84,6 +84,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete account endpoint
+  app.delete("/api/auth/delete-account", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      if (!req.userId) {
+        return res.status(401).json({ error: "User ID not found in token" });
+      }
+
+      // Delete all user's tasks and notes first
+      await storage.deleteAllUserTasks(req.userId);
+      await storage.deleteAllUserNotes(req.userId);
+      
+      // Delete the user account
+      await storage.deleteUser(req.userId);
+      
+      res.json({ message: "Account deleted successfully" });
+    } catch (error) {
+      console.error("Delete account error:", error);
+      res.status(500).json({ error: "Failed to delete account" });
+    }
+  });
+
   // Onboarding endpoint
   app.post("/api/user/onboarding", authenticateToken, async (req: AuthRequest, res) => {
     try {

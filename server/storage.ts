@@ -23,6 +23,9 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   upsertUser(user: UpsertUser): Promise<User>;
   updateUser(id: string, updates: Partial<User>): Promise<User>;
+  deleteUser(id: string): Promise<boolean>;
+  deleteAllUserTasks(userId: string): Promise<boolean>;
+  deleteAllUserNotes(userId: string): Promise<boolean>;
 
   // Task operations
   getTasks(userId: string): Promise<Task[]>;
@@ -156,6 +159,26 @@ export class MemStorage implements IStorage {
     };
     
     return this.users[userIndex];
+  }
+
+  async deleteUser(id: string): Promise<boolean> {
+    const index = this.users.findIndex(user => user.id === id);
+    if (index === -1) {
+      return false;
+    }
+    
+    this.users.splice(index, 1);
+    return true;
+  }
+
+  async deleteAllUserTasks(userId: string): Promise<boolean> {
+    this.tasks = this.tasks.filter(task => task.userId !== userId);
+    return true;
+  }
+
+  async deleteAllUserNotes(userId: string): Promise<boolean> {
+    this.notes = this.notes.filter(note => note.userId !== userId);
+    return true;
   }
 
   // Task methods

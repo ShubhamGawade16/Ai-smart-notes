@@ -108,6 +108,36 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async deleteUser(id: string): Promise<boolean> {
+    try {
+      const result = await db.delete(users).where(eq(users.id, id));
+      return (result.rowCount ?? 0) > 0;
+    } catch (error) {
+      console.error(`Error deleting user ${id}:`, error);
+      return false;
+    }
+  }
+
+  async deleteAllUserTasks(userId: string): Promise<boolean> {
+    try {
+      await db.delete(tasks).where(eq(tasks.userId, userId));
+      return true;
+    } catch (error) {
+      console.error(`Error deleting all tasks for user ${userId}:`, error);
+      return false;
+    }
+  }
+
+  async deleteAllUserNotes(userId: string): Promise<boolean> {
+    try {
+      await db.delete(notes).where(eq(notes.userId, userId));
+      return true;
+    } catch (error) {
+      console.error(`Error deleting all notes for user ${userId}:`, error);
+      return false;
+    }
+  }
+
   // Task operations
   async getTasks(userId: string): Promise<Task[]> {
     try {
