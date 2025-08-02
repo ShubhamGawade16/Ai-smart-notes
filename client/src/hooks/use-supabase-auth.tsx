@@ -138,7 +138,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 
       // Redirect to verification page
       setTimeout(() => {
-        window.location.href = "/auth/verified";
+        window.location.href = `/verify-email?email=${encodeURIComponent(email)}`;
       }, 1000);
 
     } catch (error: any) {
