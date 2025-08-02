@@ -117,7 +117,7 @@ export default function LandingPage() {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg overflow-hidden">
-                <img src="@assets/Planify_imresizer(1)_1753901727720.jpg" alt="Planify" className="w-full h-full object-cover" />
+                <img src="/attached_assets/Planify_1754160399413.png" alt="Planify" className="w-full h-full object-cover" />
               </div>
               <span className="text-xl font-bold text-gray-900 dark:text-white">Planify</span>
             </div>
@@ -136,6 +136,13 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
+          <div className="mb-8 flex justify-center">
+            <img 
+              src="/attached_assets/Planify_1754160399413.png"
+              alt="Planify Logo"
+              className="w-20 h-20 rounded-xl shadow-lg"
+            />
+          </div>
           <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 dark:text-white mb-6">
             Your AI-Powered
             <span className="text-teal-600 block">Productivity Partner</span>
@@ -143,15 +150,24 @@ export default function LandingPage() {
           <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
             Transform your daily chaos into organized success. Planify uses advanced AI to understand your work style and optimize your productivity like never before.
           </p>
-          <div className="flex gap-4 justify-center mb-12">
+          <div className="flex gap-4 justify-center mb-8">
             <Link href="/auth?mode=signup">
               <Button size="lg" className="text-lg px-8">
-                Start Free Trial
+                Start Free - 3 AI requests/day
               </Button>
             </Link>
             <Button size="lg" variant="outline" className="text-lg px-8">
               Watch Demo
             </Button>
+          </div>
+          
+          {/* Pricing Banner */}
+          <div className="mb-12 p-4 bg-teal-50 dark:bg-teal-900/20 rounded-xl border border-teal-200 dark:border-teal-800 max-w-md mx-auto">
+            <div className="text-center">
+              <div className="text-sm text-teal-600 dark:text-teal-400 font-medium mb-1">Upgrade to Premium</div>
+              <div className="text-2xl font-bold text-teal-800 dark:text-teal-200">$5/month</div>
+              <div className="text-sm text-teal-600 dark:text-teal-400">Unlimited AI features • Cancel anytime</div>
+            </div>
           </div>
 
           {/* Stats */}
@@ -222,6 +238,54 @@ export default function LandingPage() {
                 </p>
               </Card>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="py-20 px-4 bg-white dark:bg-gray-900">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+            Simple, Transparent Pricing
+          </h2>
+          <p className="text-lg text-gray-600 dark:text-gray-300 mb-12">
+            Start free, upgrade when you're ready for unlimited AI power
+          </p>
+          
+          <div className="grid md:grid-cols-2 gap-8 max-w-2xl mx-auto">
+            {/* Free Plan */}
+            <div className="p-6 border-2 border-gray-200 dark:border-gray-700 rounded-xl">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Free</h3>
+              <div className="text-3xl font-bold text-gray-900 dark:text-white mb-4">$0<span className="text-sm text-gray-500">/month</span></div>
+              <ul className="text-left space-y-3 text-gray-600 dark:text-gray-300 mb-6">
+                <li className="flex items-center gap-2">✓ Basic task management</li>
+                <li className="flex items-center gap-2">✓ 3 AI requests per day</li>
+                <li className="flex items-center gap-2">✓ Simple task creation</li>
+                <li className="flex items-center gap-2">✓ Mobile app access</li>
+              </ul>
+              <Link href="/auth?mode=signup">
+                <Button variant="outline" className="w-full">Get Started Free</Button>
+              </Link>
+            </div>
+            
+            {/* Premium Plan */}
+            <div className="p-6 border-2 border-teal-500 rounded-xl relative bg-teal-50 dark:bg-teal-900/20">
+              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-teal-500 text-white px-4 py-1 rounded-full text-sm font-medium">
+                Popular
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Premium</h3>
+              <div className="text-3xl font-bold text-gray-900 dark:text-white mb-4">$5<span className="text-sm text-gray-500">/month</span></div>
+              <ul className="text-left space-y-3 text-gray-600 dark:text-gray-300 mb-6">
+                <li className="flex items-center gap-2">✓ Everything in Free</li>
+                <li className="flex items-center gap-2">✓ Unlimited AI requests</li>
+                <li className="flex items-center gap-2">✓ AI task breakdown</li>
+                <li className="flex items-center gap-2">✓ Smart scheduling</li>
+                <li className="flex items-center gap-2">✓ Priority support</li>
+              </ul>
+              <Link href="/auth?mode=signup">
+                <Button className="w-full">Start Premium Trial</Button>
+              </Link>
+            </div>
           </div>
         </div>
       </section>

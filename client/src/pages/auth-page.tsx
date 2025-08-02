@@ -84,6 +84,13 @@ export default function AuthPage() {
           </div>
           
           <div className="text-center mb-8">
+            <div className="mb-4 flex justify-center">
+              <img 
+                src="/attached_assets/Planify_1754160399413.png"
+                alt="Planify Logo"
+                className="w-16 h-16 rounded-xl"
+              />
+            </div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Welcome to Planify</h1>
             <p className="text-gray-600 dark:text-gray-300">Your AI-powered productivity companion</p>
           </div>

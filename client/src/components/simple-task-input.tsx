@@ -5,17 +5,20 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useSubscription } from "@/hooks/use-subscription";
 import { Plus, Sparkles, Loader2 } from "lucide-react";
 
 interface SimpleTaskInputProps {
   onTaskCreated?: () => void;
+  onUpgradeRequired?: () => void;
 }
 
-export function SimpleTaskInput({ onTaskCreated }: SimpleTaskInputProps) {
+export function SimpleTaskInput({ onTaskCreated, onUpgradeRequired }: SimpleTaskInputProps) {
   const [taskInput, setTaskInput] = useState("");
   const [isSmartMode, setIsSmartMode] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { incrementAiUsage, checkAiUsageLimit } = useSubscription();
 
   const createTaskMutation = useMutation({
     mutationFn: async (taskData: any) => {
@@ -65,9 +68,24 @@ export function SimpleTaskInput({ onTaskCreated }: SimpleTaskInputProps) {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!taskInput.trim()) return;
+    
+    // Check AI usage limit if using smart mode
+    if (isSmartMode) {
+      if (!checkAiUsageLimit()) {
+        onUpgradeRequired?.();
+        return;
+      }
+      
+      const canProceed = await incrementAiUsage();
+      if (!canProceed) {
+        onUpgradeRequired?.();
+        return;
+      }
+    }
+    
     createTaskMutation.mutate({});
   };
 

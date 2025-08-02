@@ -18,6 +18,7 @@ import {
   ArrowLeft
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useSubscription } from "@/hooks/use-subscription";
 import { apiRequest } from "@/lib/queryClient";
 
 interface TaskRefinement {
@@ -40,10 +41,18 @@ interface ModernAIRefinerProps {
   onClose?: () => void;
 }
 
+interface ModernAIRefinerProps {
+  initialTask?: string;
+  onTasksRefined?: (tasks: TaskRefinement['refinedTasks']) => void;
+  onClose?: () => void;
+  onUpgradeRequired?: () => void;
+}
+
 export function ModernAIRefiner({ 
   initialTask = '', 
   onTasksRefined,
-  onClose 
+  onClose,
+  onUpgradeRequired
 }: ModernAIRefinerProps) {
   const [originalTask, setOriginalTask] = useState(initialTask);
   const [userQuery, setUserQuery] = useState('');
@@ -54,6 +63,7 @@ export function ModernAIRefiner({
   }>>([]);
   
   const { toast } = useToast();
+  const { incrementAiUsage, checkAiUsageLimit } = useSubscription();
 
   const refineMutation = useMutation({
     mutationFn: async ({ task, query }: { task: string; query: string }) => {
@@ -87,8 +97,21 @@ export function ModernAIRefiner({
     },
   });
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!userQuery.trim() || !originalTask.trim()) return;
+    
+    // Check AI usage limit
+    if (!checkAiUsageLimit()) {
+      onUpgradeRequired?.();
+      return;
+    }
+    
+    const canProceed = await incrementAiUsage();
+    if (!canProceed) {
+      onUpgradeRequired?.();
+      return;
+    }
+    
     refineMutation.mutate({ task: originalTask, query: userQuery });
   };
 

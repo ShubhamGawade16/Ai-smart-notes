@@ -5,6 +5,7 @@ import { ModernTaskList } from "@/components/modern-task-list";
 import { AdvancedTaskView } from "@/components/advanced-task-view";
 import { SimpleTaskInput } from "@/components/simple-task-input";
 import { ModernAIRefiner } from "@/components/modern-ai-refiner";
+import UpgradeModal from "@/components/UpgradeModal";
 import { 
   Brain, 
   MessageCircle, 
@@ -15,10 +16,12 @@ import {
   User,
   LogOut,
   Trash2,
-  Settings
+  Settings,
+  Crown
 } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { useSubscription } from "@/hooks/use-subscription";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useMutation } from "@tanstack/react-query";
@@ -47,8 +50,10 @@ export default function SimpleDashboard() {
   const [showAIRefiner, setShowAIRefiner] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isAdvancedViewOpen, setIsAdvancedViewOpen] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   
   const { user, signOut } = useAuth();
+  const { subscriptionStatus, incrementAiUsage, checkAiUsageLimit } = useSubscription();
   const { toast } = useToast();
 
   const deleteAccountMutation = useMutation({
@@ -71,6 +76,21 @@ export default function SimpleDashboard() {
     },
   });
 
+  const handleAiFeatureRequest = async () => {
+    if (!checkAiUsageLimit()) {
+      setShowUpgradeModal(true);
+      return false;
+    }
+    
+    const canProceed = await incrementAiUsage();
+    if (!canProceed) {
+      setShowUpgradeModal(true);
+      return false;
+    }
+    
+    return true;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Compact Header */}
@@ -80,11 +100,17 @@ export default function SimpleDashboard() {
             {/* Logo and Brand */}
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg overflow-hidden">
-                <img src="@assets/Planify_imresizer(1)_1753901727720.jpg" alt="Planify" className="w-full h-full object-cover" />
+                <img src="/attached_assets/Planify_1754160399413.png" alt="Planify" className="w-full h-full object-cover" />
               </div>
               <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
                 Planify
               </h1>
+              {!subscriptionStatus.isPremium && (
+                <div className="ml-4 px-3 py-1 bg-teal-100 dark:bg-teal-900 text-teal-800 dark:text-teal-200 text-xs rounded-full flex items-center gap-1">
+                  <Crown className="w-3 h-3" />
+                  {subscriptionStatus.dailyAiUsage}/{subscriptionStatus.dailyAiLimit} AI requests
+                </div>
+              )}
             </div>
             
             {/* Action Buttons */}
@@ -102,7 +128,12 @@ export default function SimpleDashboard() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setShowAIRefiner(!showAIRefiner)}
+                onClick={async () => {
+                  const canUseAi = await handleAiFeatureRequest();
+                  if (canUseAi) {
+                    setShowAIRefiner(!showAIRefiner);
+                  }
+                }}
                 className="flex items-center gap-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
               >
                 <MessageCircle className="w-4 h-4" />
@@ -172,7 +203,10 @@ export default function SimpleDashboard() {
           <div className="lg:col-span-3 space-y-6">
             {/* Task Input */}
             {showSmartInput && (
-              <SimpleTaskInput onTaskCreated={() => setShowSmartInput(false)} />
+              <SimpleTaskInput 
+                onTaskCreated={() => setShowSmartInput(false)}
+                onUpgradeRequired={() => setShowUpgradeModal(true)}
+              />
             )}
 
             {/* AI Task Refiner */}
@@ -194,6 +228,7 @@ export default function SimpleDashboard() {
                     console.log('Refined tasks:', tasks);
                     setShowAIRefiner(false);
                   }}
+                  onUpgradeRequired={() => setShowUpgradeModal(true)}
                 />
               </div>
             )}
@@ -267,7 +302,9 @@ export default function SimpleDashboard() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">AI Calls Used</span>
-                    <span className="font-medium">Unlimited</span>
+                    <span className="font-medium">
+                      {subscriptionStatus.isPremium ? 'Unlimited' : `${subscriptionStatus.dailyAiUsage}/${subscriptionStatus.dailyAiLimit}`}
+                    </span>
                   </div>
                 </div>
               </CardContent>
@@ -288,6 +325,14 @@ export default function SimpleDashboard() {
           // Handle task update here
           console.log('Task updated:', updatedTask);
         }}
+      />
+
+      {/* Upgrade Modal */}
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        currentUsage={subscriptionStatus.dailyAiUsage}
+        dailyLimit={subscriptionStatus.dailyAiLimit}
       />
     </div>
   );

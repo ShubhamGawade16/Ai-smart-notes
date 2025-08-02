@@ -41,13 +41,14 @@ export const users = pgTable("users", {
   lastName: varchar("last_name", { length: 100 }),
   profileImageUrl: varchar("profile_image_url"),
   tier: userTierEnum("tier").default("free").notNull(),
-  subscriptionId: varchar("subscription_id"), // Stripe subscription ID
+  subscriptionId: varchar("subscription_id"), // Payment processor subscription ID
   subscriptionStatus: subscriptionStatusEnum("subscription_status"),
   subscriptionCurrentPeriodEnd: timestamp("subscription_current_period_end"),
   trialEndsAt: timestamp("trial_ends_at"),
   isTrialUsed: boolean("is_trial_used").default(false),
   dailyAiCalls: integer("daily_ai_calls").default(0),
   dailyAiCallsResetAt: timestamp("daily_ai_calls_reset_at").defaultNow(),
+  monthlySubscriptionAmount: decimal("monthly_subscription_amount", { precision: 10, scale: 2 }),
   monthlyTaskCount: integer("monthly_task_count").default(0),
   monthlyTaskCountResetAt: timestamp("monthly_task_count_reset_at").defaultNow(),
   totalXp: integer("total_xp").default(0),

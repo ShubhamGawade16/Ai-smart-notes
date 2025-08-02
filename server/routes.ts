@@ -40,6 +40,137 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const supabaseAuthRoutes = await import("./routes/supabase-auth");
   app.use("/api/supabase", supabaseAuthRoutes.default);
 
+  // ============================================================================
+  // SUBSCRIPTION & FREEMIUM ROUTES
+  // ============================================================================
+
+  // Get subscription status
+  app.get("/api/subscription-status", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      if (!req.userId) {
+        return res.status(401).json({ error: "User ID not found in token" });
+      }
+
+      const user = await storage.getUser(req.userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Check if daily limit needs reset
+      const now = new Date();
+      const resetTime = user.dailyAiCallsResetAt ? new Date(user.dailyAiCallsResetAt) : new Date();
+      const shouldReset = now.getTime() - resetTime.getTime() > 24 * 60 * 60 * 1000;
+
+      if (shouldReset) {
+        await storage.updateUser(user.id, {
+          dailyAiCalls: 0,
+          dailyAiCallsResetAt: now
+        });
+        user.dailyAiCalls = 0;
+      }
+
+      const isPremium = user.tier !== 'free';
+      const dailyLimit = isPremium ? 999 : 3; // Premium gets unlimited (999), free gets 3
+      const currentUsage = user.dailyAiCalls || 0;
+      const canUseAi = isPremium || currentUsage < dailyLimit;
+
+      res.json({
+        isPremium,
+        dailyAiUsage: currentUsage,
+        dailyAiLimit: dailyLimit,
+        canUseAi,
+        subscriptionId: user.subscriptionId,
+        subscriptionStatus: user.subscriptionStatus,
+        expiresAt: user.subscriptionCurrentPeriodEnd
+      });
+    } catch (error) {
+      console.error("Failed to get subscription status:", error);
+      res.status(500).json({ error: "Failed to get subscription status" });
+    }
+  });
+
+  // Increment AI usage
+  app.post("/api/increment-ai-usage", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      if (!req.userId) {
+        return res.status(401).json({ error: "User ID not found in token" });
+      }
+
+      const user = await storage.getUser(req.userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const isPremium = user.tier !== 'free';
+      if (isPremium) {
+        // Premium users have unlimited usage
+        res.json({
+          dailyAiUsage: user.dailyAiCalls || 0,
+          canUseAi: true
+        });
+        return;
+      }
+
+      // Check if daily limit needs reset
+      const now = new Date();
+      const resetTime = user.dailyAiCallsResetAt ? new Date(user.dailyAiCallsResetAt) : new Date();
+      const shouldReset = now.getTime() - resetTime.getTime() > 24 * 60 * 60 * 1000;
+
+      let newDailyCount = user.dailyAiCalls || 0;
+      if (shouldReset) {
+        newDailyCount = 0;
+      }
+
+      const dailyLimit = 3;
+      const canUseAi = newDailyCount < dailyLimit;
+
+      if (canUseAi) {
+        newDailyCount += 1;
+        await storage.updateUser(user.id, {
+          dailyAiCalls: newDailyCount,
+          dailyAiCallsResetAt: shouldReset ? now : user.dailyAiCallsResetAt
+        });
+      }
+
+      res.json({
+        dailyAiUsage: newDailyCount,
+        canUseAi: newDailyCount < dailyLimit
+      });
+    } catch (error) {
+      console.error("Failed to increment AI usage:", error);
+      res.status(500).json({ error: "Failed to increment AI usage" });
+    }
+  });
+
+  // Upgrade subscription (placeholder for payment integration)
+  app.post("/api/upgrade-subscription", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      if (!req.userId) {
+        return res.status(401).json({ error: "User ID not found in token" });
+      }
+
+      const { plan } = req.body;
+      
+      // For now, simulate successful upgrade
+      // In production, this would integrate with actual payment processor
+      const updatedUser = await storage.updateUser(req.userId, {
+        tier: 'premium_pro',
+        subscriptionStatus: 'active',
+        subscriptionCurrentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+        monthlySubscriptionAmount: '5.00'
+      });
+
+      res.json({ 
+        success: true, 
+        user: updatedUser,
+        message: "Subscription upgraded successfully!" 
+      });
+    } catch (error) {
+      console.error("Failed to upgrade subscription:", error);
+      res.status(500).json({ error: "Failed to upgrade subscription" });
+    }
+  });
+
   // Supabase user sync endpoint (kept for compatibility)
   app.post("/api/auth/sync", authenticateToken, async (req: AuthRequest, res) => {
     try {
