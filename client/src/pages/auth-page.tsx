@@ -21,13 +21,7 @@ export default function AuthPage() {
   const [signupFirstName, setSignupFirstName] = useState("");
   const [signupLastName, setSignupLastName] = useState("");
 
-  // Redirect if already logged in
-  useEffect(() => {
-    if (user && !isLoading) {
-      console.log('User detected on auth page, redirecting...', user);
-      window.location.replace('/onboarding');
-    }
-  }, [user, isLoading]);
+  // Don't redirect - let routing handle it
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -28,7 +28,7 @@ function Router() {
   return (
     <Switch>
       {/* Public routes */}
-      <Route path="/" component={user ? () => <Redirect to="/onboarding" /> : LandingPage} />
+      <Route path="/" component={user ? OnboardingPage : LandingPage} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/verify-email" component={EmailVerificationPage} />
       

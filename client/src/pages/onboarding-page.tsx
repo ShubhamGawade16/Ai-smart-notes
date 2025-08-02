@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -40,12 +40,19 @@ const goals = [
 ];
 
 export default function OnboardingPage() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [step, setStep] = useState(1);
   const [selectedGoal, setSelectedGoal] = useState("");
   const [customGoals, setCustomGoals] = useState("");
+
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!isLoading && !user) {
+      navigate('/auth');
+    }
+  }, [user, isLoading, navigate]);
 
   const saveOnboardingMutation = useMutation({
     mutationFn: async (data: { primaryGoal: string; customGoals: string }) => {

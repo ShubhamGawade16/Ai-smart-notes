@@ -71,14 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             };
             setUser(userData);
             
-            // Handle redirect after successful login
-            if (event === 'SIGNED_IN') {
-              console.log('User signed in, redirecting to onboarding...');
-              // Use a short delay to ensure state is updated
-              setTimeout(() => {
-                window.location.replace('/onboarding');
-              }, 200);
-            }
+            // Don't auto-redirect - let the routing handle it
           } else {
             setUser(null);
           }
