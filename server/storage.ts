@@ -314,19 +314,50 @@ export class MemStorage implements IStorage {
   }
 }
 
-import { DatabaseStorage } from "./database-storage";
+// Safely initialize storage with fallback to MemStorage
+async function initializeStorage(): Promise<IStorage> {
+  try {
+    // Check if database URL is available
+    if (!process.env.DATABASE_URL) {
+      console.warn("⚠️  DATABASE_URL not found, using MemStorage");
+      return new MemStorage();
+    }
 
-// Use DatabaseStorage for production-ready persistent storage
-// Fallback to MemStorage for development if database is unavailable
-let storageInstance: IStorage;
-
-try {
-  // Try to initialize database storage
-  storageInstance = new DatabaseStorage();
-  console.log("✅ Using DatabaseStorage - all user data will be persisted");
-} catch (error) {
-  console.warn("⚠️  Database unavailable, falling back to MemStorage:", error);
-  storageInstance = new MemStorage();
+    // Try to import and test database connection
+    const { DatabaseStorage } = await import("./database-storage");
+    const { db } = await import("./db");
+    
+    // Test the database connection with a simple query
+    await db.execute('SELECT 1');
+    
+    console.log("✅ Using DatabaseStorage - all user data will be persisted");
+    return new DatabaseStorage();
+  } catch (error) {
+    console.warn("⚠️  Database connection failed, falling back to MemStorage:", error?.message || error);
+    return new MemStorage();
+  }
 }
 
-export const storage = storageInstance;
+// Create a promise for storage initialization
+let storagePromise: Promise<IStorage> | null = null;
+
+function getStorage(): Promise<IStorage> {
+  if (!storagePromise) {
+    storagePromise = initializeStorage();
+  }
+  return storagePromise;
+}
+
+// Create a proxy that waits for storage initialization
+export const storage: IStorage = new Proxy({} as IStorage, {
+  get(target, prop) {
+    return async (...args: any[]) => {
+      const actualStorage = await getStorage();
+      const method = (actualStorage as any)[prop];
+      if (typeof method === 'function') {
+        return method.apply(actualStorage, args);
+      }
+      return method;
+    };
+  }
+});
