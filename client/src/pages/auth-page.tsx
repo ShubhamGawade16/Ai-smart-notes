@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "@/hooks/use-auth";
+import { useSupabaseAuth } from "@/hooks/use-supabase-auth";
 import { useLocation, useSearch, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,7 +28,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 type SignupFormData = z.infer<typeof signupSchema>;
 
 export default function AuthPage() {
-  const { user, isLoading, loginMutation, registerMutation, loginWithGoogle } = useAuth();
+  const { user, isLoading, login, signup } = useSupabaseAuth();
   const [, navigate] = useLocation();
   const search = useSearch();
   const mode = search.includes("mode=signup") ? "signup" : "login";

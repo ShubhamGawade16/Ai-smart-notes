@@ -35,6 +35,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount auth routes
   app.use("/api/auth", authRoutes);
+  
+  // Add Supabase auth routes
+  const supabaseAuthRoutes = await import("./routes/supabase-auth");
+  app.use("/api/supabase", supabaseAuthRoutes.default);
 
   // Supabase user sync endpoint (kept for compatibility)
   app.post("/api/auth/sync", authenticateToken, async (req: AuthRequest, res) => {

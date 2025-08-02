@@ -5,9 +5,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { SupabaseAuthProvider, useSupabaseAuth } from "@/hooks/use-supabase-auth";
 import SimpleDashboard from "@/pages/simple-dashboard";
 import LandingPage from "@/pages/landing-page";
 import AuthPage from "@/pages/auth-page";
+import SupabaseAuthPage from "@/pages/supabase-auth-page";
 import AuthVerifiedPage from "@/pages/auth-verified-page";
 import OnboardingPage from "@/pages/onboarding-page";
 import NotFound from "@/pages/not-found";
@@ -51,7 +53,7 @@ function Router() {
     <Switch>
       {/* Public routes */}
       <Route path="/" component={user ? () => <Redirect to="/dashboard" /> : LandingPage} />
-      <Route path="/auth" component={user ? () => <Redirect to="/dashboard" /> : AuthPage} />
+      <Route path="/auth" component={user ? () => <Redirect to="/dashboard" /> : SupabaseAuthPage} />
       <Route path="/auth/verified" component={AuthVerifiedPage} />
       
       {/* Onboarding route */}
@@ -70,14 +72,16 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <ThemeProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-          </TooltipProvider>
-        </ThemeProvider>
-      </AuthProvider>
+      <SupabaseAuthProvider>
+        <AuthProvider>
+          <ThemeProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Router />
+            </TooltipProvider>
+          </ThemeProvider>
+        </AuthProvider>
+      </SupabaseAuthProvider>
     </QueryClientProvider>
   );
 }
