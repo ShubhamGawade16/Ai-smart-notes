@@ -116,18 +116,34 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg overflow-hidden">
-                <img src="/attached_assets/Planify_1754160399413.png" alt="Planify" className="w-full h-full object-cover" />
+              <img 
+                src="/attached_assets/Planify_1754160399413.png"
+                alt="Planify"
+                className="w-8 h-8 rounded-lg"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                  if (nextElement) nextElement.style.display = 'flex';
+                }}
+              />
+              <div className="w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center" style={{display: 'none'}}>
+                <span className="text-white font-bold text-sm">P</span>
               </div>
               <span className="text-xl font-bold text-gray-900 dark:text-white">Planify</span>
             </div>
-            <div className="flex gap-4">
-              <Link href="/auth?mode=login">
-                <Button variant="ghost">Sign In</Button>
-              </Link>
-              <Link href="/auth?mode=signup">
-                <Button>Get Started Free</Button>
-              </Link>
+            <div className="flex items-center gap-6">
+              <nav className="hidden md:flex items-center gap-6">
+                <a href="#features" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Features</a>
+                <a href="#pricing" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Pricing</a>
+              </nav>
+              <div className="flex gap-4">
+                <Link href="/auth?mode=login">
+                  <Button variant="ghost">Sign In</Button>
+                </Link>
+                <Link href="/auth?mode=signup">
+                  <Button>Get Started Free</Button>
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -141,7 +157,15 @@ export default function LandingPage() {
               src="/attached_assets/Planify_1754160399413.png"
               alt="Planify Logo"
               className="w-20 h-20 rounded-xl shadow-lg"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                if (nextElement) nextElement.style.display = 'flex';
+              }}
             />
+            <div className="w-20 h-20 bg-teal-600 rounded-xl flex items-center justify-center shadow-lg" style={{display: 'none'}}>
+              <span className="text-white font-bold text-2xl">P</span>
+            </div>
           </div>
           <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 dark:text-white mb-6">
             Your AI-Powered
@@ -150,7 +174,7 @@ export default function LandingPage() {
           <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
             Transform your daily chaos into organized success. Planify uses advanced AI to understand your work style and optimize your productivity like never before.
           </p>
-          <div className="flex gap-4 justify-center mb-8">
+          <div className="flex gap-4 justify-center mb-12">
             <Link href="/auth?mode=signup">
               <Button size="lg" className="text-lg px-8">
                 Start Free - 3 AI requests/day
@@ -159,15 +183,6 @@ export default function LandingPage() {
             <Button size="lg" variant="outline" className="text-lg px-8">
               Watch Demo
             </Button>
-          </div>
-          
-          {/* Pricing Banner */}
-          <div className="mb-12 p-4 bg-teal-50 dark:bg-teal-900/20 rounded-xl border border-teal-200 dark:border-teal-800 max-w-md mx-auto">
-            <div className="text-center">
-              <div className="text-sm text-teal-600 dark:text-teal-400 font-medium mb-1">Upgrade to Premium</div>
-              <div className="text-2xl font-bold text-teal-800 dark:text-teal-200">$5/month</div>
-              <div className="text-sm text-teal-600 dark:text-teal-400">Unlimited AI features • Cancel anytime</div>
-            </div>
           </div>
 
           {/* Stats */}
@@ -243,7 +258,7 @@ export default function LandingPage() {
       </section>
 
       {/* Pricing Section */}
-      <section className="py-20 px-4 bg-white dark:bg-gray-900">
+      <section id="pricing" className="py-20 px-4 bg-white dark:bg-gray-900">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
             Simple, Transparent Pricing
