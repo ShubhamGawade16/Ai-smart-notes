@@ -333,7 +333,7 @@ async function initializeStorage(): Promise<IStorage> {
     console.log("✅ Using DatabaseStorage - all user data will be persisted");
     return new DatabaseStorage();
   } catch (error) {
-    console.warn("⚠️  Database connection failed, falling back to MemStorage:", error?.message || error);
+    console.warn("⚠️  Database connection failed, falling back to MemStorage:", (error as Error)?.message || error);
     return new MemStorage();
   }
 }

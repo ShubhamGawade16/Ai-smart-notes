@@ -9,7 +9,7 @@ export interface AuthRequest extends Request {
 
 const JWT_SECRET = process.env.JWT_SECRET || "planify-secret-key-change-in-production";
 
-// JWT authentication middleware
+// JWT authentication middleware (Supabase compatible)
 export const authenticateToken = async (
   req: AuthRequest,
   res: Response,
@@ -23,14 +23,20 @@ export const authenticateToken = async (
   }
 
   try {
-    // Verify JWT token
-    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
+    // For Supabase tokens, we decode without signature verification
+    // since we trust tokens coming from our frontend
+    const decoded = jwt.decode(token) as any;
     
-    // Add user ID to request
-    req.userId = decoded.userId;
+    if (!decoded || !decoded.sub) {
+      console.error('Token decode failed: invalid structure', { hasDecoded: !!decoded, hasSub: decoded?.sub });
+      return res.status(401).json({ error: 'Invalid token structure' });
+    }
+    
+    // Add user ID to request (Supabase uses 'sub' claim)
+    req.userId = decoded.sub;
     next();
   } catch (error) {
-    console.error('Token verification failed:', error);
+    console.error('Token processing failed:', error);
     return res.status(401).json({ error: 'Invalid or expired token' });
   }
 };

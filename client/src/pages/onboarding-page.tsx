@@ -65,10 +65,11 @@ export default function OnboardingPage() {
       });
       navigate("/dashboard");
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      console.error('Onboarding save error:', error);
       toast({
         title: "Error",
-        description: "Failed to save your preferences. Please try again.",
+        description: error?.message || "Failed to save your preferences. Please try again.",
         variant: "destructive",
       });
     },

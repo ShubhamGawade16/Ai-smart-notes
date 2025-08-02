@@ -36,14 +36,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
+          // Store the access token for API requests
+          if (session.access_token) {
+            localStorage.setItem('auth_token', session.access_token);
+          }
+          
           // Create user object from session
           const userData: User = {
             id: session.user.id,
             email: session.user.email || '',
             firstName: session.user.user_metadata?.first_name,
             lastName: session.user.user_metadata?.last_name,
-            onboardingCompleted: false, // Default to false for now
+            onboardingCompleted: false,
           };
+          
+          // Sync user with backend and get actual user data
+          try {
+            const syncResponse = await fetch('/api/auth/sync', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`,
+              },
+              body: JSON.stringify({
+                email: userData.email,
+                firstName: userData.firstName,
+                lastName: userData.lastName,
+              }),
+            });
+            
+            if (syncResponse.ok) {
+              const { user: syncedUser } = await syncResponse.json();
+              if (syncedUser) {
+                userData.onboardingCompleted = syncedUser.onboardingCompleted || false;
+              }
+            }
+          } catch (error) {
+            console.warn('Initial user sync failed:', error);
+          }
+          
           setUser(userData);
         }
       } catch (error) {
@@ -62,6 +93,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.log('Auth state changed:', event, session?.user?.email);
           
           if (session?.user) {
+            // Store the access token for API requests
+            if (session.access_token) {
+              localStorage.setItem('auth_token', session.access_token);
+            }
+            
             const userData: User = {
               id: session.user.id,
               email: session.user.email || '',
@@ -69,10 +105,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               lastName: session.user.user_metadata?.last_name,
               onboardingCompleted: false,
             };
+            
+            // Sync user with backend and get actual user data
+            try {
+              const syncResponse = await fetch('/api/auth/sync', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${session.access_token}`,
+                },
+                body: JSON.stringify({
+                  email: userData.email,
+                  firstName: userData.firstName,
+                  lastName: userData.lastName,
+                }),
+              });
+              
+              if (syncResponse.ok) {
+                const { user: syncedUser } = await syncResponse.json();
+                if (syncedUser) {
+                  userData.onboardingCompleted = syncedUser.onboardingCompleted || false;
+                }
+              }
+            } catch (error) {
+              console.warn('User sync failed:', error);
+            }
+            
             setUser(userData);
             
-            // Don't auto-redirect - let the routing handle it
+            if (event === 'SIGNED_IN' && userData.email) {
+              console.log('User signed in, redirecting to onboarding...');
+            }
           } else {
+            // Clear token on logout
+            localStorage.removeItem('auth_token');
             setUser(null);
           }
           setIsLoading(false);

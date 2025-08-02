@@ -28,13 +28,23 @@ function Router() {
   return (
     <Switch>
       {/* Public routes */}
-      <Route path="/" component={user ? OnboardingPage : LandingPage} />
+      <Route path="/">
+        {user ? (
+          user.onboardingCompleted ? <Redirect to="/dashboard" /> : <Redirect to="/onboarding" />
+        ) : (
+          <LandingPage />
+        )}
+      </Route>
       <Route path="/auth" component={AuthPage} />
       <Route path="/verify-email" component={EmailVerificationPage} />
       
       {/* Protected routes */}
-      <Route path="/onboarding" component={OnboardingPage} />
-      <Route path="/dashboard" component={SimpleDashboard} />
+      <Route path="/onboarding">
+        {user ? <OnboardingPage /> : <Redirect to="/auth" />}
+      </Route>
+      <Route path="/dashboard">
+        {user ? <SimpleDashboard /> : <Redirect to="/auth" />}
+      </Route>
       
       <Route component={NotFound} />
     </Switch>
