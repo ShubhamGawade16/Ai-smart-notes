@@ -165,6 +165,11 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         description: "Welcome back to Planify!",
       });
 
+      // Force navigation after successful login
+      setTimeout(() => {
+        window.location.href = "/onboarding";
+      }, 1000);
+
     } catch (error: any) {
       console.error('Login error:', error);
       toast({

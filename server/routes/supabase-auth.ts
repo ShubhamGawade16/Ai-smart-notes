@@ -98,10 +98,8 @@ router.post('/complete-onboarding', verifySupabaseToken, async (req: any, res) =
     }
     
     const updatedUser = await storage.updateUser(user.id, {
-      career,
-      goals,
-      experienceLevel,
-      notificationPreferences,
+      primaryGoal: career,
+      customGoals: goals,
       onboardingCompleted: true,
     });
     
