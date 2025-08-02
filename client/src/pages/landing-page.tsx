@@ -74,10 +74,26 @@ const stats = [
 
 export default function LandingPage() {
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
-
+  const [isTransitioning, setIsTransitioning] = useState(true);
+  
+  // Create infinite loop by duplicating testimonials
+  const extendedTestimonials = [...testimonials, ...testimonials.slice(0, 3)];
+  
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentTestimonial((prev) => (prev + 1) % (testimonials.length - 2));
+      setCurrentTestimonial((prev) => {
+        const next = prev + 1;
+        // Reset to beginning when reaching the end (creates seamless loop)
+        if (next >= testimonials.length) {
+          setTimeout(() => {
+            setIsTransitioning(false);
+            setCurrentTestimonial(0);
+            setTimeout(() => setIsTransitioning(true), 50);
+          }, 500);
+          return next;
+        }
+        return next;
+      });
     }, 4000);
     return () => clearInterval(interval);
   }, []);
@@ -177,14 +193,14 @@ export default function LandingPage() {
           <div className="relative max-w-4xl mx-auto">
             <div className="overflow-hidden">
               <div 
-                className="flex transition-transform duration-500 ease-in-out"
+                className={`flex ${isTransitioning ? 'transition-transform duration-500 ease-in-out' : ''}`}
                 style={{
                   transform: `translateX(-${currentTestimonial * (100 / 3)}%)`,
-                  width: `${(testimonials.length * 100) / 3}%`
+                  width: `${(extendedTestimonials.length * 100) / 3}%`
                 }}
               >
-                {testimonials.map((testimonial, index) => (
-                  <div key={index} className="w-1/3 px-4">
+                {extendedTestimonials.map((testimonial, index) => (
+                  <div key={`${testimonial.name}-${index}`} className="w-1/3 px-4">
                     <Card className="p-6 h-full">
                       <div className="flex items-center gap-4 mb-4">
                         <img 
@@ -217,12 +233,15 @@ export default function LandingPage() {
             
             {/* Dots indicator */}
             <div className="flex justify-center gap-2 mt-8">
-              {Array.from({ length: testimonials.length - 2 }).map((_, index) => (
+              {Array.from({ length: testimonials.length }).map((_, index) => (
                 <button
                   key={index}
-                  onClick={() => setCurrentTestimonial(index)}
+                  onClick={() => {
+                    setIsTransitioning(true);
+                    setCurrentTestimonial(index);
+                  }}
                   className={`w-2 h-2 rounded-full transition-colors ${
-                    currentTestimonial === index ? 'bg-teal-600' : 'bg-gray-300'
+                    currentTestimonial % testimonials.length === index ? 'bg-teal-600' : 'bg-gray-300'
                   }`}
                 />
               ))}
