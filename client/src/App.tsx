@@ -29,19 +29,12 @@ function Router() {
     <Switch>
       {/* Public routes */}
       <Route path="/">
-        {user ? (
-          user.onboardingCompleted ? <Redirect to="/dashboard" /> : <Redirect to="/onboarding" />
-        ) : (
-          <LandingPage />
-        )}
+        {user ? <Redirect to="/dashboard" /> : <LandingPage />}
       </Route>
       <Route path="/auth" component={AuthPage} />
       <Route path="/verify-email" component={EmailVerificationPage} />
       
       {/* Protected routes */}
-      <Route path="/onboarding">
-        {user ? <OnboardingPage /> : <Redirect to="/auth" />}
-      </Route>
       <Route path="/dashboard">
         {user ? <SimpleDashboard /> : <Redirect to="/auth" />}
       </Route>

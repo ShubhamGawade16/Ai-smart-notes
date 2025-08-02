@@ -72,10 +72,10 @@ export class DatabaseStorage implements IStorage {
         .onConflictDoUpdate({
           target: users.id,
           set: {
-            email: sql`coalesce(${upsertData.email}, users.email)`,
-            firstName: sql`coalesce(${upsertData.firstName}, users.first_name)`,
-            lastName: sql`coalesce(${upsertData.lastName}, users.last_name)`,
-            profileImageUrl: sql`coalesce(${upsertData.profileImageUrl}, users.profile_image_url)`,
+            email: upsertData.email || sql`${users.email}`,
+            firstName: upsertData.firstName || sql`${users.firstName}`,
+            lastName: upsertData.lastName || sql`${users.lastName}`,
+            profileImageUrl: upsertData.profileImageUrl || sql`${users.profileImageUrl}`,
             updatedAt: new Date(),
           },
         })

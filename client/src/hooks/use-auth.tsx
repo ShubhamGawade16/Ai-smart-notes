@@ -50,30 +50,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             onboardingCompleted: false,
           };
           
-          // Sync user with backend and get actual user data
-          try {
-            const syncResponse = await fetch('/api/auth/sync', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${session.access_token}`,
-              },
-              body: JSON.stringify({
-                email: userData.email,
-                firstName: userData.firstName,
-                lastName: userData.lastName,
-              }),
-            });
-            
-            if (syncResponse.ok) {
-              const { user: syncedUser } = await syncResponse.json();
-              if (syncedUser) {
-                userData.onboardingCompleted = syncedUser.onboardingCompleted || false;
-              }
-            }
-          } catch (error) {
-            console.warn('Initial user sync failed:', error);
-          }
+          // For now, skip user sync to avoid database issues
+          // We'll set onboardingCompleted to true to go directly to dashboard
+          userData.onboardingCompleted = true;
           
           setUser(userData);
         }
@@ -106,30 +85,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               onboardingCompleted: false,
             };
             
-            // Sync user with backend and get actual user data
-            try {
-              const syncResponse = await fetch('/api/auth/sync', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${session.access_token}`,
-                },
-                body: JSON.stringify({
-                  email: userData.email,
-                  firstName: userData.firstName,
-                  lastName: userData.lastName,
-                }),
-              });
-              
-              if (syncResponse.ok) {
-                const { user: syncedUser } = await syncResponse.json();
-                if (syncedUser) {
-                  userData.onboardingCompleted = syncedUser.onboardingCompleted || false;
-                }
-              }
-            } catch (error) {
-              console.warn('User sync failed:', error);
-            }
+            // For now, skip user sync to avoid database issues
+            // We'll set onboardingCompleted to true to go directly to dashboard
+            userData.onboardingCompleted = true;
             
             setUser(userData);
             
