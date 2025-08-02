@@ -5,10 +5,10 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 
-import { AuthProvider, useAuth } from "@/hooks/use-simple-auth";
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import SimpleDashboard from "@/pages/simple-dashboard";
 import LandingPage from "@/pages/landing-page";
-import SimpleAuthPage from "@/pages/simple-auth-page";
+import AuthPage from "@/pages/auth-page";
 import EmailVerificationPage from "@/pages/email-verification-page";
 import OnboardingPage from "@/pages/onboarding-page";
 import NotFound from "@/pages/not-found";
@@ -29,7 +29,7 @@ function Router() {
     <Switch>
       {/* Public routes */}
       <Route path="/" component={user ? () => <Redirect to="/onboarding" /> : LandingPage} />
-      <Route path="/auth" component={SimpleAuthPage} />
+      <Route path="/auth" component={AuthPage} />
       <Route path="/verify-email" component={EmailVerificationPage} />
       
       {/* Protected routes */}
