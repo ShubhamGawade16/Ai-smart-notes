@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Space Shooter – Full Loop</title>
+<style>
+  html,body{margin:0;height:100%;background:#000;color:#fff;font-family:monospace}
+  canvas{background:#001;display:block;margin:auto;border:1px solid #555}
+  #hud{position:fixed;top:10px;left:10px}
+</style>
+</head>
+<body>
+<canvas id="c" width="480" height="640"></canvas>
+<div id="hud">
+  <div>Score <span id="score">0</span></div>
+  <div>Scrap <span id="scrap">0</span></div>
+  <div>Wave <span id="wave">1</span></div>
+  <div>Lives <span id="lives">3</span></div>
+</div>
+
+<script>
+const cvs = document.getElementById('c');
+const ctx = cvs.getContext('2d');
+const W=cvs.width, H=cvs.height;
+
+/* ---------- tiny vector lib ---------- */
+const Vec = (x=0,y=0)=>({x,y});
+const add=(a,b)=>Vec(a.x+b.x,a.y+b.y);
+const sub=(a,b)=>Vec(a.x-b.x,a.y-b.y);
+const len=v=>Math.hypot(v.x,v.y);
+const norm=v=>len(v)?Vec(v.x/len(v),v.y/len(v)):Vec(0,-1);
+
+/* ---------- game state ---------- */
+let state='menu';      // menu | play | shop | gameover
+let score=0, scrap=0, lives=3, wave=1, frame=0;
+let player, bullets, enemies, particles, upgrades;
+
+/* ---------- input ---------- */
+const keys={};
+onkeydown=e=>keys[e.code]=true;
+onkeyup  =e=>keys[e.code]=false;
+
+/* ---------- player ---------- */
+function spawnPlayer(){
+  player={
+    pos:Vec(W/2, H-50),
+    vel:Vec(0,0),
+    size:12,
+    fireCd:0,
+    weapons:1,
+    speed:3,
+    health:3
+  };
+}
+/* ---------- projectiles ---------- */
+function spawnBullet(pos,dir,speed=7,from='player'){
+  bullets.push({pos:Vec(pos.x,pos.y), vel:Vec(dir.x*speed,dir.y*speed), from, size:3});
+}
+/* ---------- enemies ---------- */
+const enemyTypes={
+  grunt:{color:'#0f0', hp:2, size:10, speed:1, scrap:1},
+  interceptor:{color:'#ff0', hp:4, size:12, speed:1.8, scrap:2, weapon:'spread'},
+  destroyer:{color:'#f00', hp:15, size:20, speed:0.8, scrap:5, weapon:'laser'}
+};
+
+function spawnEnemy(type,x,y,path){
+  const t=enemyTypes[type];
+  enemies.push({...t, type, pos:Vec(x,y), path, idx:0, shootCd:0, maxHp:t.hp});
+}
+
+/* ---------- particles ---------- */
+function spawnExplosion(pos,r=15,col='#fff'){
+  for(let i=0;i<20;i++){
+    const a=Math.random()*Math.PI*2;
+    particles.push({pos:Vec(pos.x,pos.y), vel:Vec(Math.cos(a)*3,Math.sin(a)*3), life:30, col});
+  }
+}
+
+/* ---------- shop items ---------- */
+const shopItems=[
+  {name:'Extra Life', cost:30, apply:()=>lives++},
+  {name:'Triple Shot', cost:25, apply:()=>player.weapons=3},
+  {name:'Speed +1', cost:15, apply:()=>player.speed+=.5},
+  {name:'Shield', cost:20, apply:()=>player.health++}
+];
+
+/* ---------- formations ---------- */
+const formations=[
+  // simple horizontal line
+  (wave)=>{ for(let i=0;i<2+wave;i++) spawnEnemy('grunt', 40+i*30, -20, 'line'); },
+  // V formation
+  (wave)=>{
+    for(let i=0;i<3+Math.floor(wave/2);i++){
+      spawnEnemy('interceptor', 120+i*25, -40+i*20, 'dive');
+      spawnEnemy('interceptor', 240-i*25, -40+i*20, 'dive');
+    }
+  },
+  // boss wave
+  (wave)=>{
+    spawnEnemy('destroyer', W/2, -70, 'boss');
+    for(let k=0;k<wave;k++) spawnEnemy('interceptor', 50+k*50, -30, 'circle');
+  }
+];
+
+/* ---------- init / reset ---------- */
+function init(){
+  bullets=[], enemies=[], particles=[], upgrades=[];
+  spawnPlayer();
+}
+
+/* ---------- update helpers ---------- */
+function updatePlayer(){
+  const p=player;
+  p.vel=Vec(0,0);
+  if(keys['ArrowLeft'])  p.vel.x=-p.speed;
+  if(keys['ArrowRight']) p.vel.x=p.speed;
+  if(keys['ArrowUp'])    p.vel.y=-p.speed;
+  if(keys['ArrowDown'])  p.vel.y=p.speed;
+  p.pos=add(p.pos,p.vel);
+  p.pos.x=Math.max(p.size, Math.min(W-p.size, p.pos.x));
+  p.pos.y=Math.max(p.size, Math.min(H-p.size, p.pos.y));
+
+  if((keys['Space']||keys['KeyZ']) && p.fireCd<=0){
+    const dir=Vec(0,-1);
+    if(p.weapons===1) spawnBullet(p.pos,dir);
+    else{
+      for(let i=-1;i<=1;i+=2) spawnBullet(add(p.pos,Vec(i*6,0)),dir);
+    }
+    p.fireCd=6;
+  }
+  p.fireCd--;
+}
+
+function updateBullets(){
+  bullets.forEach((b,idx)=>{
+    b.pos=add(b.pos,b.vel);
+    if(b.pos.y<0||b.pos.y>H||b.pos.x<0||b.pos.x>W) bullets.splice(idx,1);
+  });
+}
+
+function updateEnemies(){
+  enemies.forEach((e,idx)=>{
+    // movement
+    if(e.path==='line') e.pos.y+=e.speed;
+    else if(e.path==='dive'){ e.pos.y+=e.speed*1.5; e.pos.x+=Math.sin(frame/20)*2; }
+    else if(e.path==='boss'){ e.pos.y+=Math.sin(frame/50)*.5; e.pos.x+=Math.cos(frame/70)*1; }
+    else if(e.path==='circle'){ e.pos.y+=e.speed; e.pos.x+=Math.sin(frame/25)*3; }
+
+    // shoot
+    if(e.weapon){
+      e.shootCd--;
+      if(e.shootCd<=0){
+        if(e.weapon==='spread'){
+          for(let a=-0.4;a<=0.4;a+=0.4) spawnBullet(e.pos, norm(Vec(Math.sin(a),1)), 4, 'enemy');
+        }else if(e.weapon==='laser'){
+          spawnBullet(e.pos, Vec(0,1), 6, 'enemy');
+        }
+        e.shootCd=e.type==='destroyer'?30:60;
+      }
+    }
+    // off screen
+    if(e.pos.y>H+50) enemies.splice(idx,1);
+  });
+}
+
+function updateParticles(){
+  particles.forEach((p,i)=>{
+    p.pos=add(p.pos,p.vel);
+    p.life--;
+    if(p.life<=0) particles.splice(i,1);
+  });
+}
+
+function checkCollisions(){
+  // bullets vs enemies
+  bullets.forEach((b,bi)=>{
+    if(b.from!=='player') return;
+    enemies.forEach((e,ei)=>{
+      if(len(sub(b.pos,e.pos))<e.size+b.size){
+        e.hp--;
+        bullets.splice(bi,1);
+        if(e.hp<=0){
+          scrap+=e.scrap; score+=e.scrap*50;
+          spawnExplosion(e.pos, e.size, e.color);
+          enemies.splice(ei,1);
+        }
+      }
+    });
+  });
+  // enemy bullets vs player
+  bullets.forEach((b,bi)=>{
+    if(b.from==='player') return;
+    if(len(sub(b.pos,player.pos))<player.size+b.size){
+      bullets.splice(bi,1);
+      playerHit();
+    }
+  });
+  // enemies vs player
+  enemies.forEach((e,ei)=>{
+    if(len(sub(e.pos,player.pos))<e.size+player.size){
+      spawnExplosion(e.pos, e.size, e.color);
+      enemies.splice(ei,1);
+      playerHit();
+    }
+  });
+}
+function playerHit(){
+  player.health--;
+  if(player.health<=0){
+    lives--;
+    if(lives<=0) state='gameover'; else {player.health=3; player.pos=Vec(W/2,H-50);}
+  }
+}
+
+/* ---------- wave management ---------- */
+let waveTimer=0;
+function spawnWave(){
+  const fn=formations[(wave-1)%formations.length];
+  fn(wave);
+  wave++;
+}
+
+/* ---------- render ---------- */
+function drawText(str,x,y,size=20,col='#fff'){
+  ctx.fillStyle=col; ctx.font=`${size}px monospace`;
+  ctx.fillText(str,x,y);
+}
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  // stars
+  for(let i=0;i<100;i++) ctx.fillRect(i*4.8,(i*frame)%H,1,1);
+
+  if(state==='menu'){
+    drawText('SPACE SHOOTER',W/2-100,H/2-40,30,'#fff');
+    drawText('Press ENTER to start',W/2-90,H/2+10);
+    if(keys['Enter']) {init(); state='play';}
+    return;
+  }
+  if(state==='gameover'){
+    drawText('GAME OVER',W/2-70,H/2-40,30,'#f00');
+    drawText(`Final score ${score}`,W/2-70,H/2);
+    drawText('R to restart',W/2-50,H/2+30);
+    if(keys['KeyR']) {score=scrap=0; lives=3; wave=1; state='menu';}
+    return;
+  }
+  if(state==='shop'){
+    drawText('UPGRADE SHOP',W/2-70,40,25,'#0ff');
+    shopItems.forEach((it,i)=>{
+      const y=100+i*40;
+      drawText(`${i+1}: ${it.name} (${it.cost} scrap)`,40,y);
+    });
+    drawText('Press 1-4 to buy, ENTER to continue',40,300);
+    for(let i=1;i<=4;i++) if(keys['Digit'+i] && scrap>=shopItems[i-1].cost){
+      scrap-=shopItems[i-1].cost; shopItems[i-1].apply();
+    }
+    if(keys['Enter']){ state='play'; spawnWave(); }
+    return;
+  }
+
+  // play state
+  ctx.fillStyle='#fff';
+  ctx.beginPath(); ctx.arc(player.pos.x,player.pos.y,player.size,0,Math.PI*2); ctx.fill();
+
+  bullets.forEach(b=>{ ctx.fillStyle=b.from==='player'?'#0ff':'#f0f'; ctx.fillRect(b.pos.x-2,b.pos.y-2,4,4); });
+  enemies.forEach(e=>{ ctx.fillStyle=e.color; ctx.beginPath(); ctx.arc(e.pos.x,e.pos.y,e.size,0,Math.PI*2); ctx.fill(); });
+  particles.forEach(p=>{ ctx.globalAlpha=p.life/30; ctx.fillStyle=p.col; ctx.fillRect(p.pos.x,p.pos.y,2,2); });
+  ctx.globalAlpha=1;
+}
+
+/* ---------- main loop ---------- */
+function loop(){
+  frame++;
+  if(state==='play'){
+    updatePlayer();
+    updateBullets();
+    updateEnemies();
+    updateParticles();
+    checkCollisions();
+
+    if(enemies.length===0){ state='shop'; waveTimer=0; }
+  }
+  draw();
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>
