@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import SimpleDashboard from "@/pages/simple-dashboard";
 import LandingPage from "@/pages/landing-page";
 import AuthPage from "@/pages/auth-page";
+import AuthVerifiedPage from "@/pages/auth-verified-page";
 import OnboardingPage from "@/pages/onboarding-page";
 import NotFound from "@/pages/not-found";
 import { Loader2 } from "lucide-react";
@@ -51,6 +52,7 @@ function Router() {
       {/* Public routes */}
       <Route path="/" component={user ? () => <Redirect to="/dashboard" /> : LandingPage} />
       <Route path="/auth" component={user ? () => <Redirect to="/dashboard" /> : AuthPage} />
+      <Route path="/auth/verified" component={AuthVerifiedPage} />
       
       {/* Onboarding route */}
       <Route path="/onboarding">

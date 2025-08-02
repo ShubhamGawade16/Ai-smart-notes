@@ -99,6 +99,7 @@ export const signUpWithEmail = async (email: string, password: string, firstName
     email,
     password,
     options: {
+      emailRedirectTo: `${window.location.origin}/auth/verified`,
       data: {
         first_name: firstName,
         last_name: lastName,

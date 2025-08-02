@@ -79,8 +79,12 @@ router.post("/login", async (req: Request, res: Response) => {
 
     // Find user
     const user = await storage.getUserByEmail(email);
-    if (!user || !user.passwordHash) {
-      return res.status(401).json({ error: "Invalid credentials" });
+    if (!user) {
+      return res.status(404).json({ error: "No user found with this email. Please check your credentials or sign up for a new account." });
+    }
+    
+    if (!user.passwordHash) {
+      return res.status(401).json({ error: "Invalid account setup. Please contact support." });
     }
 
     // Verify password
@@ -101,7 +105,7 @@ router.post("/login", async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Login error:", error);
-    res.status(500).json({ error: "Failed to login" });
+    res.status(500).json({ error: "Login failed. Please try again." });
   }
 });
 

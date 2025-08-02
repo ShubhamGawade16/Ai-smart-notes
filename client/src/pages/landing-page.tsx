@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Link } from "wouter";
@@ -23,6 +24,48 @@ const testimonials = [
     role: "Marketing Director",
     image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Emily",
     content: "I love how Planify learns my work patterns. The AI-powered scheduling suggestions align perfectly with my energy levels throughout the day.",
+    rating: 5
+  },
+  {
+    name: "David Kim",
+    role: "Entrepreneur",
+    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=David",
+    content: "Running multiple businesses was overwhelming until I found Planify. The AI prioritization keeps me focused on what drives real results.",
+    rating: 5
+  },
+  {
+    name: "Lisa Thompson",
+    role: "Freelance Designer",
+    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Lisa",
+    content: "Planify's goal breakdown feature turned my creative chaos into organized success. I'm completing projects 50% faster now.",
+    rating: 5
+  },
+  {
+    name: "James Wilson",
+    role: "Sales Manager",
+    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=James",
+    content: "The predictive scheduling is incredible. Planify knows when I'm most productive and schedules my important calls accordingly.",
+    rating: 5
+  },
+  {
+    name: "Maria Garcia",
+    role: "Content Creator",
+    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Maria",
+    content: "From scattered ideas to structured content calendar - Planify's AI insights helped me triple my content output while reducing stress.",
+    rating: 5
+  },
+  {
+    name: "Alex Johnson",
+    role: "Remote Worker",
+    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Alex",
+    content: "Working from home was chaotic until Planify. Now I have clear daily structure and achieve more in 6 hours than I used to in 10.",
+    rating: 5
+  },
+  {
+    name: "Rachel Brown",
+    role: "Project Coordinator",
+    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Rachel",
+    content: "Managing multiple team projects is seamless with Planify. The AI automatically adjusts priorities when deadlines shift.",
     rating: 5
   }
 ];
@@ -58,6 +101,14 @@ const stats = [
 ];
 
 export default function LandingPage() {
+  const [currentTestimonial, setCurrentTestimonial] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-gray-950">
       {/* Header */}
@@ -185,7 +236,7 @@ export default function LandingPage() {
             Join thousands who've already revolutionized their work life with AI
           </p>
           <Link href="/auth?mode=signup">
-            <Button size="lg" variant="secondary" className="text-lg px-8">
+            <Button size="lg" className="text-lg px-8 bg-white text-teal-600 hover:bg-gray-100">
               Get Started - It's Free
             </Button>
           </Link>
