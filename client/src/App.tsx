@@ -41,7 +41,7 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
 }
 
 function Router() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading } = useSupabaseAuth();
   
   if (isLoading) {
     return (
@@ -55,18 +55,16 @@ function Router() {
     <Switch>
       {/* Public routes */}
       <Route path="/" component={user ? () => <Redirect to="/dashboard" /> : LandingPage} />
-      <Route path="/auth" component={user ? () => <Redirect to="/dashboard" /> : SupabaseAuthPage} />
+      <Route path="/auth" component={SupabaseAuthPage} />
       <Route path="/auth/callback" component={AuthCallbackPage} />
       <Route path="/verify-email" component={EmailVerificationPage} />
       <Route path="/auth/verified" component={AuthVerifiedPage} />
       
       {/* Onboarding route */}
-      <Route path="/onboarding">
-        {user && !user.onboardingCompleted ? <OnboardingPage /> : <Redirect to="/dashboard" />}
-      </Route>
+      <Route path="/onboarding" component={OnboardingPage} />
       
       {/* Protected routes */}
-      <Route path="/dashboard" component={() => <ProtectedRoute component={SimpleDashboard} />} />
+      <Route path="/dashboard" component={SimpleDashboard} />
       
       <Route component={NotFound} />
     </Switch>
@@ -77,14 +75,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <SupabaseAuthProvider>
-        <AuthProvider>
-          <ThemeProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Router />
-            </TooltipProvider>
-          </ThemeProvider>
-        </AuthProvider>
+        <ThemeProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </ThemeProvider>
       </SupabaseAuthProvider>
     </QueryClientProvider>
   );

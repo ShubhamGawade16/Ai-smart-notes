@@ -30,7 +30,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null);
   const [supabaseUser, setSupabaseUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   // Sync user data from our backend when Supabase user changes
@@ -79,7 +79,6 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!supabase) {
-      setIsLoading(false);
       return;
     }
 
@@ -93,8 +92,6 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
-      } finally {
-        setIsLoading(false);
       }
     };
 
@@ -111,8 +108,6 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         setSupabaseUser(null);
         setUser(null);
       }
-      
-      setIsLoading(false);
     });
 
     return () => {

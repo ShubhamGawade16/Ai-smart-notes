@@ -27,7 +27,12 @@ export default function SupabaseAuthPage() {
   // Redirect if already logged in
   useEffect(() => {
     if (!isLoading && user) {
-      navigate("/dashboard");
+      // Check if user has completed onboarding
+      if (user.onboardingCompleted) {
+        navigate("/dashboard");
+      } else {
+        navigate("/onboarding");
+      }
     }
   }, [user, isLoading, navigate]);
 
