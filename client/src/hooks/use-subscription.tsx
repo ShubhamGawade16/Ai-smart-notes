@@ -28,9 +28,12 @@ export function useSubscription() {
     }
 
     try {
-      const response = await apiRequest("GET", "/api/subscription-status");
+      // Use apiRequest with cache-busting timestamp
+      const timestamp = Date.now();
+      const response = await apiRequest("GET", `/api/subscription-status?t=${timestamp}`);
       if (response.ok) {
         const data = await response.json();
+        console.log('Fresh subscription data:', data);
         setSubscriptionStatus(data);
       } else {
         console.error("Failed to fetch subscription status:", response.status, response.statusText);

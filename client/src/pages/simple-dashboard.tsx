@@ -292,6 +292,10 @@ export default function SimpleDashboard() {
                           await resetAiUsage();
                           // Force refresh all cached queries
                           queryClient.invalidateQueries();
+                          // Add a small delay to ensure database consistency
+                          setTimeout(async () => {
+                            await refreshStatus();
+                          }, 200);
                           // Show success message
                           toast({
                             title: "Dev Mode",
