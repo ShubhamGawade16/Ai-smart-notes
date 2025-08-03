@@ -61,11 +61,15 @@ export const signInWithGoogle = async () => {
   }
   
   console.log('Google OAuth initiated successfully. Data:', data)
+  console.log('Redirect URL from Supabase:', data?.url)
   
   // If we reach here, the OAuth flow should redirect to Google
   if (!data || !data.url) {
     throw new Error('Google OAuth did not return a redirect URL. Please check your Supabase Google provider configuration.')
   }
+  
+  // Log the full redirect URL for debugging
+  console.log('About to redirect to:', data.url)
   
   return data
 }
