@@ -18,14 +18,20 @@ export async function apiRequest(
     let token = localStorage.getItem('auth_token');
     
     // If no token in localStorage, try to get it from Supabase
-    if (!token) {
-      const { supabase } = await import('@/lib/supabase');
-      if (supabase) {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.access_token) {
-          token = session.access_token;
-          localStorage.setItem('auth_token', token);
+    // But don't attempt this if we're in the middle of a logout process
+    if (!token && !window.location.pathname.includes('/auth') && !localStorage.getItem('logout_in_progress')) {
+      try {
+        const { supabase } = await import('@/lib/supabase');
+        if (supabase) {
+          const { data: { session }, error } = await supabase.auth.getSession();
+          if (session?.access_token && !error) {
+            token = session.access_token;
+            localStorage.setItem('auth_token', token);
+          }
         }
+      } catch (sessionError) {
+        // Silently handle session errors during logout
+        console.log('Session check skipped due to auth state transition');
       }
     }
     
@@ -57,6 +63,11 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
+    // Skip queries during logout process
+    if (localStorage.getItem('logout_in_progress')) {
+      return null;
+    }
+    
     const token = localStorage.getItem('auth_token');
     
     const res = await fetch(queryKey.join("") as string, {

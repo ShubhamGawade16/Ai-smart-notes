@@ -88,8 +88,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               console.log('User signed in, redirecting to dashboard...');
             }
           } else {
-            // Clear token on logout
+            // Clear token and logout flag on logout
             localStorage.removeItem('auth_token');
+            localStorage.removeItem('logout_in_progress');
             setUser(null);
           }
           setIsLoading(false);
@@ -183,24 +184,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error('Authentication not configured');
     }
 
-    const { error } = await supabase.auth.signOut();
-    
-    if (error) {
+    try {
+      // Set logout flag to prevent API calls during logout
+      localStorage.setItem('logout_in_progress', 'true');
+      
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        toast({
+          title: "Logout failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        throw error;
+      }
+
       toast({
-        title: "Logout failed",
-        description: error.message,
-        variant: "destructive",
+        title: "Logged out",
+        description: "You have been successfully logged out.",
       });
+
+      // Force redirect to home
+      window.location.href = '/';
+    } catch (error) {
+      // Clean up logout flag if there's an error
+      localStorage.removeItem('logout_in_progress');
       throw error;
     }
-
-    toast({
-      title: "Logged out",
-      description: "You have been successfully logged out.",
-    });
-
-    // Force redirect to home
-    window.location.href = '/';
   };
 
   const value = {
