@@ -14,14 +14,28 @@ export async function apiRequest(
   options: RequestInit = {},
 ): Promise<Response> {
   try {
-    // Get auth token from localStorage
-    const token = localStorage.getItem('auth_token');
+    // Get auth token from localStorage or Supabase session
+    let token = localStorage.getItem('auth_token');
+    
+    // If no token in localStorage, try to get it from Supabase
+    if (!token) {
+      const { supabase } = await import('@/lib/supabase');
+      if (supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          token = session.access_token;
+          localStorage.setItem('auth_token', token);
+        }
+      }
+    }
     
     const headers = {
       'Content-Type': 'application/json',
       ...options.headers,
       ...(token && { Authorization: `Bearer ${token}` }),
     };
+
+    console.log('Making API request:', { method, url, hasToken: !!token });
 
     const res = await fetch(url, {
       method,

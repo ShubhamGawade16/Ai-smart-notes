@@ -78,34 +78,44 @@ export function RazorpayPayment({ onSuccess, onError, userEmail }: RazorpayPayme
       }
 
       // Create subscription order
+      console.log("Creating subscription order...");
       const response = await apiRequest("POST", "/api/razorpay/subscription", {
         planId: SUBSCRIPTION_PLAN.id,
         customerEmail: userEmail,
-      }) as any;
+      });
+      
+      const responseData = await response.json();
+      console.log("Subscription order response:", responseData);
 
-      if (!response.success) {
-        throw new Error(response.error || "Failed to create subscription");
+      if (!responseData.success) {
+        throw new Error(responseData.error || "Failed to create subscription");
       }
 
       // Configure Razorpay checkout
       const options = {
-        key: response.key_id,
-        amount: response.order.amount,
-        currency: response.order.currency,
-        order_id: response.order.id,
+        key: responseData.key_id,
+        amount: responseData.order.amount,
+        currency: responseData.order.currency,
+        order_id: responseData.order.id,
         name: "Planify",
         description: `${SUBSCRIPTION_PLAN.name} Subscription`,
         image: "/attached_assets/Planify_imresizer_1754161747016.jpg",
         handler: async (paymentResponse: any) => {
           try {
+            setLoading(true);
+            console.log("Payment response received:", paymentResponse);
+            
             // Verify payment
             const verifyResponse = await apiRequest("POST", "/api/razorpay/verify", {
               razorpay_order_id: paymentResponse.razorpay_order_id,
               razorpay_payment_id: paymentResponse.razorpay_payment_id,
               razorpay_signature: paymentResponse.razorpay_signature,
-            }) as any;
+            });
 
-            if (verifyResponse.success) {
+            const verifyData = await verifyResponse.json();
+            console.log("Verification response:", verifyData);
+
+            if (verifyData.success) {
               toast({
                 title: "Payment Successful!",
                 description: `Welcome to ${SUBSCRIPTION_PLAN.name}! Your premium features are now active.`,
@@ -114,12 +124,14 @@ export function RazorpayPayment({ onSuccess, onError, userEmail }: RazorpayPayme
               // Refresh subscription status
               queryClient.invalidateQueries({ queryKey: ['/api/subscription-status'] });
               
+              setLoading(false);
               onSuccess?.();
             } else {
-              throw new Error("Payment verification failed");
+              throw new Error(verifyData.error || "Payment verification failed");
             }
           } catch (error: any) {
             console.error("Payment verification error:", error);
+            setLoading(false);
             toast({
               title: "Payment Verification Failed",
               description: error.message || "Please contact support for assistance.",
@@ -139,18 +151,43 @@ export function RazorpayPayment({ onSuccess, onError, userEmail }: RazorpayPayme
             setLoading(false);
           },
         },
+        notes: {
+          subscription_type: "pro",
+          user_email: userEmail,
+        },
       };
 
+      console.log("Opening Razorpay with options:", options);
       const razorpay = new window.Razorpay(options);
+      
+      razorpay.on('payment.failed', function (response: any) {
+        console.error("Payment failed:", response.error);
+        setLoading(false);
+        toast({
+          title: "Payment Failed",
+          description: response.error.description || "Payment could not be processed",
+          variant: "destructive",
+        });
+        onError?.(response.error.description);
+      });
+      
       razorpay.open();
     } catch (error: any) {
       console.error("Subscription error:", error);
+      
+      let errorMessage = "Failed to start subscription process";
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
       toast({
         title: "Subscription Failed",
-        description: error.message || "Failed to start subscription process",
+        description: errorMessage,
         variant: "destructive",
       });
-      onError?.(error.message);
+      onError?.(errorMessage);
       setLoading(false);
     }
   };

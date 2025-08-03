@@ -71,6 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // Store the access token for API requests
             if (session.access_token) {
               localStorage.setItem('auth_token', session.access_token);
+              console.log('Stored auth token for API requests');
             }
             
             const userData: User = {
