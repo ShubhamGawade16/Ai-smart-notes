@@ -77,8 +77,8 @@ export default function AdvancedFeatures() {
     },
   });
 
-  // AI Insights Query
-  const { data: insightsData, refetch: fetchInsights } = useQuery({
+  // AI Insights Query with loading state
+  const { data: insightsData, refetch: fetchInsights, isLoading: isLoadingInsights } = useQuery({
     queryKey: ['/api/ai/insights'],
     enabled: false,
   });
@@ -252,45 +252,75 @@ export default function AdvancedFeatures() {
             <CardContent className="space-y-4">
               <Button 
                 onClick={() => fetchInsights()}
-                disabled={!canUseAI}
+                disabled={!canUseAI || isLoadingInsights}
                 className="w-full"
               >
-                Generate Insights
+                {isLoadingInsights ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Generating Insights...
+                  </div>
+                ) : (
+                  'Generate Insights'
+                )}
               </Button>
               
-              {insightsData && (
-                <div className="mt-4 p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
-                  <h4 className="font-semibold text-purple-800 dark:text-purple-200 mb-2">Your Insights:</h4>
-                  <div className="space-y-3 text-sm">
+              {/* Loading State */}
+              {isLoadingInsights && (
+                <div className="flex flex-col items-center justify-center py-8 px-4">
+                  <div className="w-12 h-12 border-4 border-green-200 border-t-green-600 rounded-full animate-spin mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                    Analyzing Your Productivity
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 text-center max-w-sm">
+                    Our AI is reviewing your task patterns and generating personalized insights. This may take a few moments.
+                  </p>
+                </div>
+              )}
+              
+              {/* Results */}
+              {!isLoadingInsights && insightsData && (
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-gray-900 dark:text-white text-lg mb-4">Your Productivity Insights</h4>
+                  <div className="space-y-4">
                     {insightsData.insights?.map((insight: any, index: number) => (
-                      <div key={index} className="p-3 bg-white dark:bg-gray-800 rounded-lg border border-purple-100 dark:border-purple-700">
-                        <div className="flex items-start gap-2">
-                          <Badge variant="outline" className="text-xs">
+                      <div key={index} className="group p-4 bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-xl border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all duration-200">
+                        <div className="flex items-start justify-between mb-3">
+                          <Badge 
+                            variant="outline" 
+                            className="text-xs font-medium capitalize bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800"
+                          >
                             {insight.type?.replace('_', ' ') || 'insight'}
                           </Badge>
+                          {insight.confidence && (
+                            <div className="flex items-center gap-2">
+                              <div className="w-20 h-2 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-gradient-to-r from-green-500 to-blue-500 rounded-full transition-all duration-500"
+                                  style={{ width: `${insight.confidence * 100}%` }}
+                                />
+                              </div>
+                              <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                                {Math.round(insight.confidence * 100)}%
+                              </span>
+                            </div>
+                          )}
                         </div>
-                        <h5 className="font-medium text-purple-900 dark:text-purple-100 mt-2">
+                        
+                        <h5 className="font-semibold text-gray-900 dark:text-white mb-2 text-base leading-tight">
                           {insight.title}
                         </h5>
-                        <p className="text-gray-600 dark:text-gray-300 mt-1">
+                        
+                        <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed mb-3">
                           {insight.content}
                         </p>
-                        {insight.confidence && (
-                          <div className="mt-2 flex items-center gap-2">
-                            <span className="text-xs text-gray-500">Confidence:</span>
-                            <div className="w-16 h-1.5 bg-gray-200 dark:bg-gray-600 rounded-full">
-                              <div 
-                                className="h-1.5 bg-purple-500 rounded-full"
-                                style={{ width: `${insight.confidence * 100}%` }}
-                              />
-                            </div>
-                            <span className="text-xs text-gray-500">{Math.round(insight.confidence * 100)}%</span>
-                          </div>
-                        )}
+                        
                         {insight.actionable && (
-                          <Badge variant="secondary" className="mt-2 text-xs">
-                            Actionable
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary" className="text-xs bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800">
+                              💡 Actionable
+                            </Badge>
+                          </div>
                         )}
                       </div>
                     ))}
