@@ -9,6 +9,9 @@ import UpgradeModal from "@/components/UpgradeModal";
 import DailyMotivationQuote from "@/components/daily-motivation-quote";
 import TaskProgressRadar from "@/components/task-progress-radar";
 import ConfettiBurst from "@/components/confetti-burst";
+import TodayTasks from "@/components/today-tasks";
+import DashboardStats from "@/components/dashboard-stats";
+import CompletedTasks from "@/components/completed-tasks";
 import { 
   Brain, 
   MessageCircle, 
@@ -212,10 +215,12 @@ export default function SimpleDashboard() {
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Main Task Area */}
-          <div className="lg:col-span-3 space-y-6">
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left Column - Today's Tasks */}
+          <div className="space-y-6">
+            <TodayTasks />
+            
             {/* Task Input */}
             {showSmartInput && (
               <SimpleTaskInput 
@@ -226,113 +231,37 @@ export default function SimpleDashboard() {
 
             {/* AI Task Refiner */}
             {showAIRefiner && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold">AI Task Refiner</h2>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowAIRefiner(false)}
-                  >
-                    Close
-                  </Button>
-                </div>
-                <ModernAIRefiner 
-                  onClose={() => setShowAIRefiner(false)}
-                  onTasksRefined={(tasks) => {
-                    console.log('Refined tasks:', tasks);
-                    setShowAIRefiner(false);
-                  }}
-                  onUpgradeRequired={() => setShowUpgradeModal(true)}
-                />
-              </div>
+              <Card className="border-0 shadow-sm bg-white dark:bg-gray-900">
+                <CardHeader className="pb-4 pt-6 px-6">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">AI Task Refiner</CardTitle>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowAIRefiner(false)}
+                    >
+                      Close
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="px-6 pb-6">
+                  <ModernAIRefiner 
+                    onClose={() => setShowAIRefiner(false)}
+                    onTasksRefined={(tasks) => {
+                      console.log('Refined tasks:', tasks);
+                      setShowAIRefiner(false);
+                    }}
+                    onUpgradeRequired={() => setShowUpgradeModal(true)}
+                  />
+                </CardContent>
+              </Card>
             )}
-
-            {/* Task List */}
-            <ModernTaskList 
-              onAdvancedView={(task) => {
-                setSelectedTask(task);
-                setIsAdvancedViewOpen(true);
-              }}
-              onTaskCompleted={() => {
-                setShowConfetti(true);
-              }}
-            />
           </div>
 
-          {/* AI Features Sidebar */}
-          <div className="space-y-4">
-            {/* Daily Motivation Quote */}
-            <DailyMotivationQuote />
-            
-            {/* Task Progress Radar Chart */}
-            <TaskProgressRadar />
-            
-            <Card className="border-0 shadow-sm bg-white dark:bg-gray-900">
-              <CardHeader className="pb-4 pt-6 px-6">
-                <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-purple-600" />
-                  AI Tools
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-6 pb-6 space-y-3">
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => setShowSmartInput(!showSmartInput)}
-                >
-                  <Brain className="w-4 h-4 mr-2" />
-                  Quick Add Task
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => setShowAIRefiner(!showAIRefiner)}
-                >
-                  <MessageCircle className="w-4 h-4 mr-2" />
-                  Task Refiner
-                </Button>
-                
-                <Link href="/advanced-features">
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start"
-                  >
-                    <Eye className="w-4 h-4 mr-2" />
-                    All AI Features
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-
-            {/* Quick Stats */}
-            <Card className="border-0 shadow-sm bg-white dark:bg-gray-900">
-              <CardHeader className="pb-4 pt-6 px-6">
-                <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-green-600" />
-                  Quick Stats
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-6 pb-6">
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Active Tasks</span>
-                    <span className="font-medium">-</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Completed Today</span>
-                    <span className="font-medium">-</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">AI Calls Used</span>
-                    <span className="font-medium">
-                      {subscriptionStatus.isPremium ? 'Unlimited' : `${subscriptionStatus.dailyAiUsage}/${subscriptionStatus.dailyAiLimit}`}
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+          {/* Right Column - Stats and Completed Tasks */}
+          <div className="space-y-6">
+            <DashboardStats />
+            <CompletedTasks />
           </div>
         </div>
       </div>
