@@ -128,8 +128,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // The redirect will be handled by the auth state change listener
       
     } catch (error) {
-      setIsLoading(false);
       throw error;
+    } finally {
+      // Don't set isLoading to false here - let the auth state change handle it
     }
   };
 
