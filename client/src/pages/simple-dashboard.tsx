@@ -11,6 +11,8 @@ import UpgradeProModal from "@/components/upgrade-pro-modal";
 import DailyMotivationQuote from "@/components/daily-motivation-quote";
 import TaskProgressRadar from "@/components/task-progress-radar";
 import ConfettiBurst from "@/components/confetti-burst";
+import { CircularProgressChart } from "@/components/circular-progress-chart";
+import { TestimonialsSection } from "@/components/testimonials-section";
 import { 
   Brain, 
   MessageCircle, 
@@ -322,6 +324,12 @@ export default function SimpleDashboard() {
 
             {/* Daily Motivation Quote */}
             <DailyMotivationQuote />
+            
+            {/* Progress Overview */}
+            <CircularProgressChart />
+            
+            {/* User Testimonials */}
+            <TestimonialsSection />
             
             {/* Task Progress Radar Chart */}
             <TaskProgressRadar />
