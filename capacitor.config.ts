@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.aismartnotes.app',
-  appName: 'AI Smart Notes',
+  appId: 'com.planify.taskmanager',
+  appName: 'Planify - Smart AI Task Management',
   webDir: 'dist/public',
   server: {
     androidScheme: 'https'
