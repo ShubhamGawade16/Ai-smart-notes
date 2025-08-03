@@ -6,6 +6,7 @@ import { AdvancedTaskView } from "@/components/advanced-task-view";
 import { SimpleTaskInput } from "@/components/simple-task-input";
 import { ModernAIRefiner } from "@/components/modern-ai-refiner";
 import UpgradeModal from "@/components/UpgradeModal";
+import UpgradeProModal from "@/components/upgrade-pro-modal";
 import DailyMotivationQuote from "@/components/daily-motivation-quote";
 import TaskProgressRadar from "@/components/task-progress-radar";
 import ConfettiBurst from "@/components/confetti-burst";
@@ -54,6 +55,7 @@ export default function SimpleDashboard() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isAdvancedViewOpen, setIsAdvancedViewOpen] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showUpgradeProModal, setShowUpgradeProModal] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   
   const { user, signOut } = useAuth();
@@ -124,6 +126,12 @@ export default function SimpleDashboard() {
                 <div className="ml-4 px-3 py-1 bg-teal-100 dark:bg-teal-900 text-teal-800 dark:text-teal-200 text-xs rounded-full flex items-center gap-1">
                   <Crown className="w-3 h-3" />
                   {subscriptionStatus.dailyAiUsage}/{subscriptionStatus.dailyAiLimit} AI requests
+                </div>
+              )}
+              {subscriptionStatus.isPremium && (
+                <div className="ml-4 px-3 py-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs rounded-full flex items-center gap-1 font-medium">
+                  <Crown className="w-3 h-3" />
+                  Pro User
                 </div>
               )}
             </div>
@@ -268,6 +276,30 @@ export default function SimpleDashboard() {
             {/* Task Progress Radar Chart */}
             <TaskProgressRadar />
             
+            {/* Upgrade to Pro Card - Prominent placement */}
+            {!subscriptionStatus.isPremium && (
+              <Card className="border-2 border-gradient-to-r from-yellow-400 to-orange-500 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20">
+                <CardContent className="p-6 text-center">
+                  <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full mx-auto mb-4 flex items-center justify-center">
+                    <Crown className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="font-bold text-gray-900 dark:text-white mb-2">
+                    Unlock Pro Features
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    Get unlimited AI requests, advanced analytics, and personalized insights
+                  </p>
+                  <Button
+                    onClick={() => setShowUpgradeProModal(true)}
+                    className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white border-0 font-semibold"
+                  >
+                    <Crown className="w-4 h-4 mr-2" />
+                    Upgrade Now - $5/month
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+            
             <Card className="border-0 shadow-sm bg-white dark:bg-gray-900">
               <CardHeader className="pb-4 pt-6 px-6">
                 <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
@@ -357,6 +389,12 @@ export default function SimpleDashboard() {
         onClose={() => setShowUpgradeModal(false)}
         currentUsage={subscriptionStatus.dailyAiUsage}
         dailyLimit={subscriptionStatus.dailyAiLimit}
+      />
+
+      {/* Upgrade Pro Modal */}
+      <UpgradeProModal 
+        isOpen={showUpgradeProModal} 
+        onClose={() => setShowUpgradeProModal(false)} 
       />
       
       {/* Confetti Burst Animation */}

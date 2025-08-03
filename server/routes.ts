@@ -331,6 +331,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
 
+  // AI motivation quote route
+  app.post("/api/ai/motivation-quote", async (req: AuthRequest, res) => {
+    try {
+      const { completedTasks, incompleteTasks, recentTasks } = req.body;
+      
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(500).json({ error: "OpenAI API key not configured" });
+      }
+
+      const OpenAI = require('openai');
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+      const prompt = `Generate a personalized motivational quote for a user with the following task status:
+- Completed tasks: ${completedTasks}
+- Incomplete tasks: ${incompleteTasks}
+- Recent tasks: ${recentTasks.map((t: any) => `${t.title} (${t.completed ? 'done' : 'pending'})`).join(', ')}
+
+Create an encouraging, personalized quote that acknowledges their progress and motivates them for the tasks ahead. Make it specific to their situation. Keep it under 150 characters and inspirational.
+
+Respond with JSON in this format: {"quote": "your motivational quote", "author": "Planify AI"}`;
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+        messages: [{ role: "user", content: prompt }],
+        response_format: { type: "json_object" }
+      });
+
+      const result = JSON.parse(response.choices[0].message.content || '{}');
+      res.json(result);
+    } catch (error) {
+      console.error('AI motivation quote error:', error);
+      res.status(500).json({ error: "Failed to generate motivation quote" });
+    }
+  });
+
   // Conversational Task Refiner (FREE for testing)
   app.post("/api/ai/refine-task", optionalAuth, async (req: AuthRequest, res) => {
       try {

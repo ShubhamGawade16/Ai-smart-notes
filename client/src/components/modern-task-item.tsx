@@ -88,14 +88,14 @@ export function ModernTaskItem({ task, onUpdate, onDelete, onAdvancedView, onTas
   });
 
   const handleToggleComplete = () => {
-    const isCompletingTask = !task.completed;
+    const newCompletedState = !task.completed;
     updateTaskMutation.mutate({
       id: task.id,
-      updates: { completed: isCompletingTask },
+      updates: { completed: newCompletedState }
     });
     
-    // Trigger confetti when task is completed
-    if (isCompletingTask && onTaskCompleted) {
+    // Trigger confetti only when completing a task (not uncompleting)
+    if (newCompletedState && onTaskCompleted) {
       onTaskCompleted();
     }
   };

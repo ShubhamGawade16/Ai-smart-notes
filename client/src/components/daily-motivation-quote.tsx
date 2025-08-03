@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Sparkles, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useQuery } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 
 const productivityQuotes = [
   {
@@ -59,6 +61,32 @@ const productivityQuotes = [
 export default function DailyMotivationQuote() {
   const [currentQuote, setCurrentQuote] = useState(productivityQuotes[0]);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isAiQuote, setIsAiQuote] = useState(false);
+
+  // Fetch user's tasks for AI context
+  const { data: tasksResponse } = useQuery({
+    queryKey: ['/api/tasks'],
+  });
+
+  const tasks = (tasksResponse as any)?.tasks || [];
+  const completedTasks = tasks.filter((task: any) => task.completed);
+  const incompleteTasks = tasks.filter((task: any) => !task.completed);
+
+  // Get AI-generated personalized quote
+  const getAiPersonalizedQuote = async () => {
+    try {
+      const response = await apiRequest('POST', '/api/ai/motivation-quote', {
+        completedTasks: completedTasks.length,
+        incompleteTasks: incompleteTasks.length,
+        recentTasks: tasks.slice(0, 5).map((t: any) => ({ title: t.title, completed: t.completed }))
+      });
+      const data = await response.json();
+      return { quote: data.quote, author: data.author || 'AI Assistant', category: 'ai' };
+    } catch (error) {
+      console.error('Failed to get AI quote:', error);
+      return getPersonalizedQuote();
+    }
+  };
 
   // Get a personalized quote based on time of day and previous quote
   const getPersonalizedQuote = () => {
@@ -96,12 +124,24 @@ export default function DailyMotivationQuote() {
     setCurrentQuote(productivityQuotes[quoteIndex]);
   }, []);
 
-  const refreshQuote = () => {
+  const refreshQuote = async () => {
     setIsAnimating(true);
-    setTimeout(() => {
+    try {
+      // 50% chance to get AI quote if user has tasks
+      const useAi = tasks.length > 0 && Math.random() > 0.5;
+      if (useAi) {
+        const aiQuote = await getAiPersonalizedQuote();
+        setCurrentQuote(aiQuote);
+        setIsAiQuote(true);
+      } else {
+        setCurrentQuote(getPersonalizedQuote());
+        setIsAiQuote(false);
+      }
+    } catch (error) {
       setCurrentQuote(getPersonalizedQuote());
-      setIsAnimating(false);
-    }, 300);
+      setIsAiQuote(false);
+    }
+    setIsAnimating(false);
   };
 
   return (
@@ -123,12 +163,19 @@ export default function DailyMotivationQuote() {
       </CardHeader>
       <CardContent className="px-6 pb-6">
         <div className={`transition-all duration-300 ${isAnimating ? 'opacity-0 transform scale-95' : 'opacity-100 transform scale-100'}`}>
-          <blockquote className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+          <blockquote className="text-sm font-medium text-gray-800 dark:text-gray-200 leading-relaxed">
             "{currentQuote.quote}"
           </blockquote>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-right">
-            — {currentQuote.author}
-          </p>
+          <div className="flex items-center justify-between mt-3">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              — {currentQuote.author}
+            </p>
+            {isAiQuote && (
+              <span className="text-xs bg-gradient-to-r from-purple-500 to-teal-500 bg-clip-text text-transparent font-medium">
+                ✨ AI Personalized
+              </span>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>
