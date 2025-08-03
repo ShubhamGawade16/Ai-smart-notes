@@ -278,6 +278,84 @@ export default function SimpleDashboard() {
                 setShowConfetti(true);
               }}
             />
+
+            {/* Moved Content from Sidebar to Fill White Space */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+              {/* Daily Motivation Quote */}
+              <DailyMotivationQuote />
+              
+              {/* Progress Overview */}
+              <CircularProgressChart />
+              
+              {/* Task Progress Radar Chart */}
+              <TaskProgressRadar />
+              
+              {/* AI Tools */}
+              <Card className="border-0 shadow-sm bg-white dark:bg-gray-900">
+                <CardHeader className="pb-4 pt-6 px-6">
+                  <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-purple-600" />
+                    AI Tools
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="px-6 pb-6 space-y-3">
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start"
+                    onClick={() => setShowSmartInput(!showSmartInput)}
+                  >
+                    <Brain className="w-4 h-4 mr-2" />
+                    Quick Add Task
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start"
+                    onClick={() => setShowAIRefiner(!showAIRefiner)}
+                  >
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    AI Task Refiner
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start"
+                    onClick={() => window.location.href = '/advanced-features'}
+                  >
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    View All AI Features
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Quick Stats */}
+              <Card className="border-0 shadow-sm bg-white dark:bg-gray-900">
+                <CardHeader className="pb-4 pt-6 px-6">
+                  <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-green-600" />
+                    Quick Stats
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="px-6 pb-6">
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Active Tasks</span>
+                      <span className="font-medium">-</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Completed Today</span>
+                      <span className="font-medium">-</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">AI Calls Used</span>
+                      <span className="font-medium">
+                        {subscriptionStatus.isPremium ? 'Unlimited' : `${subscriptionStatus.dailyAiUsage}/${subscriptionStatus.dailyAiLimit}`}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
 
           {/* AI Features Sidebar */}
@@ -322,17 +400,7 @@ export default function SimpleDashboard() {
               </Card>
             )}
 
-            {/* Daily Motivation Quote */}
-            <DailyMotivationQuote />
-            
-            {/* Progress Overview */}
-            <CircularProgressChart />
-            
-            {/* User Testimonials */}
-            <TestimonialsSection />
-            
-            {/* Task Progress Radar Chart */}
-            <TaskProgressRadar />
+
             
             {/* Upgrade to Pro Card - Prominent placement */}
             {!subscriptionStatus.isPremium && (
@@ -357,71 +425,6 @@ export default function SimpleDashboard() {
                 </CardContent>
               </Card>
             )}
-            
-            <Card className="border-0 shadow-sm bg-white dark:bg-gray-900">
-              <CardHeader className="pb-4 pt-6 px-6">
-                <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-purple-600" />
-                  AI Tools
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-6 pb-6 space-y-3">
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => setShowSmartInput(!showSmartInput)}
-                >
-                  <Brain className="w-4 h-4 mr-2" />
-                  Quick Add Task
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => setShowAIRefiner(!showAIRefiner)}
-                >
-                  <MessageCircle className="w-4 h-4 mr-2" />
-                  AI Task Refiner
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => window.location.href = '/advanced-features'}
-                >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  View All AI Features
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Quick Stats */}
-            <Card className="border-0 shadow-sm bg-white dark:bg-gray-900">
-              <CardHeader className="pb-4 pt-6 px-6">
-                <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-green-600" />
-                  Quick Stats
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-6 pb-6">
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Active Tasks</span>
-                    <span className="font-medium">-</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Completed Today</span>
-                    <span className="font-medium">-</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">AI Calls Used</span>
-                    <span className="font-medium">
-                      {subscriptionStatus.isPremium ? 'Unlimited' : `${subscriptionStatus.dailyAiUsage}/${subscriptionStatus.dailyAiLimit}`}
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </div>
