@@ -344,4 +344,19 @@ export class DatabaseStorage implements IStorage {
       console.error(`Error incrementing monthly task count for user ${userId}:`, error);
     }
   }
+
+  async resetDailyAiUsage(userId: string): Promise<void> {
+    try {
+      await db
+        .update(users)
+        .set({
+          dailyAiCalls: 0,
+          dailyAiCallsResetAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, userId));
+    } catch (error) {
+      console.error(`Error resetting daily AI usage for user ${userId}:`, error);
+    }
+  }
 }
