@@ -30,14 +30,15 @@ Preferred communication style: Simple, everyday language.
 
 ### Database Schema
 The application manages `Tasks` and `Notes` entities, both including automatic timestamps and UUID primary keys.
-- **Tasks**: Title, description, priority levels, categories, tags, due dates, completion tracking, AI suggestions.
+- **Tasks**: Title, description, priority levels, task types (creative/routine/analytical/deep work/communication/learning), categories, tags, due dates, completion tracking, AI suggestions, readiness scores, and optimal timing data.
 - **Notes**: Title, content, categories, tags, AI-generated summaries.
 
 ### Key Components & Features
-- **AI Service Integration**: Smart categorization, priority detection, productivity insights, and tag generation powered by AI.
-- **Frontend Components**: Responsive dashboard, quick add task functionality, note system with AI summaries, analytics for progress tracking, and a theme system (dark/light mode).
-- **Backend Services**: Storage abstraction layer, centralized AI service, organized API endpoints (tasks, notes, analytics), and consistent error handling.
-- **UI/UX Decisions**: Clean, minimalist UI/UX design with a new teal theme (hsl(173, 58%, 39%)). Features include a modern task item design with hover-based actions, tabbed task lists (Today/All/Done), conversational AI refiner interfaces with gradient designs, and a 4-column dashboard layout. Advanced task view includes priority meters and description hover functionality. Mobile-first design principles are applied throughout for touch-friendly interfaces and responsive layouts across devices.
+- **AI Service Integration**: Smart categorization, priority detection, productivity insights, tag generation, and Smart Timing analysis powered by AI.
+- **Smart Timing Feature**: AI-powered task readiness scoring (0-100) based on circadian rhythms, time zones, task types (creative/routine/analytical/deep work/communication/learning), and optimal timing recommendations. Includes current time analysis, personalized timing suggestions, and productivity optimization.
+- **Frontend Components**: Responsive dashboard, quick add task functionality, note system with AI summaries, analytics for progress tracking, Smart Timing tab with readiness analysis, and a theme system (dark/light mode).
+- **Backend Services**: Storage abstraction layer, centralized AI service, organized API endpoints (tasks, notes, analytics, smart-timing), and consistent error handling.
+- **UI/UX Decisions**: Clean, minimalist UI/UX design with a new teal theme (hsl(173, 58%, 39%)). Features include a modern task item design with hover-based actions, tabbed task lists (Today/All/Done/Smart Timing), conversational AI refiner interfaces with gradient designs, and a 4-column dashboard layout. Advanced task view includes priority meters and description hover functionality. Mobile-first design principles are applied throughout for touch-friendly interfaces and responsive layouts across devices.
 
 ### System Design Choices
 - **Data Flow**: User input initiates AI analysis, followed by database storage with enhanced metadata. Periodic AI analysis generates productivity recommendations. TanStack Query manages real-time updates through cache invalidation and optimistic updates.

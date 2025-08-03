@@ -377,6 +377,105 @@ Respond with JSON in this format: {"quote": "your motivational quote", "author":
     }
   });
 
+  // Smart Timing Analysis endpoint
+  app.get("/api/ai/smart-timing", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      if (!req.userId) {
+        return res.status(401).json({ error: "User ID not found in token" });
+      }
+
+      // Check and increment AI usage
+      const canUse = await incrementAiUsageForUser(storage, req.userId);
+      if (!canUse) {
+        return res.status(429).json({ error: "Daily AI usage limit exceeded" });
+      }
+
+      // Get user's incomplete tasks
+      const tasks = await storage.getTasks(req.userId);
+      const incompleteTasks = tasks.filter(task => !task.completed);
+
+      if (incompleteTasks.length === 0) {
+        return res.json({ analyses: [] });
+      }
+
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+      // Get current time context
+      const now = new Date();
+      const currentHour = now.getHours();
+      const currentDay = now.getDay(); // 0 = Sunday, 6 = Saturday
+      const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+      const prompt = `You are a circadian rhythm and productivity expert. Analyze the optimal timing for these tasks based on current time context and task types.
+
+Current Context:
+- Current time: ${now.toLocaleString()}
+- Hour: ${currentHour} (24-hour format)
+- Day of week: ${currentDay} (0=Sunday, 6=Saturday)
+- Time zone: ${timeZone}
+
+Tasks to analyze:
+${incompleteTasks.map(task => `- "${task.title}" (Type: ${task.taskType || 'routine'}, Priority: ${task.priority})`).join('\n')}
+
+For each task, provide a readiness analysis considering:
+1. Circadian rhythm science (energy peaks/dips throughout the day)
+2. Task type suitability to current time
+3. Current vs optimal timing recommendations
+
+Circadian Guidelines:
+- 6-10 AM: Peak cortisol, best for creative/strategic work
+- 10 AM-2 PM: Peak alertness, ideal for analytical/complex tasks  
+- 2-4 PM: Post-lunch dip, better for routine tasks
+- 4-6 PM: Second alertness peak, good for communication/meetings
+- 6-9 PM: Wind-down period, planning and light tasks
+- 9 PM+: Rest preparation, avoid stimulating work
+
+Task Type Guidelines:
+- Creative: Morning peak (7-10 AM) or evening reflection (7-9 PM)
+- Analytical: Mid-morning peak (10 AM-12 PM)
+- Deep Work: Morning focus (8-11 AM) or afternoon focus (2-4 PM) 
+- Routine: Any time, especially during energy dips
+- Communication: Mid-morning or afternoon (10 AM-12 PM, 2-5 PM)
+- Learning: Morning (9-11 AM) or evening review (6-8 PM)
+
+Respond with JSON in this format:
+{
+  "analyses": [
+    {
+      "taskId": "task_id",
+      "taskTitle": "task title",
+      "taskType": "task_type",
+      "readinessScore": 85,
+      "currentOptimal": true,
+      "recommendations": {
+        "bestTimeSlot": "9:00-11:00 AM",
+        "reason": "Peak morning creativity aligns with strategic task requirements",
+        "energyLevel": "high",
+        "distractionLevel": "low"
+      },
+      "circadianFactors": {
+        "timeOfDay": "morning",
+        "energyPeak": true,
+        "focusWindow": true
+      }
+    }
+  ]
+}`;
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+        messages: [{ role: "user", content: prompt }],
+        response_format: { type: "json_object" }
+      });
+
+      const result = JSON.parse(response.choices[0].message.content || '{}');
+      res.json(result);
+    } catch (error) {
+      console.error('Smart timing analysis error:', error);
+      res.status(500).json({ error: "Failed to analyze task timing" });
+    }
+  });
+
   // Dev endpoint to reset AI usage for testing
   app.post("/api/dev/reset-ai-usage", async (req: AuthRequest, res) => {
     try {
@@ -450,44 +549,7 @@ Respond with JSON in this format: {"quote": "your motivational quote", "author":
     }
   });
 
-  // Toggle between free and premium user for testing
-  app.post("/api/dev/toggle-premium", authenticateToken, async (req: AuthRequest, res) => {
-    if (process.env.NODE_ENV !== 'development') {
-      return res.status(403).json({ error: "Dev routes only available in development" });
-    }
 
-    try {
-      if (!req.userId) {
-        return res.status(401).json({ error: "User ID not found in token" });
-      }
-
-      const user = await storage.getUser(req.userId);
-      if (!user) {
-        return res.status(404).json({ error: "User not found" });
-      }
-
-      // Toggle between free and premium tiers
-      const newTier = user.tier === 'free' ? 'premium' : 'free';
-      await storage.updateUser(req.userId, { 
-        tier: newTier,
-        // Reset AI usage when switching tiers for clean testing
-        dailyAiCalls: 0,
-        dailyAiCallsResetAt: new Date()
-      });
-
-      console.log(`Dev toggle: User ${req.userId} switched to ${newTier} tier`);
-
-      res.json({
-        success: true,
-        isPremium: newTier === 'premium',
-        tier: newTier,
-        message: `Switched to ${newTier} user mode`
-      });
-    } catch (error) {
-      console.error("Failed to toggle premium:", error);
-      res.status(500).json({ error: "Failed to toggle premium status" });
-    }
-  });
 
   // Conversational Task Refiner (FREE for testing)
   app.post("/api/ai/refine-task", optionalAuth, async (req: AuthRequest, res) => {

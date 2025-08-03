@@ -19,6 +19,7 @@ import { z } from "zod";
 export const userTierEnum = pgEnum("user_tier", ["free", "basic_pro", "advanced_pro", "premium_pro"]);
 export const subscriptionStatusEnum = pgEnum("subscription_status", ["active", "canceled", "past_due", "incomplete"]);
 export const taskPriorityEnum = pgEnum("task_priority", ["low", "medium", "high", "urgent"]);
+export const taskTypeEnum = pgEnum("task_type", ["creative", "routine", "analytical", "deep_work", "communication", "learning"]);
 export const integrationTypeEnum = pgEnum("integration_type", ["google_calendar", "gmail", "outlook", "zoom", "meet", "slack", "teams", "webhook"]);
 
 // Session storage table (required for authentication)
@@ -71,6 +72,7 @@ export const tasks = pgTable("tasks", {
   description: text("description"),
   completed: boolean("completed").default(false),
   priority: taskPriorityEnum("priority").default("medium"),
+  taskType: taskTypeEnum("task_type").default("routine"),
   category: text("category"),
   tags: text("tags").array().default(sql`ARRAY[]::text[]`),
   estimatedTime: integer("estimated_time"), // in minutes
@@ -81,6 +83,8 @@ export const tasks = pgTable("tasks", {
   aiSuggestions: jsonb("ai_suggestions"), // AI-generated improvements
   parentTaskId: varchar("parent_task_id").references((): any => tasks.id),
   contextSwitchCost: integer("context_switch_cost"), // AI-calculated switching penalty
+  readinessScore: integer("readiness_score"), // Smart timing readiness score (0-100)
+  optimalTimeSlot: jsonb("optimal_time_slot"), // AI-suggested optimal timing
   xpReward: integer("xp_reward").default(10),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

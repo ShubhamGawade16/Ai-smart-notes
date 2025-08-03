@@ -10,10 +10,12 @@ import {
   Calendar,
   Filter,
   SortAsc,
-  Plus
+  Plus,
+  Clock
 } from "lucide-react";
 import { ModernTaskItem } from "./modern-task-item";
 import { SmartTaskInput } from "./SmartTaskInput";
+import { SmartTiming } from "./smart-timing";
 import type { Task } from "@shared/schema";
 
 interface ModernTaskListProps {
@@ -72,6 +74,8 @@ export function ModernTaskList({ onAdvancedView, onTaskCompleted }: ModernTaskLi
         return <Circle className="w-4 h-4" />;
       case "completed":
         return <CheckCircle2 className="w-4 h-4" />;
+      case "smart-timing":
+        return <Clock className="w-4 h-4" />;
       default:
         return null;
     }
@@ -133,7 +137,7 @@ export function ModernTaskList({ onAdvancedView, onTaskCompleted }: ModernTaskLi
       <CardContent className="px-6 pb-6 space-y-4">
         {/* Tab Navigation - Clean toggle design */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-gray-50 dark:bg-gray-800/50 p-1 rounded-lg">
+          <TabsList className="grid w-full grid-cols-4 bg-gray-50 dark:bg-gray-800/50 p-1 rounded-lg">
             <TabsTrigger 
               value="today" 
               className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm dark:data-[state=active]:bg-gray-700 dark:data-[state=active]:text-white rounded-md px-3 py-2 transition-all"
@@ -155,13 +159,25 @@ export function ModernTaskList({ onAdvancedView, onTaskCompleted }: ModernTaskLi
               {getTabIcon("completed")}
               <span className="font-medium">Done</span>
             </TabsTrigger>
+            <TabsTrigger 
+              value="smart-timing"
+              className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm dark:data-[state=active]:bg-gray-700 dark:data-[state=active]:text-white rounded-md px-3 py-2 transition-all"
+            >
+              {getTabIcon("smart-timing")}
+              <span className="font-medium">Smart Timing</span>
+            </TabsTrigger>
           </TabsList>
 
           {/* Tab Content */}
           <TabsContent value={activeTab} className="mt-4">
-            {/* Quick Add Button */}
-            {activeTab !== "completed" && (
-              <div className="mb-4">
+            {/* Smart Timing Tab */}
+            {activeTab === "smart-timing" ? (
+              <SmartTiming />
+            ) : (
+              <>
+                {/* Quick Add Button */}
+                {activeTab !== "completed" && (
+                  <div className="mb-4">
                 {showSmartInput ? (
                   <div className="space-y-3">
                     <SmartTaskInput 
@@ -223,6 +239,8 @@ export function ModernTaskList({ onAdvancedView, onTaskCompleted }: ModernTaskLi
                   </Button>
                 )}
               </div>
+            )}
+                </>
             )}
           </TabsContent>
         </Tabs>
