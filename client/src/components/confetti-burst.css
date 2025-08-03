@@ -1,0 +1,83 @@
+.confetti-container {
+  position: fixed;
+  pointer-events: none;
+  inset: 0;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.confetti-particle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  transform-origin: center;
+  animation: confetti-burst 2s ease-out forwards;
+}
+
+@keyframes confetti-burst {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg) scale(0);
+    opacity: 1;
+  }
+  
+  10% {
+    transform: translate(-50%, -50%) rotate(45deg) scale(1.2);
+  }
+  
+  100% {
+    transform: 
+      translate(
+        calc(-50% + var(--random-x, 0) * 300px), 
+        calc(-50% + var(--random-y, 0) * 300px)
+      ) 
+      rotate(720deg) 
+      scale(0);
+    opacity: 0;
+  }
+}
+
+/* Create random directions for each particle */
+.confetti-particle:nth-child(1) { --random-x: -0.8; --random-y: -0.6; }
+.confetti-particle:nth-child(2) { --random-x: 0.9; --random-y: -0.7; }
+.confetti-particle:nth-child(3) { --random-x: -0.3; --random-y: 0.8; }
+.confetti-particle:nth-child(4) { --random-x: 0.6; --random-y: 0.4; }
+.confetti-particle:nth-child(5) { --random-x: -0.7; --random-y: 0.2; }
+.confetti-particle:nth-child(6) { --random-x: 0.4; --random-y: -0.9; }
+.confetti-particle:nth-child(7) { --random-x: -0.2; --random-y: -0.5; }
+.confetti-particle:nth-child(8) { --random-x: 0.8; --random-y: 0.3; }
+.confetti-particle:nth-child(9) { --random-x: -0.5; --random-y: 0.7; }
+.confetti-particle:nth-child(10) { --random-x: 0.3; --random-y: -0.4; }
+.confetti-particle:nth-child(11) { --random-x: -0.9; --random-y: -0.3; }
+.confetti-particle:nth-child(12) { --random-x: 0.7; --random-y: 0.9; }
+.confetti-particle:nth-child(13) { --random-x: -0.4; --random-y: -0.8; }
+.confetti-particle:nth-child(14) { --random-x: 0.5; --random-y: 0.6; }
+.confetti-particle:nth-child(15) { --random-x: -0.6; --random-y: 0.5; }
+.confetti-particle:nth-child(16) { --random-x: 0.2; --random-y: -0.7; }
+.confetti-particle:nth-child(17) { --random-x: -0.8; --random-y: 0.4; }
+.confetti-particle:nth-child(18) { --random-x: 0.9; --random-y: -0.2; }
+.confetti-particle:nth-child(19) { --random-x: -0.1; --random-y: 0.9; }
+.confetti-particle:nth-child(20) { --random-x: 0.6; --random-y: -0.5; }
+.confetti-particle:nth-child(21) { --random-x: -0.7; --random-y: -0.7; }
+.confetti-particle:nth-child(22) { --random-x: 0.3; --random-y: 0.8; }
+.confetti-particle:nth-child(23) { --random-x: -0.5; --random-y: -0.2; }
+.confetti-particle:nth-child(24) { --random-x: 0.8; --random-y: 0.1; }
+.confetti-particle:nth-child(25) { --random-x: -0.2; --random-y: 0.6; }
+.confetti-particle:nth-child(26) { --random-x: 0.4; --random-y: -0.3; }
+.confetti-particle:nth-child(27) { --random-x: -0.6; --random-y: -0.9; }
+.confetti-particle:nth-child(28) { --random-x: 0.7; --random-y: 0.7; }
+.confetti-particle:nth-child(29) { --random-x: -0.3; --random-y: 0.3; }
+.confetti-particle:nth-child(30) { --random-x: 0.5; --random-y: -0.6; }
+
+/* Add some variety with different shapes */
+.confetti-particle:nth-child(3n) {
+  border-radius: 50%;
+}
+
+.confetti-particle:nth-child(3n+1) {
+  border-radius: 0;
+}
+
+.confetti-particle:nth-child(3n+2) {
+  border-radius: 2px;
+  transform: rotate(45deg);
+}

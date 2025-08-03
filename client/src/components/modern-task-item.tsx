@@ -34,9 +34,10 @@ interface ModernTaskItemProps {
   onUpdate?: (task: Task) => void;
   onDelete?: (id: string) => void;
   onAdvancedView?: (task: Task) => void;
+  onTaskCompleted?: () => void;
 }
 
-export function ModernTaskItem({ task, onUpdate, onDelete, onAdvancedView }: ModernTaskItemProps) {
+export function ModernTaskItem({ task, onUpdate, onDelete, onAdvancedView, onTaskCompleted }: ModernTaskItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(task.title);
   const [isHovered, setIsHovered] = useState(false);
@@ -87,10 +88,16 @@ export function ModernTaskItem({ task, onUpdate, onDelete, onAdvancedView }: Mod
   });
 
   const handleToggleComplete = () => {
+    const isCompletingTask = !task.completed;
     updateTaskMutation.mutate({
       id: task.id,
-      updates: { completed: !task.completed },
+      updates: { completed: isCompletingTask },
     });
+    
+    // Trigger confetti when task is completed
+    if (isCompletingTask && onTaskCompleted) {
+      onTaskCompleted();
+    }
   };
 
   const handleEditSave = () => {

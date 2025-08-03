@@ -6,6 +6,9 @@ import { AdvancedTaskView } from "@/components/advanced-task-view";
 import { SimpleTaskInput } from "@/components/simple-task-input";
 import { ModernAIRefiner } from "@/components/modern-ai-refiner";
 import UpgradeModal from "@/components/UpgradeModal";
+import DailyMotivationQuote from "@/components/daily-motivation-quote";
+import TaskProgressRadar from "@/components/task-progress-radar";
+import ConfettiBurst from "@/components/confetti-burst";
 import { 
   Brain, 
   MessageCircle, 
@@ -51,6 +54,7 @@ export default function SimpleDashboard() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isAdvancedViewOpen, setIsAdvancedViewOpen] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
   
   const { user, signOut } = useAuth();
   const { subscriptionStatus, incrementAiUsage, checkAiUsageLimit } = useSubscription();
@@ -250,11 +254,20 @@ export default function SimpleDashboard() {
                 setSelectedTask(task);
                 setIsAdvancedViewOpen(true);
               }}
+              onTaskCompleted={() => {
+                setShowConfetti(true);
+              }}
             />
           </div>
 
           {/* AI Features Sidebar */}
           <div className="space-y-4">
+            {/* Daily Motivation Quote */}
+            <DailyMotivationQuote />
+            
+            {/* Task Progress Radar Chart */}
+            <TaskProgressRadar />
+            
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center gap-2">
@@ -344,6 +357,12 @@ export default function SimpleDashboard() {
         onClose={() => setShowUpgradeModal(false)}
         currentUsage={subscriptionStatus.dailyAiUsage}
         dailyLimit={subscriptionStatus.dailyAiLimit}
+      />
+      
+      {/* Confetti Burst Animation */}
+      <ConfettiBurst 
+        trigger={showConfetti} 
+        onComplete={() => setShowConfetti(false)} 
       />
     </div>
   );

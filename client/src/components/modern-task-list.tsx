@@ -18,9 +18,10 @@ import type { Task } from "@shared/schema";
 
 interface ModernTaskListProps {
   onAdvancedView?: (task: Task) => void;
+  onTaskCompleted?: () => void;
 }
 
-export function ModernTaskList({ onAdvancedView }: ModernTaskListProps) {
+export function ModernTaskList({ onAdvancedView, onTaskCompleted }: ModernTaskListProps) {
   const [activeTab, setActiveTab] = useState("today");
   const [showSmartInput, setShowSmartInput] = useState(false);
 
@@ -203,6 +204,7 @@ export function ModernTaskList({ onAdvancedView }: ModernTaskListProps) {
                     onUpdate={handleUpdateTask}
                     onDelete={handleDeleteTask}
                     onAdvancedView={onAdvancedView}
+                    onTaskCompleted={onTaskCompleted}
                   />
                 ))}
               </div>
