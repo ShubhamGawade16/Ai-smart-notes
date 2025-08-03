@@ -78,7 +78,7 @@ export async function createRazorpaySubscription(req: Request, res: Response) {
       return res.status(500).json({ error: "Payment service not configured" });
     }
 
-    const { planId, customerId, customerEmail, customerPhone } = req.body;
+    const { planId, customerEmail } = req.body;
 
     if (!planId || planId !== "pro") {
       return res.status(400).json({ error: "Invalid subscription plan" });
@@ -86,71 +86,31 @@ export async function createRazorpaySubscription(req: Request, res: Response) {
 
     const plan = SUBSCRIPTION_PLANS.PRO;
 
-    // Create Razorpay plan if it doesn't exist
-    let razorpayPlan: any;
-    try {
-      // Try to fetch existing plan
-      razorpayPlan = await (razorpay as any).plans.fetch(`plan_${planId}`);
-    } catch (error) {
-      // Create new plan if it doesn't exist
-      razorpayPlan = await (razorpay as any).plans.create({
-        id: `plan_${planId}`,
-        item: {
-          name: plan.name,
-          amount: plan.amount,
-          currency: plan.currency,
-          description: plan.description,
-        },
-        period: "monthly",
-        interval: 1,
-      });
-    }
-
-    // Create customer if not exists
-    let customer: any = null;
-    if (customerId) {
-      try {
-        customer = await (razorpay as any).customers.fetch(customerId);
-      } catch (error) {
-        // Customer doesn't exist, create new one
-        customer = null;
-      }
-    }
-
-    if (!customer && customerEmail) {
-      customer = await (razorpay as any).customers.create({
-        name: customerEmail.split("@")[0],
-        email: customerEmail,
-        contact: customerPhone || "",
-      });
-    }
-
-    // Create subscription
-    const subscription = await (razorpay as any).subscriptions.create({
-      plan_id: razorpayPlan.id,
-      customer_id: customer?.id,
-      total_count: 12, // 12 months
-      quantity: 1,
+    // Create a simple payment order for now (easier to implement than subscriptions)
+    const order = await (razorpay as any).orders.create({
+      amount: plan.amount, // Amount in paise
+      currency: plan.currency,
+      receipt: `pro_subscription_${Date.now()}`,
       notes: {
-        plan_type: planId,
+        subscription_type: "pro",
         user_email: customerEmail,
+        plan_name: plan.name,
       },
     });
 
     res.json({
       success: true,
-      subscription: {
-        id: subscription.id,
-        plan_id: subscription.plan_id,
-        customer_id: subscription.customer_id,
-        status: subscription.status,
-        short_url: subscription.short_url,
+      order: {
+        id: order.id,
+        amount: order.amount,
+        currency: order.currency,
+        receipt: order.receipt,
       },
-      customer: customer ? {
-        id: customer.id,
-        email: customer.email,
-      } : null,
       key_id: RAZORPAY_KEY_ID,
+      plan: {
+        name: plan.name,
+        description: plan.description,
+      },
     });
   } catch (error: any) {
     console.error("Failed to create subscription:", error);

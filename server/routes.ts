@@ -596,6 +596,7 @@ Respond with JSON in this format:
     createRazorpayOrder,
     createRazorpaySubscription,
     verifyRazorpayPayment,
+    verifyRazorpaySignature,
     handleRazorpayWebhook,
     getSubscriptionDetails,
     cancelRazorpaySubscription,
@@ -607,8 +608,57 @@ Respond with JSON in this format:
   // Create Razorpay subscription
   app.post("/api/razorpay/subscription", authenticateToken, createRazorpaySubscription);
 
-  // Verify Razorpay payment
-  app.post("/api/razorpay/verify", authenticateToken, verifyRazorpayPayment);
+  // Verify Razorpay payment and upgrade user
+  app.post("/api/razorpay/verify", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      // Verify the payment first
+      const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+
+      if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+        return res.status(400).json({ error: "Missing payment verification data" });
+      }
+
+      // Use the existing verification function
+      const isValid = verifyRazorpaySignature(
+        razorpay_order_id,
+        razorpay_payment_id,
+        razorpay_signature
+      );
+
+      if (!isValid) {
+        return res.status(400).json({
+          success: false,
+          error: "Payment verification failed",
+        });
+      }
+
+      // Payment verified successfully, now upgrade the user
+      const userId = req.user!.id;
+      const user = await storage.updateUserSubscription(userId, {
+        isPremium: true,
+        subscriptionTier: 'pro',
+        subscriptionStatus: 'active',
+        subscriptionId: razorpay_payment_id,
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+      });
+
+      console.log(`User ${userId} upgraded to Pro subscription`);
+
+      res.json({
+        success: true,
+        message: "Payment verified and subscription activated",
+        payment_id: razorpay_payment_id,
+        order_id: razorpay_order_id,
+      });
+      
+    } catch (error: any) {
+      console.error("Failed to verify payment or upgrade user:", error);
+      res.status(500).json({ 
+        error: "Payment verification failed",
+        details: error.message 
+      });
+    }
+  });
 
   // Handle Razorpay webhooks (no auth required)
   app.post("/api/razorpay/webhook", handleRazorpayWebhook);

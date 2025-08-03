@@ -77,7 +77,7 @@ export function RazorpayPayment({ onSuccess, onError, userEmail }: RazorpayPayme
         throw new Error("Failed to load payment gateway");
       }
 
-      // Create subscription
+      // Create subscription order
       const response = await apiRequest("POST", "/api/razorpay/subscription", {
         planId: SUBSCRIPTION_PLAN.id,
         customerEmail: userEmail,
@@ -90,7 +90,9 @@ export function RazorpayPayment({ onSuccess, onError, userEmail }: RazorpayPayme
       // Configure Razorpay checkout
       const options = {
         key: response.key_id,
-        subscription_id: response.subscription.id,
+        amount: response.order.amount,
+        currency: response.order.currency,
+        order_id: response.order.id,
         name: "Planify",
         description: `${SUBSCRIPTION_PLAN.name} Subscription`,
         image: "/attached_assets/Planify_imresizer_1754161747016.jpg",
@@ -98,14 +100,14 @@ export function RazorpayPayment({ onSuccess, onError, userEmail }: RazorpayPayme
           try {
             // Verify payment
             const verifyResponse = await apiRequest("POST", "/api/razorpay/verify", {
+              razorpay_order_id: paymentResponse.razorpay_order_id,
               razorpay_payment_id: paymentResponse.razorpay_payment_id,
-              razorpay_subscription_id: paymentResponse.razorpay_subscription_id,
               razorpay_signature: paymentResponse.razorpay_signature,
             }) as any;
 
             if (verifyResponse.success) {
               toast({
-                title: "Subscription Activated!",
+                title: "Payment Successful!",
                 description: `Welcome to ${SUBSCRIPTION_PLAN.name}! Your premium features are now active.`,
               });
               
