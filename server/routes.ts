@@ -435,6 +435,45 @@ Respond with JSON in this format: {"quote": "your motivational quote", "author":
         return res.status(404).json({ error: "User not found" });
       }
 
+      // Toggle between 'free' and 'basic_pro' tiers (correct enum values)
+      const newTier = user.tier === 'free' ? 'basic_pro' : 'free';
+      await storage.updateUser(req.userId, { 
+        tier: newTier,
+        // Reset AI usage when switching tiers
+        dailyAiCalls: 0,
+        dailyAiCallsResetAt: new Date()
+      });
+
+      console.log(`Dev toggle: User ${req.userId} switched to ${newTier} tier`);
+
+      res.json({
+        success: true,
+        isPremium: newTier !== 'free',
+        tier: newTier,
+        message: `Switched to ${newTier} user mode`
+      });
+    } catch (error) {
+      console.error("Failed to toggle premium:", error);
+      res.status(500).json({ error: "Failed to toggle premium status" });
+    }
+  });
+
+  // Toggle between free and premium user for testing
+  app.post("/api/dev/toggle-premium", authenticateToken, async (req: AuthRequest, res) => {
+    if (process.env.NODE_ENV !== 'development') {
+      return res.status(403).json({ error: "Dev routes only available in development" });
+    }
+
+    try {
+      if (!req.userId) {
+        return res.status(401).json({ error: "User ID not found in token" });
+      }
+
+      const user = await storage.getUser(req.userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
       // Toggle between free and premium tiers
       const newTier = user.tier === 'free' ? 'premium' : 'free';
       await storage.updateUser(req.userId, { 
