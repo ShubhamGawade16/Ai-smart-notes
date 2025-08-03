@@ -270,53 +270,19 @@ export default function SimpleDashboard() {
 
           {/* AI Features Sidebar */}
           <div className="space-y-4">
-            {/* Dev Tools - Remove AI limits for testing */}
-            <Card className="border-2 border-dashed border-orange-300 bg-orange-50 dark:bg-orange-900/20">
-              <CardContent className="p-4 text-center">
-                <h3 className="font-bold text-orange-800 dark:text-orange-200 mb-2">
-                  Dev Mode
-                </h3>
-                <Button
-                  onClick={async () => {
-                    try {
-                      const response = await fetch('/api/dev/reset-ai-usage', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: '{}'
-                      });
-                      
-                      if (response.ok) {
-                        const data = await response.json();
-                        if (data.success) {
-                          // Reset subscription status immediately
-                          await resetAiUsage();
-                          // Force refresh all cached queries
-                          queryClient.invalidateQueries();
-                          // Add a small delay to ensure database consistency
-                          setTimeout(async () => {
-                            await refreshStatus();
-                          }, 200);
-                          // Show success message
-                          toast({
-                            title: "Dev Mode",
-                            description: "AI usage reset successfully! You now have 3 AI requests available.",
-                          });
-                        }
-                      } else {
-                        console.error('Failed to reset AI usage');
-                      }
-                    } catch (error) {
-                      console.error('Failed to reset AI usage:', error);
-                    }
-                  }}
-                  variant="outline"
-                  size="sm"
-                  className="w-full text-orange-800 border-orange-300 hover:bg-orange-100 dark:text-orange-200 dark:border-orange-600 dark:hover:bg-orange-800"
-                >
-                  Reset AI Usage (Dev)
-                </Button>
-              </CardContent>
-            </Card>
+            {/* Dev Mode Indicator - Show unlimited AI in development */}
+            {process.env.NODE_ENV === 'development' && (
+              <Card className="border-2 border-dashed border-green-300 bg-green-50 dark:bg-green-900/20">
+                <CardContent className="p-4 text-center">
+                  <h3 className="font-bold text-green-800 dark:text-green-200 mb-2">
+                    Dev Mode Active
+                  </h3>
+                  <p className="text-sm text-green-700 dark:text-green-300">
+                    Unlimited AI features enabled for development
+                  </p>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Daily Motivation Quote */}
             <DailyMotivationQuote />
