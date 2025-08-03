@@ -74,26 +74,29 @@ export default function TaskProgressRadar() {
 
   return (
     <Card className="h-full">
-      <CardHeader>
-        <CardTitle className="text-lg">Task Progress by Category</CardTitle>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          📊 Task Progress
+        </CardTitle>
       </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <RadarChart data={radarData}>
+      <CardContent className="p-4">
+        <ResponsiveContainer width="100%" height={240}>
+          <RadarChart data={radarData} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
             <PolarGrid 
-              stroke="#e5e7eb" 
-              strokeDasharray="3 3"
+              stroke="#0d9488" 
+              strokeOpacity={0.3}
+              strokeDasharray="2 2"
               radialLines={true}
             />
             <PolarAngleAxis 
               dataKey="category" 
-              tick={{ fill: '#6b7280', fontSize: 12 }}
-              className="text-gray-600 dark:text-gray-400"
+              tick={{ fill: '#374151', fontSize: 13, fontWeight: 600 }}
+              className="text-gray-700 dark:text-gray-300"
             />
             <PolarRadiusAxis 
               domain={[0, 100]} 
-              tick={{ fill: '#6b7280', fontSize: 10 }}
-              tickCount={5}
+              tick={{ fill: '#6b7280', fontSize: 11 }}
+              tickCount={4}
               axisLine={false}
             />
             <Radar
@@ -101,8 +104,9 @@ export default function TaskProgressRadar() {
               dataKey="percentage"
               stroke="#0d9488"
               fill="#0d9488"
-              fillOpacity={0.6}
-              strokeWidth={2}
+              fillOpacity={0.4}
+              strokeWidth={3}
+              dot={{ fill: '#0d9488', strokeWidth: 2, r: 4 }}
               onMouseEnter={(data) => setHoveredCategory(data.category)}
               onMouseLeave={() => setHoveredCategory(null)}
             />
@@ -110,18 +114,26 @@ export default function TaskProgressRadar() {
           </RadarChart>
         </ResponsiveContainer>
         
-        {/* Legend */}
-        <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
+        {/* Compact Legend */}
+        <div className="mt-3 grid grid-cols-2 gap-1">
           {radarData.map((item) => (
             <div 
               key={item.category}
-              className={`flex items-center gap-2 p-2 rounded transition-colors ${
-                hoveredCategory === item.category ? 'bg-teal-50 dark:bg-teal-900/20' : ''
+              className={`flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all duration-200 ${
+                hoveredCategory === item.category 
+                  ? 'bg-teal-100 dark:bg-teal-900/30 scale-105' 
+                  : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
               }`}
             >
-              <div className="w-3 h-3 rounded-full bg-teal-600" />
-              <span className="text-gray-700 dark:text-gray-300">{item.category}</span>
-              <span className="text-gray-500 dark:text-gray-400 ml-auto">{item.percentage}%</span>
+              <div className="w-2.5 h-2.5 rounded-full bg-teal-600 shadow-sm" />
+              <span className="text-sm font-medium text-gray-800 dark:text-gray-200 flex-1">
+                {item.category}
+              </span>
+              <span className={`text-sm font-bold ${
+                item.percentage > 0 ? 'text-teal-600 dark:text-teal-400' : 'text-gray-400'
+              }`}>
+                {item.percentage}%
+              </span>
             </div>
           ))}
         </div>
