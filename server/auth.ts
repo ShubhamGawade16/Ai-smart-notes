@@ -61,13 +61,22 @@ export const authenticateToken = async (
       // For Supabase JWT tokens, use the 'sub' field as user ID
       req.userId = decoded.sub;
       
-      // Try to get user from database
+      // Try to get user from database, create if doesn't exist
       if (decoded.email) {
-        const dbUser = await storage.getUserByEmail(decoded.email);
-        if (dbUser) {
-          req.user = dbUser;
-          req.userId = dbUser.id;
+        let dbUser = await storage.getUserByEmail(decoded.email);
+        if (!dbUser) {
+          // Create user from JWT token data
+          console.log(`Creating new user from JWT: ${decoded.email}`);
+          dbUser = await storage.createUser({
+            email: decoded.email,
+            firstName: decoded.user_metadata?.first_name || decoded.given_name || '',
+            lastName: decoded.user_metadata?.last_name || decoded.family_name || '',
+            tier: 'free',
+            onboardingCompleted: true, // Skip onboarding for OAuth users
+          });
         }
+        req.user = dbUser;
+        req.userId = dbUser.id;
       }
       
       return next();

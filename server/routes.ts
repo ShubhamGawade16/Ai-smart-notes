@@ -679,21 +679,26 @@ Respond with JSON in this format:
         return res.status(401).json({ error: "User ID not found in token" });
       }
 
-      const user = await storage.getUser(req.userId);
+      let user = await storage.getUser(req.userId);
+      if (!user && req.user) {
+        // Use the user from the auth middleware if available
+        user = req.user;
+      }
+      
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
 
       // Toggle between 'free' and 'basic_pro' tiers (correct enum values)
       const newTier = user.tier === 'free' ? 'basic_pro' : 'free';
-      await storage.updateUser(req.userId, { 
+      await storage.updateUser(user.id, { 
         tier: newTier,
         // Reset AI usage when switching tiers
         dailyAiCalls: 0,
         dailyAiCallsResetAt: new Date()
       });
 
-      console.log(`Dev toggle: User ${req.userId} switched to ${newTier} tier`);
+      console.log(`Dev toggle: User ${user.id} (${user.email}) switched to ${newTier} tier`);
 
       res.json({
         success: true,
