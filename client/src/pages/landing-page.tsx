@@ -3,40 +3,45 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Link } from "wouter";
 import { Star, Users, Brain, Target, Clock, Zap } from "lucide-react";
+import sarahChenImage from "@assets/generated_images/Sarah_Chen_headshot_f5fa50a9.png";
+import michaelRodriguezImage from "@assets/generated_images/Michael_Rodriguez_headshot_185b9249.png";
+import emilyWatsonImage from "@assets/generated_images/Emily_Watson_headshot_48650449.png";
+import davidKimImage from "@assets/generated_images/David_Kim_headshot_fe98a0b8.png";
+import lisaThompsonImage from "@assets/generated_images/Lisa_Thompson_headshot_eea04749.png";
 
 const testimonials = [
   {
     name: "Sarah Chen",
     role: "Product Manager",
-    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah",
+    image: sarahChenImage,
     content: "Planify transformed how I manage my daily tasks. The AI suggestions are spot-on, helping me prioritize what truly matters. My productivity increased by 40% in just 2 weeks!",
     rating: 5
   },
   {
     name: "Michael Rodriguez",
     role: "Software Developer",
-    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Michael",
+    image: michaelRodriguezImage,
     content: "The smart task breakdown feature is a game-changer. Complex projects become manageable, and I never miss deadlines anymore. Worth every penny!",
     rating: 5
   },
   {
     name: "Emily Watson",
     role: "Marketing Director",
-    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Emily",
+    image: emilyWatsonImage,
     content: "I love how Planify learns my work patterns. The AI-powered scheduling suggestions align perfectly with my energy levels throughout the day.",
     rating: 5
   },
   {
     name: "David Kim",
     role: "Entrepreneur",
-    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=David",
+    image: davidKimImage,
     content: "Running multiple businesses was overwhelming until I found Planify. The AI prioritization keeps me focused on what drives real results.",
     rating: 5
   },
   {
     name: "Lisa Thompson",
     role: "Freelance Designer",
-    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Lisa",
+    image: lisaThompsonImage,
     content: "Planify's goal breakdown feature turned my creative chaos into organized success. I'm completing projects 50% faster now.",
     rating: 5
   }
