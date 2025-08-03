@@ -490,7 +490,7 @@ Respond with JSON in this format: {"quote": "your motivational quote", "author":
   );
 
   // Update task (works with or without auth for testing)
-  app.patch("/api/tasks/:id", optionalAuth, async (req: AuthRequest, res) => {
+  app.patch("/api/tasks/:id", async (req: AuthRequest, res) => {
     try {
       // Use demo user ID if no auth token provided
       const userId = req.userId || 'demo-user';
@@ -498,6 +498,14 @@ Respond with JSON in this format: {"quote": "your motivational quote", "author":
       const taskId = req.params.id;
       if (!taskId) {
         return res.status(400).json({ error: "Task ID is required" });
+      }
+
+      // Get the existing task first to ensure it exists and belongs to user
+      const existingTasks = await storage.getTasks(userId);
+      const existingTask = existingTasks.find(t => t.id === taskId);
+      
+      if (!existingTask) {
+        return res.status(404).json({ error: "Task not found" });
       }
 
       // Validate input
@@ -511,7 +519,7 @@ Respond with JSON in this format: {"quote": "your motivational quote", "author":
 
       const task = await storage.updateTask(taskId, userId, result.data);
       if (!task) {
-        return res.status(404).json({ error: "Task not found" });
+        return res.status(404).json({ error: "Task not found or update failed" });
       }
 
       res.json({ task });

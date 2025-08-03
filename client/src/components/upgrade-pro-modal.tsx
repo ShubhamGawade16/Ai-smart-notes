@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -37,7 +37,7 @@ export default function UpgradeProModal({ isOpen, onClose }: UpgradeProModalProp
     {
       icon: <Brain className="w-5 h-5" />,
       title: "Advanced AI Task Analysis",
-      description: "Get detailed insights, priority recommendations, and smart scheduling",
+      description: "Get detailed insights and priority recommendations for your tasks",
       free: false,
       pro: true
     },
@@ -49,39 +49,11 @@ export default function UpgradeProModal({ isOpen, onClose }: UpgradeProModalProp
       pro: true
     },
     {
-      icon: <Target className="w-5 h-5" />,
-      title: "Smart Goal Tracking",
-      description: "AI-powered goal setting and progress tracking with insights",
-      free: false,
-      pro: true
-    },
-    {
-      icon: <Calendar className="w-5 h-5" />,
-      title: "Intelligent Scheduling",
-      description: "Auto-schedule tasks based on your patterns and preferences",
-      free: false,
-      pro: true
-    },
-    {
       icon: <BarChart3 className="w-5 h-5" />,
-      title: "Advanced Analytics",
-      description: "Detailed productivity reports and performance insights",
+      title: "Enhanced Task Management",
+      description: "Better task organization with categories and tags",
       free: "Basic",
       pro: "Advanced"
-    },
-    {
-      icon: <Zap className="w-5 h-5" />,
-      title: "Priority Queue Management",
-      description: "AI-optimized task ordering for maximum productivity",
-      free: false,
-      pro: true
-    },
-    {
-      icon: <Users className="w-5 h-5" />,
-      title: "Team Collaboration",
-      description: "Share tasks and collaborate with team members",
-      free: false,
-      pro: true
     },
     {
       icon: <Shield className="w-5 h-5" />,
@@ -93,9 +65,14 @@ export default function UpgradeProModal({ isOpen, onClose }: UpgradeProModalProp
   ];
 
   const handleUpgrade = () => {
-    // This would integrate with payment processing
+    // This would integrate with actual payment processing like Stripe
     console.log(`Upgrading to ${selectedPlan} plan`);
-    // For now, just close the modal
+    
+    // Simulate payment gateway redirect
+    window.open('https://checkout.stripe.com/demo', '_blank');
+    
+    // Show success message
+    alert('Payment gateway integration would be implemented here. This would redirect to Stripe checkout.');
     onClose();
   };
 
@@ -110,9 +87,9 @@ export default function UpgradeProModal({ isOpen, onClose }: UpgradeProModalProp
             <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-purple-600 bg-clip-text text-transparent">
               Upgrade to Planify Pro
             </DialogTitle>
-            <p className="text-gray-600 dark:text-gray-400 mt-2">
+            <DialogDescription className="text-gray-600 dark:text-gray-400 mt-2">
               Unlock powerful AI features and boost your productivity
-            </p>
+            </DialogDescription>
           </div>
         </DialogHeader>
 
@@ -304,7 +281,7 @@ export default function UpgradeProModal({ isOpen, onClose }: UpgradeProModalProp
         {/* Trust Badges */}
         <div className="text-center pt-6 border-t">
           <p className="text-xs text-gray-500 dark:text-gray-400">
-            ✓ 30-day money-back guarantee ✓ Cancel anytime ✓ Secure payment
+            ✓ Cancel anytime ✓ Secure payment ✓ Instant access
           </p>
         </div>
       </DialogContent>

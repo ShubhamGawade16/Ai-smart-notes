@@ -11,6 +11,7 @@ import LandingPage from "@/pages/landing-page";
 import AuthPage from "@/pages/auth-page";
 import EmailVerificationPage from "@/pages/email-verification-page";
 import OnboardingPage from "@/pages/onboarding-page";
+import AdvancedFeatures from "./pages/advanced-features";
 import NotFound from "@/pages/not-found";
 import { Loader2 } from "lucide-react";
 
@@ -37,6 +38,10 @@ function Router() {
       {/* Protected routes */}
       <Route path="/dashboard">
         {user ? <SimpleDashboard /> : <Redirect to="/auth" />}
+      </Route>
+      
+      <Route path="/advanced-features">
+        {user ? <AdvancedFeatures /> : <Redirect to="/auth" />}
       </Route>
       
       <Route component={NotFound} />

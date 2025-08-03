@@ -323,18 +323,17 @@ export default function SimpleDashboard() {
                   onClick={() => setShowAIRefiner(!showAIRefiner)}
                 >
                   <MessageCircle className="w-4 h-4 mr-2" />
-                  Task Refiner
+                  AI Task Refiner
                 </Button>
                 
-                <Link href="/advanced-features">
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start"
-                  >
-                    <Eye className="w-4 h-4 mr-2" />
-                    All AI Features
-                  </Button>
-                </Link>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => window.location.href = '/advanced-features'}
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  View All AI Features
+                </Button>
               </CardContent>
             </Card>
 

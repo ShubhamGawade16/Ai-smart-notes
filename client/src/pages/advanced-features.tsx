@@ -1,266 +1,356 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/hooks/use-toast';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 import { 
-  ArrowLeft, 
   Brain, 
+  Sparkles, 
   Target, 
-  Calendar, 
-  BarChart3, 
-  Users, 
-  Settings,
-  Zap,
-  Clock,
-  Repeat,
-  Heart,
-  Trash2
+  TrendingUp, 
+  MessageCircle, 
+  Wand2,
+  ArrowLeft,
+  Crown
 } from 'lucide-react';
 import { Link } from 'wouter';
-import { CleanHeader } from '@/components/clean-header';
-import { ConversationalRefiner } from '@/components/ConversationalRefiner';
-import { FocusForecast } from '@/components/focus-forecast-simple';
-import { ProductivityInsights } from '@/components/productivity-insights';
-import { IntegrationHub } from '@/components/IntegrationHub';
-import { SmartTaskInput } from '@/components/SmartTaskInput';
-import { SmartReminderRecalibration } from '@/components/smart-reminder-recalibration';
-import { RecurringTaskGeneratorTuner } from '@/components/recurring-task-generator-tuner';
-import { TaskDecayDeclutter } from '@/components/task-decay-declutter';
-import { MoodAwareTaskSuggestions } from '@/components/mood-aware-task-suggestions';
 
-const aiFeatures = [
-  {
-    id: 'smart-input',
-    title: 'Smart Task Input',
-    description: 'AI analyzes and categorizes your tasks automatically',
-    icon: Brain,
-    color: 'text-purple-600',
-    component: SmartTaskInput
-  },
-  {
-    id: 'task-refiner',
-    title: 'AI Task Refiner',
-    description: 'Break down complex tasks with AI assistance',
-    icon: Target,
-    color: 'text-blue-600',
-    component: ConversationalRefiner
-  },
-  {
-    id: 'focus-forecast',
-    title: 'Focus Forecast',
-    description: 'Predict your optimal productivity windows',
-    icon: BarChart3,
-    color: 'text-green-600',
-    component: FocusForecast
-  },
-  {
-    id: 'insights',
-    title: 'Productivity Insights',
-    description: 'AI-powered analytics and bottleneck detection',
-    icon: Zap,
-    color: 'text-yellow-600',
-    component: ProductivityInsights
-  }
-];
+export default function AdvancedFeatures() {
+  const [taskInput, setTaskInput] = useState('');
+  const [refineInput, setRefineInput] = useState('');
+  const [refineQuery, setRefineQuery] = useState('');
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-const productivityTools = [
-  {
-    id: 'smart-reminders',
-    title: 'Smart Reminders',
-    description: 'Context-aware reminder optimization',
-    icon: Clock,
-    color: 'text-teal-600',
-    component: SmartReminderRecalibration
-  },
-  {
-    id: 'recurring-tasks',
-    title: 'Recurring Tasks',
-    description: 'Intelligent recurring task generation',
-    icon: Repeat,
-    color: 'text-cyan-600',
-    component: RecurringTaskGeneratorTuner
-  }
-];
+  // Check subscription status
+  const { data: subscriptionStatus } = useQuery({
+    queryKey: ['/api/subscription-status'],
+  });
 
-const lifestyleFeatures = [
-  {
-    id: 'mood-aware',
-    title: 'Mood-Aware Tasks',
-    description: 'Task suggestions based on your current mood',
-    icon: Heart,
-    color: 'text-pink-600',
-    component: MoodAwareTaskSuggestions
-  },
-  {
-    id: 'task-decay',
-    title: 'Task Cleanup',
-    description: 'Automated cleanup of outdated tasks',
-    icon: Trash2,
-    color: 'text-red-600',
-    component: TaskDecayDeclutter
-  }
-];
+  // AI Parse Task Mutation
+  const parseTaskMutation = useMutation({
+    mutationFn: async (input: string) => {
+      const response = await apiRequest('POST', '/api/ai/parse-task', { input });
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Task Analyzed",
+        description: "AI has analyzed your task and provided suggestions.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to analyze task. You may have reached your daily limit.",
+        variant: "destructive",
+      });
+    },
+  });
 
-export default function CleanAdvancedFeatures() {
-  const [activeFeature, setActiveFeature] = useState<string | null>(null);
+  // AI Refine Task Mutation
+  const refineTaskMutation = useMutation({
+    mutationFn: async ({ originalTask, userQuery }: { originalTask: string; userQuery: string }) => {
+      const response = await apiRequest('POST', '/api/ai/refine-task', { 
+        originalTask, 
+        userQuery, 
+        context: {} 
+      });
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Task Refined",
+        description: "AI has provided suggestions to improve your task.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to refine task. You may have reached your daily limit.",
+        variant: "destructive",
+      });
+    },
+  });
 
-  const renderFeatureComponent = (featureId: string) => {
-    const allFeatures = [...aiFeatures, ...productivityTools, ...lifestyleFeatures];
-    const feature = allFeatures.find(f => f.id === featureId);
-    if (!feature) return null;
+  // AI Insights Query
+  const { data: insightsData, refetch: fetchInsights } = useQuery({
+    queryKey: ['/api/ai/insights'],
+    enabled: false,
+  });
 
-    const Component = feature.component;
-    return <Component />;
+  const handleParseTask = () => {
+    if (!taskInput.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a task to analyze.",
+        variant: "destructive",
+      });
+      return;
+    }
+    parseTaskMutation.mutate(taskInput);
   };
 
-  if (activeFeature) {
-    return (
-      <div className="min-h-screen bg-background">
-        <CleanHeader />
-        <div className="container mx-auto px-4 py-6 max-w-6xl">
-          <div className="mb-6">
-            <Button 
-              variant="ghost" 
-              onClick={() => setActiveFeature(null)}
-              className="mb-4"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Features
-            </Button>
-          </div>
-          
-          <div className="bg-card border rounded-xl p-6">
-            {renderFeatureComponent(activeFeature)}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const handleRefineTask = () => {
+    if (!refineInput.trim() || !refineQuery.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter both the task and your refinement query.",
+        variant: "destructive",
+      });
+      return;
+    }
+    refineTaskMutation.mutate({ originalTask: refineInput, userQuery: refineQuery });
+  };
+
+  const canUseAI = subscriptionStatus?.isPremium || (subscriptionStatus?.dailyAiUsage || 0) < (subscriptionStatus?.dailyAiLimit || 3);
 
   return (
-    <div className="min-h-screen bg-background">
-      <CleanHeader />
-      
-      <div className="container mx-auto px-4 py-6 max-w-6xl">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+      <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <Link href="/dashboard">
-            <Button variant="ghost" className="mb-4">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
-            </Button>
-          </Link>
-          
-          <div className="text-center">
-            <h1 className="text-3xl font-bold mb-2">AI-Powered Features</h1>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Unlock advanced productivity tools powered by artificial intelligence
-            </p>
-            <Badge className="mt-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white">
-              <Zap className="h-3 w-3 mr-1" />
-              All Features Free for Testing
-            </Badge>
+          <div className="flex items-center gap-4 mb-4">
+            <Link href="/">
+              <Button variant="outline" size="sm">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Dashboard
+              </Button>
+            </Link>
+            <div className="flex items-center gap-2">
+              <Brain className="w-8 h-8 text-teal-600" />
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                AI Features
+              </h1>
+            </div>
+            {subscriptionStatus?.isPremium && (
+              <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white">
+                <Crown className="w-3 h-3 mr-1" />
+                Pro User
+              </Badge>
+            )}
           </div>
+          <p className="text-gray-600 dark:text-gray-400">
+            Explore powerful AI tools to enhance your productivity and task management.
+          </p>
+          
+          {!canUseAI && (
+            <div className="mt-4 p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
+              <p className="text-orange-800 dark:text-orange-200 text-sm">
+                You've reached your daily AI limit ({subscriptionStatus?.dailyAiUsage}/{subscriptionStatus?.dailyAiLimit}). 
+                Upgrade to Pro for unlimited access.
+              </p>
+            </div>
+          )}
         </div>
 
-        <Tabs defaultValue="ai" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 max-w-md mx-auto">
-            <TabsTrigger value="ai">AI Tools</TabsTrigger>
-            <TabsTrigger value="productivity">Planning</TabsTrigger>
-            <TabsTrigger value="lifestyle">Lifestyle</TabsTrigger>
-            <TabsTrigger value="integrations">Connect</TabsTrigger>
-          </TabsList>
+        {/* AI Features Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Natural Language Task Parser */}
+          <Card className="border-0 shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Wand2 className="w-5 h-5 text-purple-600" />
+                Natural Language Task Parser
+              </CardTitle>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Describe your task in plain English and let AI structure it for you.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Textarea
+                placeholder="e.g., Call John tomorrow at 3pm about the project meeting and make sure to prepare the presentation slides beforehand"
+                value={taskInput}
+                onChange={(e) => setTaskInput(e.target.value)}
+                className="min-h-[100px]"
+                disabled={!canUseAI}
+              />
+              <Button 
+                onClick={handleParseTask}
+                disabled={parseTaskMutation.isPending || !canUseAI}
+                className="w-full"
+              >
+                {parseTaskMutation.isPending ? 'Analyzing...' : 'Analyze Task'}
+              </Button>
+              
+              {parseTaskMutation.data && (
+                <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                  <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2">AI Analysis Result:</h4>
+                  <div className="space-y-2 text-sm">
+                    <p><strong>Title:</strong> {parseTaskMutation.data.analysis?.title}</p>
+                    <p><strong>Priority:</strong> {parseTaskMutation.data.analysis?.priority}</p>
+                    <p><strong>Category:</strong> {parseTaskMutation.data.analysis?.category}</p>
+                    {parseTaskMutation.data.analysis?.description && (
+                      <p><strong>Description:</strong> {parseTaskMutation.data.analysis.description}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-          {/* AI Features */}
-          <TabsContent value="ai" className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              {aiFeatures.map((feature) => {
-                const Icon = feature.icon;
-                return (
-                  <Card 
-                    key={feature.id} 
-                    className="cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-[1.02]"
-                    onClick={() => setActiveFeature(feature.id)}
-                  >
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-muted">
-                          <Icon className={`h-5 w-5 ${feature.color}`} />
-                        </div>
-                        <CardTitle className="text-lg">{feature.title}</CardTitle>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground">{feature.description}</p>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </TabsContent>
+          {/* Task Refiner */}
+          <Card className="border-0 shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MessageCircle className="w-5 h-5 text-blue-600" />
+                AI Task Refiner
+              </CardTitle>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Get AI suggestions to improve and break down your tasks.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Input
+                placeholder="Enter your task"
+                value={refineInput}
+                onChange={(e) => setRefineInput(e.target.value)}
+                disabled={!canUseAI}
+              />
+              <Input
+                placeholder="What would you like to improve? (e.g., 'break this down into smaller steps')"
+                value={refineQuery}
+                onChange={(e) => setRefineQuery(e.target.value)}
+                disabled={!canUseAI}
+              />
+              <Button 
+                onClick={handleRefineTask}
+                disabled={refineTaskMutation.isPending || !canUseAI}
+                className="w-full"
+              >
+                {refineTaskMutation.isPending ? 'Refining...' : 'Refine Task'}
+              </Button>
+              
+              {refineTaskMutation.data && (
+                <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">AI Suggestions:</h4>
+                  <div className="space-y-2 text-sm">
+                    {refineTaskMutation.data.suggestions?.map((suggestion: string, index: number) => (
+                      <p key={index}>• {suggestion}</p>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-          {/* Productivity Tools */}
-          <TabsContent value="productivity" className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              {productivityTools.map((feature) => {
-                const Icon = feature.icon;
-                return (
-                  <Card 
-                    key={feature.id} 
-                    className="cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-[1.02]"
-                    onClick={() => setActiveFeature(feature.id)}
-                  >
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-muted">
-                          <Icon className={`h-5 w-5 ${feature.color}`} />
-                        </div>
-                        <CardTitle className="text-lg">{feature.title}</CardTitle>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground">{feature.description}</p>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </TabsContent>
+          {/* Productivity Insights */}
+          <Card className="border-0 shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-green-600" />
+                Productivity Insights
+              </CardTitle>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Get AI-powered insights about your productivity patterns.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button 
+                onClick={() => fetchInsights()}
+                disabled={!canUseAI}
+                className="w-full"
+              >
+                Generate Insights
+              </Button>
+              
+              {insightsData && (
+                <div className="mt-4 p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
+                  <h4 className="font-semibold text-purple-800 dark:text-purple-200 mb-2">Your Insights:</h4>
+                  <div className="space-y-2 text-sm">
+                    {insightsData.insights?.map((insight: string, index: number) => (
+                      <p key={index}>• {insight}</p>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-          {/* Lifestyle Features */}
-          <TabsContent value="lifestyle" className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              {lifestyleFeatures.map((feature) => {
-                const Icon = feature.icon;
-                return (
-                  <Card 
-                    key={feature.id} 
-                    className="cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-[1.02]"
-                    onClick={() => setActiveFeature(feature.id)}
-                  >
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-muted">
-                          <Icon className={`h-5 w-5 ${feature.color}`} />
-                        </div>
-                        <CardTitle className="text-lg">{feature.title}</CardTitle>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground">{feature.description}</p>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </TabsContent>
+          {/* AI Usage Stats */}
+          <Card className="border-0 shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-orange-600" />
+                AI Usage Statistics
+              </CardTitle>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Track your AI feature usage and limits.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Daily AI Requests</span>
+                  <span className="font-semibold">
+                    {subscriptionStatus?.isPremium ? 'Unlimited' : `${subscriptionStatus?.dailyAiUsage || 0}/${subscriptionStatus?.dailyAiLimit || 3}`}
+                  </span>
+                </div>
+                
+                {!subscriptionStatus?.isPremium && (
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                    <div 
+                      className="bg-gradient-to-r from-teal-500 to-purple-500 h-2 rounded-full transition-all duration-300"
+                      style={{ 
+                        width: `${Math.min(100, ((subscriptionStatus?.dailyAiUsage || 0) / (subscriptionStatus?.dailyAiLimit || 3)) * 100)}%` 
+                      }}
+                    />
+                  </div>
+                )}
+                
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Plan Type</span>
+                  <Badge variant={subscriptionStatus?.isPremium ? "default" : "secondary"}>
+                    {subscriptionStatus?.isPremium ? 'Pro' : 'Free'}
+                  </Badge>
+                </div>
+              </div>
+              
+              {!subscriptionStatus?.isPremium && (
+                <Button className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white">
+                  <Crown className="w-4 h-4 mr-2" />
+                  Upgrade to Pro
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
-          {/* Integrations */}
-          <TabsContent value="integrations" className="space-y-4">
-            <IntegrationHub />
-          </TabsContent>
-        </Tabs>
+        {/* Pro Features Teaser */}
+        {!subscriptionStatus?.isPremium && (
+          <Card className="border-2 border-gradient-to-r from-yellow-400 to-orange-500 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20">
+            <CardContent className="p-6 text-center">
+              <Crown className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                Unlock More AI Features with Pro
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                Get unlimited AI requests, advanced analytics, and personalized productivity insights for just $5/month.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                <div className="text-center">
+                  <Target className="w-8 h-8 text-teal-600 mx-auto mb-2" />
+                  <p className="font-semibold">Unlimited AI</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">No daily limits</p>
+                </div>
+                <div className="text-center">
+                  <Brain className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+                  <p className="font-semibold">Advanced Analysis</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Deeper insights</p>
+                </div>
+                <div className="text-center">
+                  <Sparkles className="w-8 h-8 text-orange-600 mx-auto mb-2" />
+                  <p className="font-semibold">Personalized Quotes</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">AI motivation</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

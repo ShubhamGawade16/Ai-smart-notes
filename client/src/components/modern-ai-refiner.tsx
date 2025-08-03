@@ -76,7 +76,10 @@ export function ModernAIRefiner({
       });
       return await response.json();
     },
-    onSuccess: (data: TaskRefinement) => {
+    onSuccess: async (data: TaskRefinement) => {
+      // Increment AI usage only after successful generation
+      await incrementAiUsage();
+      
       setConversation(prev => [...prev, 
         { type: 'user', content: userQuery },
         { type: 'ai', content: data.explanation, refinement: data }
@@ -100,18 +103,13 @@ export function ModernAIRefiner({
   const handleSubmit = async () => {
     if (!userQuery.trim() || !originalTask.trim()) return;
     
-    // Check AI usage limit
+    // Check AI usage limit first
     if (!checkAiUsageLimit()) {
       onUpgradeRequired?.();
       return;
     }
     
-    const canProceed = await incrementAiUsage();
-    if (!canProceed) {
-      onUpgradeRequired?.();
-      return;
-    }
-    
+    // Only increment usage after successful AI response
     refineMutation.mutate({ task: originalTask, query: userQuery });
   };
 
