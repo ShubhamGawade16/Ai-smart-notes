@@ -5,6 +5,7 @@ import { ModernTaskList } from "@/components/modern-task-list";
 import { AdvancedTaskView } from "@/components/advanced-task-view";
 import { SimpleTaskInput } from "@/components/simple-task-input";
 import { ModernAIRefiner } from "@/components/modern-ai-refiner";
+import { UserProfile } from "@/components/user-profile";
 import UpgradeModal from "@/components/UpgradeModal";
 import UpgradeProModal from "@/components/upgrade-pro-modal";
 import DailyMotivationQuote from "@/components/daily-motivation-quote";
@@ -26,6 +27,7 @@ import {
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useSubscription } from "@/hooks/use-subscription";
+import { useTimezone } from "@/hooks/use-timezone";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useMutation } from "@tanstack/react-query";
@@ -57,10 +59,14 @@ export default function SimpleDashboard() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showUpgradeProModal, setShowUpgradeProModal] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   
   const { user, signOut } = useAuth();
   const { subscriptionStatus, incrementAiUsage, checkAiUsageLimit, refreshStatus, resetAiUsage } = useSubscription();
   const { toast } = useToast();
+  
+  // Initialize timezone auto-detection
+  useTimezone();
 
   const deleteAccountMutation = useMutation({
     mutationFn: async () => {
@@ -180,6 +186,10 @@ export default function SimpleDashboard() {
                     <p className="font-medium">{user?.firstName || "User"}</p>
                     <p className="text-gray-500 dark:text-gray-400">{user?.email}</p>
                   </div>
+                  <DropdownMenuItem onClick={() => setShowProfile(true)} className="cursor-pointer">
+                    <Settings className="w-4 h-4 mr-2" />
+                    Profile Settings
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={signOut} className="cursor-pointer">
                     <LogOut className="w-4 h-4 mr-2" />
@@ -435,6 +445,15 @@ export default function SimpleDashboard() {
         isOpen={showUpgradeProModal} 
         onClose={() => setShowUpgradeProModal(false)} 
       />
+      
+      {/* User Profile Settings Modal */}
+      {showProfile && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <UserProfile onClose={() => setShowProfile(false)} />
+          </div>
+        </div>
+      )}
       
       {/* Confetti Burst Animation */}
       <ConfettiBurst 

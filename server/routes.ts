@@ -400,19 +400,22 @@ Respond with JSON in this format: {"quote": "your motivational quote", "author":
 
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-      // Get current time context
+      // Get user timezone and current time context
+      const user = await storage.getUser(req.userId);
+      const userTimezone = user?.timezone || 'UTC';
+      
       const now = new Date();
-      const currentHour = now.getHours();
-      const currentDay = now.getDay(); // 0 = Sunday, 6 = Saturday
-      const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const userTime = new Date(now.toLocaleString("en-US", { timeZone: userTimezone }));
+      const currentHour = userTime.getHours();
+      const currentDay = userTime.getDay(); // 0 = Sunday, 6 = Saturday
 
       const prompt = `You are a circadian rhythm and productivity expert. Analyze the optimal timing for these tasks based on current time context and task types.
 
 Current Context:
-- Current time: ${now.toLocaleString()}
+- Current time: ${userTime.toLocaleString()} (${userTimezone})
 - Hour: ${currentHour} (24-hour format)
 - Day of week: ${currentDay} (0=Sunday, 6=Saturday)
-- Time zone: ${timeZone}
+- User timezone: ${userTimezone}
 
 Tasks to analyze:
 ${incompleteTasks.map(task => `- "${task.title}" (Type: ${task.taskType || 'routine'}, Priority: ${task.priority})`).join('\n')}
@@ -510,6 +513,80 @@ Respond with JSON in this format:
     }
   });
 
+  // Update user timezone
+  app.patch("/api/user/timezone", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      if (!req.userId) {
+        return res.status(401).json({ error: "User ID not found in token" });
+      }
+
+      const { timezone } = req.body;
+      
+      if (!timezone || typeof timezone !== 'string') {
+        return res.status(400).json({ error: "Valid timezone is required" });
+      }
+
+      // Validate timezone by checking if it exists in Intl supported timezones
+      try {
+        Intl.DateTimeFormat(undefined, { timeZone: timezone });
+      } catch (error) {
+        return res.status(400).json({ error: "Invalid timezone" });
+      }
+
+      await storage.updateUser(req.userId, { timezone });
+      
+      const updatedUser = await storage.getUser(req.userId);
+      res.json({ 
+        success: true, 
+        timezone: updatedUser?.timezone,
+        message: "Timezone updated successfully" 
+      });
+    } catch (error) {
+      console.error("Failed to update timezone:", error);
+      res.status(500).json({ error: "Failed to update timezone" });
+    }
+  });
+
+  // Auto-detect and update user timezone
+  app.post("/api/user/auto-timezone", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      if (!req.userId) {
+        return res.status(401).json({ error: "User ID not found in token" });
+      }
+
+      const { detectedTimezone } = req.body;
+      
+      if (!detectedTimezone || typeof detectedTimezone !== 'string') {
+        return res.status(400).json({ error: "Detected timezone is required" });
+      }
+
+      // Get current user to check if timezone is already set
+      const currentUser = await storage.getUser(req.userId);
+      
+      // Only auto-update if user hasn't manually set a different timezone
+      if (currentUser && (currentUser.timezone === 'UTC' || !currentUser.timezone)) {
+        await storage.updateUser(req.userId, { timezone: detectedTimezone });
+        
+        console.log(`Auto-updated timezone for user ${req.userId}: ${detectedTimezone}`);
+        
+        res.json({ 
+          success: true, 
+          timezone: detectedTimezone,
+          message: "Timezone auto-detected and updated" 
+        });
+      } else {
+        res.json({ 
+          success: false, 
+          timezone: currentUser?.timezone,
+          message: "User has custom timezone, not auto-updating" 
+        });
+      }
+    } catch (error) {
+      console.error("Failed to auto-update timezone:", error);
+      res.status(500).json({ error: "Failed to auto-update timezone" });
+    }
+  });
+
   // Toggle between free and premium user for testing
   app.post("/api/dev/toggle-premium", authenticateToken, async (req: AuthRequest, res) => {
     if (process.env.NODE_ENV !== 'development') {
@@ -550,6 +627,37 @@ Respond with JSON in this format:
   });
 
 
+
+  // Get user profile
+  app.get("/api/user/profile", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      if (!req.userId) {
+        return res.status(401).json({ error: "User ID not found in token" });
+      }
+
+      const user = await storage.getUser(req.userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Return safe user data (exclude sensitive fields)
+      const safeUserData = {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        timezone: user.timezone,
+        tier: user.tier,
+        dailyAiCalls: user.dailyAiCalls,
+        createdAt: user.createdAt,
+      };
+
+      res.json(safeUserData);
+    } catch (error) {
+      console.error("Failed to get user profile:", error);
+      res.status(500).json({ error: "Failed to get user profile" });
+    }
+  });
 
   // Conversational Task Refiner (FREE for testing)
   app.post("/api/ai/refine-task", optionalAuth, async (req: AuthRequest, res) => {

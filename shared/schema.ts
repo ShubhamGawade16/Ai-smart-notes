@@ -41,6 +41,7 @@ export const users = pgTable("users", {
   firstName: varchar("first_name", { length: 100 }),
   lastName: varchar("last_name", { length: 100 }),
   profileImageUrl: varchar("profile_image_url"),
+  timezone: varchar("timezone", { length: 100 }).default("UTC").notNull(),
   tier: userTierEnum("tier").default("free").notNull(),
   subscriptionId: varchar("subscription_id"), // Payment processor subscription ID
   subscriptionStatus: subscriptionStatusEnum("subscription_status"),
