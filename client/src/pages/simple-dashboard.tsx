@@ -270,16 +270,42 @@ export default function SimpleDashboard() {
 
           {/* AI Features Sidebar */}
           <div className="space-y-4">
-            {/* Dev Mode Indicator - Show unlimited AI in development */}
-            {process.env.NODE_ENV === 'development' && (
-              <Card className="border-2 border-dashed border-green-300 bg-green-50 dark:bg-green-900/20">
-                <CardContent className="p-4 text-center">
-                  <h3 className="font-bold text-green-800 dark:text-green-200 mb-2">
-                    Dev Mode Active
+            {/* Dev Mode Controls - Toggle between free and premium testing */}
+            {import.meta.env.DEV && (
+              <Card className="border-2 border-dashed border-blue-300 bg-blue-50 dark:bg-blue-900/20">
+                <CardContent className="p-4">
+                  <h3 className="font-bold text-blue-800 dark:text-blue-200 mb-3 text-center">
+                    Dev Mode Controls
                   </h3>
-                  <p className="text-sm text-green-700 dark:text-green-300">
-                    Unlimited AI features enabled for development
-                  </p>
+                  <div className="space-y-3">
+                    <Button
+                      onClick={async () => {
+                        try {
+                          const response = await apiRequest("POST", "/api/dev/toggle-premium");
+                          if (response.ok) {
+                            const data = await response.json();
+                            await refreshStatus();
+                            toast({
+                              title: "Dev Mode",
+                              description: `Switched to ${data.isPremium ? 'Premium' : 'Free'} user mode`,
+                            });
+                          }
+                        } catch (error) {
+                          console.error('Failed to toggle premium:', error);
+                        }
+                      }}
+                      variant="outline"
+                      size="sm"
+                      className="w-full text-blue-800 border-blue-300 hover:bg-blue-100 dark:text-blue-200 dark:border-blue-600 dark:hover:bg-blue-800"
+                    >
+                      {subscriptionStatus.isPremium ? 'Switch to Free User' : 'Switch to Premium User'}
+                    </Button>
+                    <div className="text-xs text-center text-blue-700 dark:text-blue-300">
+                      Current: {subscriptionStatus.isPremium ? 'Premium' : 'Free'} user
+                      <br />
+                      AI Usage: {subscriptionStatus.dailyAiUsage}/{subscriptionStatus.dailyAiLimit}
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             )}
