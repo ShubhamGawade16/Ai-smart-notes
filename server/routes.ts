@@ -78,13 +78,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         user.dailyAiCalls = 0;
       }
 
-      // In development mode, completely disable AI usage restrictions
+      // In development mode, respect the user tier but provide generous limits for testing
       const isDevelopment = process.env.NODE_ENV === 'development';
       
-      const isPremium = user.tier !== 'free' || isDevelopment;
-      const dailyLimit = isPremium ? 999 : 3; // Premium gets unlimited (999), free gets 3
-      const currentUsage = isDevelopment ? 0 : (user.dailyAiCalls || 0);
-      const canUseAi = isDevelopment || isPremium || currentUsage < dailyLimit;
+      const isPremium = user.tier !== 'free';
+      const dailyLimit = isPremium ? 999 : (isDevelopment ? 50 : 3); // Premium gets unlimited, dev free gets 50, prod free gets 3
+      const currentUsage = user.dailyAiCalls || 0;
+      const canUseAi = isPremium || currentUsage < dailyLimit;
 
       res.json({
         isPremium,
@@ -113,16 +113,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "User not found" });
       }
 
-      // In development mode, completely bypass AI usage tracking
+      // In development mode, still track usage but be more generous for free users
       const isDevelopment = process.env.NODE_ENV === 'development';
-      if (isDevelopment) {
-        return res.json({
-          success: true,
-          dailyAiUsage: 0,
-          canUseAi: true,
-          message: "Development mode - unlimited AI usage"
-        });
-      }
 
       const isPremium = user.tier !== 'free';
       if (isPremium) {

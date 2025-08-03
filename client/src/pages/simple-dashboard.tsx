@@ -303,7 +303,11 @@ export default function SimpleDashboard() {
                     <div className="text-xs text-center text-blue-700 dark:text-blue-300">
                       Current: {subscriptionStatus.isPremium ? 'Premium' : 'Free'} user
                       <br />
-                      AI Usage: {subscriptionStatus.dailyAiUsage}/{subscriptionStatus.dailyAiLimit}
+                      AI Usage: {subscriptionStatus.dailyAiUsage}/{subscriptionStatus.dailyAiLimit === 999 ? '∞' : subscriptionStatus.dailyAiLimit}
+                      <br />
+                      {import.meta.env.DEV && subscriptionStatus.dailyAiLimit === 50 && (
+                        <span className="text-green-600 dark:text-green-400">Dev: 50 calls for testing</span>
+                      )}
                     </div>
                   </div>
                 </CardContent>
