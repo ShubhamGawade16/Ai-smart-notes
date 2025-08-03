@@ -134,7 +134,7 @@ export function ModernTaskList({ onAdvancedView, onTaskCompleted }: ModernTaskLi
         </div>
       </CardHeader>
 
-      <CardContent className="px-6 pb-6 space-y-4">
+      <CardContent className="px-6 pb-4 space-y-4">
         {/* Tab Navigation - Clean toggle design */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-4 bg-gray-50 dark:bg-gray-800/50 p-1 rounded-lg">
@@ -219,14 +219,14 @@ export function ModernTaskList({ onAdvancedView, onTaskCompleted }: ModernTaskLi
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12">
+              <div className="text-center py-8">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
                   {getTabIcon(activeTab)}
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
                   {emptyState.title}
                 </h3>
-                <p className="text-gray-500 dark:text-gray-400 mb-4">
+                <p className="text-gray-500 dark:text-gray-400 mb-6">
                   {emptyState.description}
                 </p>
                 {activeTab !== "completed" && (
