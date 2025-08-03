@@ -16,6 +16,7 @@ type AuthContextType = {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<void>;
   signOut: () => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -213,12 +214,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const signInWithGoogle = async () => {
+    if (!supabase) {
+      throw new Error('Authentication not configured');
+    }
+
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          scopes: 'openid email profile',
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      });
+
+      if (error) {
+        toast({
+          title: "Google Sign-In failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        throw error;
+      }
+
+      // The redirect will be handled by OAuth flow
+      
+    } catch (error) {
+      setIsLoading(false);
+      throw error;
+    }
+  };
+
   const value = {
     user,
     isLoading,
     signIn,
     signUp,
     signOut,
+    signInWithGoogle,
   };
 
   return (

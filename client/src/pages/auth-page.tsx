@@ -6,10 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Brain, Target, Zap, Mail, Lock, User, Home, ArrowLeft } from "lucide-react";
+import { FaGoogle } from "react-icons/fa";
 import { Link } from "wouter";
 
 export default function AuthPage() {
-  const { user, isLoading, signIn, signUp } = useAuth();
+  const { user, isLoading, signIn, signUp, signInWithGoogle } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Login form state
@@ -48,6 +49,20 @@ export default function AuthPage() {
       await signUp(signupEmail, signupPassword, signupFirstName, signupLastName);
     } catch (error) {
       console.error('Signup error:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    if (isSubmitting) return;
+    
+    setIsSubmitting(true);
+    try {
+      await signInWithGoogle();
+      // OAuth redirect will handle the rest
+    } catch (error) {
+      console.error('Google sign-in error:', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -189,6 +204,28 @@ export default function AuthPage() {
                       )}
                     </Button>
                   </form>
+                  
+                  <div className="mt-4">
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t border-gray-300 dark:border-gray-600" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-white dark:bg-gray-800 px-2 text-gray-500 dark:text-gray-400">
+                          Or continue with
+                        </span>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={handleGoogleSignIn}
+                      variant="outline"
+                      className="w-full mt-4 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+                      disabled={isSubmitting}
+                    >
+                      <FaGoogle className="w-4 h-4 mr-2 text-red-500" />
+                      Sign in with Google
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -284,6 +321,28 @@ export default function AuthPage() {
                       )}
                     </Button>
                   </form>
+                  
+                  <div className="mt-4">
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t border-gray-300 dark:border-gray-600" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-white dark:bg-gray-800 px-2 text-gray-500 dark:text-gray-400">
+                          Or continue with
+                        </span>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={handleGoogleSignIn}
+                      variant="outline"
+                      className="w-full mt-4 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+                      disabled={isSubmitting}
+                    >
+                      <FaGoogle className="w-4 h-4 mr-2 text-red-500" />
+                      Sign up with Google
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
