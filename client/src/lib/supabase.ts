@@ -44,6 +44,8 @@ export const signInWithGoogle = async () => {
     },
   })
   
+  console.log('Raw OAuth response:', { data, error })
+  
   if (error) {
     console.error('Google OAuth initiation error:', error)
     console.error('Full error details:', JSON.stringify(error, null, 2))
