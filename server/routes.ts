@@ -340,7 +340,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ error: "OpenAI API key not configured" });
       }
 
-      const OpenAI = require('openai');
+      const { default: OpenAI } = await import('openai');
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
       const prompt = `Generate a personalized motivational quote for a user with the following task status:
@@ -363,6 +363,21 @@ Respond with JSON in this format: {"quote": "your motivational quote", "author":
     } catch (error) {
       console.error('AI motivation quote error:', error);
       res.status(500).json({ error: "Failed to generate motivation quote" });
+    }
+  });
+
+  // Dev endpoint to reset AI usage for testing
+  app.post("/api/dev/reset-ai-usage", async (req: AuthRequest, res) => {
+    try {
+      const userId = req.userId || 'demo-user';
+      
+      // Reset daily AI usage for the user
+      await storage.resetDailyAiUsage(userId);
+      
+      res.json({ message: "AI usage reset successfully", dailyAiUsage: 0 });
+    } catch (error) {
+      console.error('Reset AI usage error:', error);
+      res.status(500).json({ error: "Failed to reset AI usage" });
     }
   });
 
@@ -530,7 +545,7 @@ Respond with JSON in this format: {"quote": "your motivational quote", "author":
   });
 
   // Delete task (works with or without auth for testing)
-  app.delete("/api/tasks/:id", optionalAuth, async (req: AuthRequest, res) => {
+  app.delete("/api/tasks/:id", async (req: AuthRequest, res) => {
     try {
       // Use demo user ID if no auth token provided
       const userId = req.userId || 'demo-user';
@@ -540,9 +555,17 @@ Respond with JSON in this format: {"quote": "your motivational quote", "author":
         return res.status(400).json({ error: "Task ID is required" });
       }
 
+      // Get the existing task first to ensure it exists and belongs to user
+      const existingTasks = await storage.getTasks(userId);
+      const existingTask = existingTasks.find(t => t.id === taskId);
+      
+      if (!existingTask) {
+        return res.status(404).json({ error: "Task not found" });
+      }
+
       const deleted = await storage.deleteTask(taskId, userId);
       if (!deleted) {
-        return res.status(404).json({ error: "Task not found" });
+        return res.status(404).json({ error: "Task not found or delete failed" });
       }
 
       res.json({ success: true });

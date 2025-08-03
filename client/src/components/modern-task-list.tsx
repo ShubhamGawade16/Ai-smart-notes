@@ -105,7 +105,7 @@ export function ModernTaskList({ onAdvancedView, onTaskCompleted }: ModernTaskLi
   const emptyState = getEmptyStateMessage();
 
   return (
-    <Card className="border-0 shadow-sm bg-white dark:bg-gray-900">
+    <Card className="border-0 shadow-sm bg-gray-50 dark:bg-gray-900">
       <CardHeader className="pb-4 pt-6 px-6">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">Tasks</CardTitle>

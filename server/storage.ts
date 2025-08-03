@@ -46,6 +46,7 @@ export interface IStorage {
   resetMonthlyLimits(userId: string): Promise<void>;
   incrementDailyAiCalls(userId: string): Promise<void>;
   incrementMonthlyTaskCount(userId: string): Promise<void>;
+  resetDailyAiUsage(userId: string): Promise<void>;
 }
 
 // In-memory storage implementation
@@ -333,6 +334,18 @@ export class MemStorage implements IStorage {
       this.users[userIndex] = {
         ...this.users[userIndex],
         monthlyTaskCount: (this.users[userIndex].monthlyTaskCount || 0) + 1,
+        updatedAt: new Date()
+      };
+    }
+  }
+
+  async resetDailyAiUsage(userId: string): Promise<void> {
+    const userIndex = this.users.findIndex(user => user.id === userId);
+    if (userIndex !== -1) {
+      this.users[userIndex] = {
+        ...this.users[userIndex],
+        dailyAiCalls: 0,
+        dailyAiCallsResetAt: new Date(),
         updatedAt: new Date()
       };
     }

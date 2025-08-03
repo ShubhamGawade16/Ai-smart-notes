@@ -270,6 +270,30 @@ export default function SimpleDashboard() {
 
           {/* AI Features Sidebar */}
           <div className="space-y-4">
+            {/* Dev Tools - Remove AI limits for testing */}
+            <Card className="border-2 border-dashed border-orange-300 bg-orange-50 dark:bg-orange-900/20">
+              <CardContent className="p-4 text-center">
+                <h3 className="font-bold text-orange-800 dark:text-orange-200 mb-2">
+                  Dev Mode
+                </h3>
+                <Button
+                  onClick={async () => {
+                    try {
+                      await apiRequest('POST', '/api/dev/reset-ai-usage');
+                      window.location.reload();
+                    } catch (error) {
+                      console.error('Failed to reset AI usage:', error);
+                    }
+                  }}
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-orange-800 border-orange-300 hover:bg-orange-100"
+                >
+                  Reset AI Usage (Dev)
+                </Button>
+              </CardContent>
+            </Card>
+
             {/* Daily Motivation Quote */}
             <DailyMotivationQuote />
             

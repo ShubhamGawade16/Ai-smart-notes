@@ -78,7 +78,7 @@ export default function UpgradeProModal({ isOpen, onClose }: UpgradeProModalProp
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" aria-describedby="upgrade-description">
         <DialogHeader className="text-center space-y-4 pb-6">
           <div className="mx-auto w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
             <Crown className="w-8 h-8 text-white" />
@@ -87,7 +87,7 @@ export default function UpgradeProModal({ isOpen, onClose }: UpgradeProModalProp
             <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-purple-600 bg-clip-text text-transparent">
               Upgrade to Planify Pro
             </DialogTitle>
-            <DialogDescription className="text-gray-600 dark:text-gray-400 mt-2">
+            <DialogDescription id="upgrade-description" className="text-gray-600 dark:text-gray-400 mt-2">
               Unlock powerful AI features and boost your productivity
             </DialogDescription>
           </div>
