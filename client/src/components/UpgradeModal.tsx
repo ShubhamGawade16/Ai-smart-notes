@@ -105,7 +105,7 @@ export default function UpgradeModal({ isOpen, onClose, currentUsage, dailyLimit
               <Sparkles className="w-5 h-5 text-teal-600" />
               <h3 className="font-semibold text-teal-900 dark:text-teal-100">Premium Benefits</h3>
               <Badge variant="secondary" className="bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200">
-                ₹500/month
+                $5/month
               </Badge>
             </div>
             <div className="space-y-2">

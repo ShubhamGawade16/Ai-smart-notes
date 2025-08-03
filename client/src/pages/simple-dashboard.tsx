@@ -344,7 +344,7 @@ export default function SimpleDashboard() {
                     className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white border-0 font-semibold"
                   >
                     <Crown className="w-4 h-4 mr-2" />
-                    Upgrade Now - ₹500/month
+                    Upgrade Now - $5/month
                   </Button>
                 </CardContent>
               </Card>

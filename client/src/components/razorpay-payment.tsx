@@ -156,7 +156,8 @@ export function RazorpayPayment({ onSuccess, onError, userEmail }: RazorpayPayme
   };
 
   const formatPrice = (amount: number) => {
-    return `₹${(amount / 100).toFixed(2)}`;
+    // Show $5 for demo purposes (₹500 = ~$5 USD)
+    return `$5.00`;
   };
 
   return (
