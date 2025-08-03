@@ -140,7 +140,7 @@ export default function UpgradeModal({ isOpen, onClose, currentUsage, dailyLimit
             Maybe Later
           </Button>
           <Button
-            onClick={handlePaymentSetup}
+            onClick={() => window.location.href = '/upgrade'}
             disabled={isProcessing}
             className="flex-1 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white border-0"
           >

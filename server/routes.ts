@@ -587,6 +587,38 @@ Respond with JSON in this format:
     }
   });
 
+  // ============================================================================
+  // RAZORPAY PAYMENT ROUTES
+  // ============================================================================
+
+  // Import Razorpay functions
+  const {
+    createRazorpayOrder,
+    createRazorpaySubscription,
+    verifyRazorpayPayment,
+    handleRazorpayWebhook,
+    getSubscriptionDetails,
+    cancelRazorpaySubscription,
+  } = await import("./razorpay");
+
+  // Create Razorpay order for one-time payments
+  app.post("/api/razorpay/order", authenticateToken, createRazorpayOrder);
+
+  // Create Razorpay subscription
+  app.post("/api/razorpay/subscription", authenticateToken, createRazorpaySubscription);
+
+  // Verify Razorpay payment
+  app.post("/api/razorpay/verify", authenticateToken, verifyRazorpayPayment);
+
+  // Handle Razorpay webhooks (no auth required)
+  app.post("/api/razorpay/webhook", handleRazorpayWebhook);
+
+  // Get subscription details
+  app.get("/api/razorpay/subscription/:subscriptionId", authenticateToken, getSubscriptionDetails);
+
+  // Cancel subscription
+  app.post("/api/razorpay/subscription/:subscriptionId/cancel", authenticateToken, cancelRazorpaySubscription);
+
   // Toggle between free and premium user for testing
   app.post("/api/dev/toggle-premium", authenticateToken, async (req: AuthRequest, res) => {
     if (process.env.NODE_ENV !== 'development') {
