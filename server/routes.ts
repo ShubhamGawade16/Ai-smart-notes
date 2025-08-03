@@ -383,7 +383,13 @@ Respond with JSON in this format: {"quote": "your motivational quote", "author":
       // Reset daily AI usage for the user
       await storage.resetDailyAiUsage(userId);
       
-      res.json({ message: "AI usage reset successfully", dailyAiUsage: 0 });
+      // Get updated user to confirm reset
+      const updatedUser = await storage.getUser(userId);
+      res.json({ 
+        message: "AI usage reset successfully", 
+        dailyAiUsage: updatedUser?.dailyAiCalls || 0,
+        success: true
+      });
     } catch (error) {
       console.error('Reset AI usage error:', error);
       res.status(500).json({ error: "Failed to reset AI usage" });

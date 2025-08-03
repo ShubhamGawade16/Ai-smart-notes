@@ -127,17 +127,36 @@ export default function DailyMotivationQuote() {
   const refreshQuote = async () => {
     setIsAnimating(true);
     try {
-      // 50% chance to get AI quote if user has tasks
-      const useAi = tasks.length > 0 && Math.random() > 0.5;
-      if (useAi) {
-        const aiQuote = await getAiPersonalizedQuote();
-        setCurrentQuote(aiQuote);
-        setIsAiQuote(true);
+      // Always try to get AI quote first
+      const response = await fetch('/api/ai/motivation-quote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          completedTasks: completedTasks.length,
+          incompleteTasks: incompleteTasks.length,
+          recentTasks: tasks.slice(0, 3).map((t: any) => ({ title: t.title, completed: t.completed }))
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.quote) {
+          setCurrentQuote({
+            quote: data.quote,
+            author: data.author || 'Planify AI',
+            category: 'ai-personalized'
+          });
+          setIsAiQuote(true);
+        } else {
+          setCurrentQuote(getPersonalizedQuote());
+          setIsAiQuote(false);
+        }
       } else {
         setCurrentQuote(getPersonalizedQuote());
         setIsAiQuote(false);
       }
     } catch (error) {
+      console.error('Failed to get AI quote:', error);
       setCurrentQuote(getPersonalizedQuote());
       setIsAiQuote(false);
     }

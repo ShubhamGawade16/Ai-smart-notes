@@ -27,7 +27,7 @@ import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useSubscription } from "@/hooks/use-subscription";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useMutation } from "@tanstack/react-query";
 import {
   DropdownMenu,
@@ -286,7 +286,13 @@ export default function SimpleDashboard() {
                       });
                       
                       if (response.ok) {
-                        window.location.reload();
+                        const data = await response.json();
+                        if (data.success) {
+                          // Force refresh subscription status
+                          queryClient.invalidateQueries({ queryKey: ['/api/subscription-status'] });
+                          // Reload the page to ensure all components update
+                          setTimeout(() => window.location.reload(), 100);
+                        }
                       } else {
                         console.error('Failed to reset AI usage');
                       }
