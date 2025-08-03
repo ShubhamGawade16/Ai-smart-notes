@@ -18,31 +18,15 @@ const razorpay = RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET ? new Razorpay({
   key_secret: RAZORPAY_KEY_SECRET,
 }) : null;
 
-// Subscription plans (amounts in INR)
+// Subscription plan (amount in INR)
 export const SUBSCRIPTION_PLANS = {
-  BASIC_PRO: {
-    id: "basic_pro",
-    name: "Basic Pro",
-    amount: 39900, // ₹399.00 per month in paise
+  PRO: {
+    id: "pro",
+    name: "Planify Pro",
+    amount: 50000, // $5 ≈ ₹500.00 per month in paise  
     currency: "INR",
     interval: "monthly",
     description: "Unlimited AI features and task management"
-  },
-  ADVANCED_PRO: {
-    id: "advanced_pro", 
-    name: "Advanced Pro",
-    amount: 79900, // ₹799.00 per month in paise
-    currency: "INR",
-    interval: "monthly",
-    description: "Advanced analytics and team collaboration"
-  },
-  PREMIUM_PRO: {
-    id: "premium_pro",
-    name: "Premium Pro", 
-    amount: 129900, // ₹1299.00 per month in paise
-    currency: "INR",
-    interval: "monthly",
-    description: "Full suite with AI scheduling and insights"
   }
 };
 
@@ -96,11 +80,11 @@ export async function createRazorpaySubscription(req: Request, res: Response) {
 
     const { planId, customerId, customerEmail, customerPhone } = req.body;
 
-    if (!planId || !SUBSCRIPTION_PLANS[planId as keyof typeof SUBSCRIPTION_PLANS]) {
+    if (!planId || planId !== "pro") {
       return res.status(400).json({ error: "Invalid subscription plan" });
     }
 
-    const plan = SUBSCRIPTION_PLANS[planId as keyof typeof SUBSCRIPTION_PLANS];
+    const plan = SUBSCRIPTION_PLANS.PRO;
 
     // Create Razorpay plan if it doesn't exist
     let razorpayPlan: any;

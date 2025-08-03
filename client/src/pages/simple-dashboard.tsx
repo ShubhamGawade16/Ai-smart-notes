@@ -340,11 +340,11 @@ export default function SimpleDashboard() {
                     Get unlimited AI requests, advanced analytics, and personalized insights
                   </p>
                   <Button
-                    onClick={() => setShowUpgradeProModal(true)}
+                    onClick={() => window.location.href = '/upgrade'}
                     className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white border-0 font-semibold"
                   >
                     <Crown className="w-4 h-4 mr-2" />
-                    Upgrade Now - $5/month
+                    Upgrade Now - ₹500/month
                   </Button>
                 </CardContent>
               </Card>

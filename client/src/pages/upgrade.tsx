@@ -90,9 +90,8 @@ export default function UpgradePage() {
                   <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
                     <li>• Only 3 AI requests per day</li>
                     <li>• Basic task management</li>
-                    <li>• Limited analytics</li>
-                    <li>• No team collaboration</li>
-                    <li>• No integrations</li>
+                    <li>• Limited features</li>
+                    <li>• No priority support</li>
                   </ul>
                 </div>
                 <div>
@@ -100,10 +99,10 @@ export default function UpgradePage() {
                   <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
                     <li>• Unlimited AI task analysis</li>
                     <li>• Smart timing & scheduling</li>
-                    <li>• Advanced productivity insights</li>
-                    <li>• Team collaboration tools</li>
-                    <li>• Calendar & app integrations</li>
+                    <li>• Advanced task categorization</li>
+                    <li>• Export capabilities</li>
                     <li>• Priority support</li>
+                    <li>• No daily usage limits</li>
                   </ul>
                 </div>
               </div>

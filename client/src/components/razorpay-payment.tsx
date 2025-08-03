@@ -25,56 +25,22 @@ interface SubscriptionPlan {
   popular?: boolean;
 }
 
-const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
-  {
-    id: "basic_pro",
-    name: "Basic Pro",
-    amount: 39900, // ₹399 in paise
-    currency: "INR",
-    interval: "monthly",
-    description: "Perfect for individual productivity",
-    features: [
-      "Unlimited AI task analysis",
-      "Smart timing suggestions", 
-      "Priority support",
-      "Advanced task categorization",
-      "Export capabilities"
-    ]
-  },
-  {
-    id: "advanced_pro",
-    name: "Advanced Pro", 
-    amount: 79900, // ₹799 in paise
-    currency: "INR",
-    interval: "monthly",
-    description: "Advanced features for power users",
-    features: [
-      "Everything in Basic Pro",
-      "Team collaboration",
-      "Advanced analytics dashboard",
-      "Custom AI workflows",
-      "API access",
-      "Calendar integrations"
-    ],
-    popular: true
-  },
-  {
-    id: "premium_pro",
-    name: "Premium Pro",
-    amount: 129900, // ₹1299 in paise
-    currency: "INR",
-    interval: "monthly",
-    description: "Complete productivity suite",
-    features: [
-      "Everything in Advanced Pro",
-      "AI scheduling automation",
-      "Predictive insights",
-      "Custom integrations",
-      "White-label options",
-      "Dedicated account manager"
-    ]
-  }
-];
+const SUBSCRIPTION_PLAN: SubscriptionPlan = {
+  id: "pro",
+  name: "Planify Pro",
+  amount: 50000, // $5 ≈ ₹500 in paise
+  currency: "INR", 
+  interval: "monthly",
+  description: "Unlock unlimited AI-powered productivity",
+  features: [
+    "Unlimited AI task analysis",
+    "Smart timing suggestions",
+    "Advanced task categorization", 
+    "Priority support",
+    "Export capabilities",
+    "No daily usage limits"
+  ]
+};
 
 interface RazorpayPaymentProps {
   onSuccess?: () => void;
@@ -83,7 +49,7 @@ interface RazorpayPaymentProps {
 }
 
 export function RazorpayPayment({ onSuccess, onError, userEmail }: RazorpayPaymentProps) {
-  const [loading, setLoading] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
   const loadRazorpayScript = (): Promise<boolean> => {
@@ -101,9 +67,9 @@ export function RazorpayPayment({ onSuccess, onError, userEmail }: RazorpayPayme
     });
   };
 
-  const handleSubscribe = async (plan: SubscriptionPlan) => {
+  const handleSubscribe = async () => {
     try {
-      setLoading(plan.id);
+      setLoading(true);
 
       // Load Razorpay script
       const scriptLoaded = await loadRazorpayScript();
@@ -113,7 +79,7 @@ export function RazorpayPayment({ onSuccess, onError, userEmail }: RazorpayPayme
 
       // Create subscription
       const response = await apiRequest("POST", "/api/razorpay/subscription", {
-        planId: plan.id,
+        planId: SUBSCRIPTION_PLAN.id,
         customerEmail: userEmail,
       }) as any;
 
@@ -126,7 +92,7 @@ export function RazorpayPayment({ onSuccess, onError, userEmail }: RazorpayPayme
         key: response.key_id,
         subscription_id: response.subscription.id,
         name: "Planify",
-        description: `${plan.name} Subscription`,
+        description: `${SUBSCRIPTION_PLAN.name} Subscription`,
         image: "/attached_assets/Planify_imresizer_1754161747016.jpg",
         handler: async (paymentResponse: any) => {
           try {
@@ -139,8 +105,8 @@ export function RazorpayPayment({ onSuccess, onError, userEmail }: RazorpayPayme
 
             if (verifyResponse.success) {
               toast({
-                title: "Subscription Activated! 🎉",
-                description: `Welcome to ${plan.name}! Your premium features are now active.`,
+                title: "Subscription Activated!",
+                description: `Welcome to ${SUBSCRIPTION_PLAN.name}! Your premium features are now active.`,
               });
               
               // Refresh subscription status
@@ -168,7 +134,7 @@ export function RazorpayPayment({ onSuccess, onError, userEmail }: RazorpayPayme
         },
         modal: {
           ondismiss: () => {
-            setLoading(null);
+            setLoading(false);
           },
         },
       };
@@ -183,7 +149,7 @@ export function RazorpayPayment({ onSuccess, onError, userEmail }: RazorpayPayme
         variant: "destructive",
       });
       onError?.(error.message);
-      setLoading(null);
+      setLoading(false);
     }
   };
 
@@ -192,100 +158,80 @@ export function RazorpayPayment({ onSuccess, onError, userEmail }: RazorpayPayme
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto">
+    <div className="w-full max-w-2xl mx-auto">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-          Choose Your Plan
+          Upgrade to Planify Pro
         </h2>
         <p className="text-lg text-gray-600 dark:text-gray-400">
-          Upgrade to unlock unlimited AI features and advanced productivity tools
+          Unlock unlimited AI features and advanced productivity tools
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {SUBSCRIPTION_PLANS.map((plan) => (
-          <Card 
-            key={plan.id} 
-            className={`relative ${
-              plan.popular 
-                ? "border-2 border-teal-500 shadow-lg scale-105" 
-                : "border border-gray-200 dark:border-gray-700"
-            }`}
+      <Card className="border-2 border-teal-500 shadow-lg">
+        <CardHeader className="text-center pb-4">
+          <div className="flex justify-center mb-4">
+            <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-teal-600 rounded-full flex items-center justify-center">
+              <Crown className="w-8 h-8 text-white" />
+            </div>
+          </div>
+          
+          <CardTitle className="text-2xl font-bold">
+            {SUBSCRIPTION_PLAN.name}
+          </CardTitle>
+          
+          <div className="mt-4">
+            <span className="text-4xl font-bold text-gray-900 dark:text-white">
+              {formatPrice(SUBSCRIPTION_PLAN.amount)}
+            </span>
+            <span className="text-gray-600 dark:text-gray-400 ml-1">
+              /{SUBSCRIPTION_PLAN.interval}
+            </span>
+          </div>
+          
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+            {SUBSCRIPTION_PLAN.description}
+          </p>
+        </CardHeader>
+
+        <CardContent className="pt-0">
+          <div className="space-y-3 mb-8">
+            {SUBSCRIPTION_PLAN.features.map((feature, index) => (
+              <div key={index} className="flex items-center gap-3">
+                <Check className="w-5 h-5 text-teal-500 flex-shrink-0" />
+                <span className="text-gray-700 dark:text-gray-300">
+                  {feature}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <Button
+            onClick={handleSubscribe}
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white text-lg py-6"
           >
-            {plan.popular && (
-              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                <Badge className="bg-teal-500 text-white px-3 py-1">
-                  <Crown className="w-3 h-3 mr-1" />
-                  Most Popular
-                </Badge>
+            {loading ? (
+              <div className="flex items-center gap-2">
+                <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
+                Processing Payment...
               </div>
+            ) : (
+              <>
+                <Crown className="w-5 h-5 mr-2" />
+                Subscribe Now
+              </>
             )}
+          </Button>
 
-            <CardHeader className="text-center pb-4">
-              <div className="flex justify-center mb-4">
-                {plan.id === "basic_pro" && <Zap className="w-8 h-8 text-teal-500" />}
-                {plan.id === "advanced_pro" && <Sparkles className="w-8 h-8 text-teal-500" />}
-                {plan.id === "premium_pro" && <TrendingUp className="w-8 h-8 text-teal-500" />}
-              </div>
-              
-              <CardTitle className="text-xl font-bold">
-                {plan.name}
-              </CardTitle>
-              
-              <div className="mt-4">
-                <span className="text-3xl font-bold text-gray-900 dark:text-white">
-                  {formatPrice(plan.amount)}
-                </span>
-                <span className="text-gray-600 dark:text-gray-400 ml-1">
-                  /{plan.interval}
-                </span>
-              </div>
-              
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                {plan.description}
-              </p>
-            </CardHeader>
-
-            <CardContent className="pt-0">
-              <div className="space-y-3 mb-6">
-                {plan.features.map((feature, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-teal-500 flex-shrink-0" />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">
-                      {feature}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              <Button
-                onClick={() => handleSubscribe(plan)}
-                disabled={loading === plan.id}
-                className={`w-full ${
-                  plan.popular
-                    ? "bg-teal-500 hover:bg-teal-600 text-white"
-                    : "bg-gray-900 hover:bg-gray-800 text-white dark:bg-gray-700 dark:hover:bg-gray-600"
-                }`}
-              >
-                {loading === plan.id ? (
-                  <div className="flex items-center gap-2">
-                    <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
-                    Processing...
-                  </div>
-                ) : (
-                  "Subscribe Now"
-                )}
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <div className="mt-8 text-center">
-        <p className="text-sm text-gray-600 dark:text-gray-400">
-          Secure payments powered by Razorpay • Cancel anytime • 30-day money-back guarantee
-        </p>
-      </div>
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              🔒 Secure payments powered by Razorpay<br/>
+              Cancel anytime • 30-day money-back guarantee
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
