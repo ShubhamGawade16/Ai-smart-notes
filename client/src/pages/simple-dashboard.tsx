@@ -59,7 +59,7 @@ export default function SimpleDashboard() {
   const [showConfetti, setShowConfetti] = useState(false);
   
   const { user, signOut } = useAuth();
-  const { subscriptionStatus, incrementAiUsage, checkAiUsageLimit } = useSubscription();
+  const { subscriptionStatus, incrementAiUsage, checkAiUsageLimit, refreshStatus, resetAiUsage } = useSubscription();
   const { toast } = useToast();
 
   const deleteAccountMutation = useMutation({
@@ -288,10 +288,15 @@ export default function SimpleDashboard() {
                       if (response.ok) {
                         const data = await response.json();
                         if (data.success) {
-                          // Force refresh subscription status
-                          queryClient.invalidateQueries({ queryKey: ['/api/subscription-status'] });
-                          // Reload the page to ensure all components update
-                          setTimeout(() => window.location.reload(), 100);
+                          // Reset subscription status immediately
+                          await resetAiUsage();
+                          // Force refresh all cached queries
+                          queryClient.invalidateQueries();
+                          // Show success message
+                          toast({
+                            title: "Dev Mode",
+                            description: "AI usage reset successfully! You now have 3 AI requests available.",
+                          });
                         }
                       } else {
                         console.error('Failed to reset AI usage');

@@ -51,10 +51,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "User ID not found in token" });
       }
 
-      let user = req.user;
-      if (!user) {
-        user = await storage.getUser(req.userId);
-      }
+      // Always fetch fresh user data from storage to avoid caching issues
+      const user = await storage.getUser(req.userId);
       
       if (!user) {
         return res.status(404).json({ error: "User not found" });
@@ -383,8 +381,12 @@ Respond with JSON in this format: {"quote": "your motivational quote", "author":
       // Reset daily AI usage for the user
       await storage.resetDailyAiUsage(userId);
       
-      // Get updated user to confirm reset
+      // Clear any cached user data and get fresh data
+      await new Promise(resolve => setTimeout(resolve, 100)); // Small delay for database consistency
       const updatedUser = await storage.getUser(userId);
+      
+      console.log(`Dev reset: User ${userId} AI usage reset to ${updatedUser?.dailyAiCalls || 0}`);
+      
       res.json({ 
         message: "AI usage reset successfully", 
         dailyAiUsage: updatedUser?.dailyAiCalls || 0,

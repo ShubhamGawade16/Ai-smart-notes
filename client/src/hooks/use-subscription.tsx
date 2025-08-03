@@ -73,11 +73,21 @@ export function useSubscription() {
     fetchSubscriptionStatus();
   }, [user]);
 
+  const resetAiUsage = async () => {
+    setSubscriptionStatus(prev => ({
+      ...prev,
+      dailyAiUsage: 0,
+      canUseAi: true
+    }));
+    await fetchSubscriptionStatus();
+  };
+
   return {
     subscriptionStatus,
     isLoading,
     incrementAiUsage,
     checkAiUsageLimit,
-    refreshStatus: fetchSubscriptionStatus
+    refreshStatus: fetchSubscriptionStatus,
+    resetAiUsage
   };
 }
