@@ -10,6 +10,7 @@ Planify aims to be a leading AI-powered productivity tool with a freemium model.
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+Payment Gateway: Razorpay (user in India, cannot access Stripe invite-only, no PayPal business account)
 
 ## System Architecture
 
