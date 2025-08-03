@@ -364,11 +364,27 @@ export function AdvancedTaskView({ task, isOpen, onClose, onUpdate, onAIRefine }
             </label>
             {task.tags && task.tags.length > 0 ? (
               <div className="flex flex-wrap gap-2">
-                {task.tags.map((tag, index) => (
-                  <Badge key={index} variant="secondary" className="text-xs">
-                    {tag}
-                  </Badge>
-                ))}
+                {task.tags.map((tag, index) => {
+                  const colors = [
+                    'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 border-blue-200 dark:border-blue-700',
+                    'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 border-green-200 dark:border-green-700',
+                    'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 border-purple-200 dark:border-purple-700',
+                    'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 border-orange-200 dark:border-orange-700',
+                    'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200 border-pink-200 dark:border-pink-700',
+                    'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200 border-teal-200 dark:border-teal-700'
+                  ];
+                  const colorClass = colors[index % colors.length];
+                  
+                  return (
+                    <Badge 
+                      key={index} 
+                      variant="secondary" 
+                      className={`text-xs font-medium border ${colorClass}`}
+                    >
+                      {tag}
+                    </Badge>
+                  );
+                })}
               </div>
             ) : (
               <p className="text-sm text-gray-500 dark:text-gray-400 italic">

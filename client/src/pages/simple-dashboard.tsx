@@ -279,15 +279,24 @@ export default function SimpleDashboard() {
                 <Button
                   onClick={async () => {
                     try {
-                      await apiRequest('POST', '/api/dev/reset-ai-usage');
-                      window.location.reload();
+                      const response = await fetch('/api/dev/reset-ai-usage', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: '{}'
+                      });
+                      
+                      if (response.ok) {
+                        window.location.reload();
+                      } else {
+                        console.error('Failed to reset AI usage');
+                      }
                     } catch (error) {
                       console.error('Failed to reset AI usage:', error);
                     }
                   }}
                   variant="outline"
                   size="sm"
-                  className="w-full text-orange-800 border-orange-300 hover:bg-orange-100"
+                  className="w-full text-orange-800 border-orange-300 hover:bg-orange-100 dark:text-orange-200 dark:border-orange-600 dark:hover:bg-orange-800"
                 >
                   Reset AI Usage (Dev)
                 </Button>

@@ -371,6 +371,15 @@ Respond with JSON in this format: {"quote": "your motivational quote", "author":
     try {
       const userId = req.userId || 'demo-user';
       
+      // Ensure user exists first
+      let user = await storage.getUser(userId);
+      if (!user) {
+        user = await storage.upsertUser({
+          id: userId,
+          email: `${userId}@demo.com`
+        });
+      }
+      
       // Reset daily AI usage for the user
       await storage.resetDailyAiUsage(userId);
       
