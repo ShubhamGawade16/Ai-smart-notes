@@ -261,9 +261,38 @@ export default function AdvancedFeatures() {
               {insightsData && (
                 <div className="mt-4 p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
                   <h4 className="font-semibold text-purple-800 dark:text-purple-200 mb-2">Your Insights:</h4>
-                  <div className="space-y-2 text-sm">
-                    {insightsData.insights?.map((insight: string, index: number) => (
-                      <p key={index}>• {insight}</p>
+                  <div className="space-y-3 text-sm">
+                    {insightsData.insights?.map((insight: any, index: number) => (
+                      <div key={index} className="p-3 bg-white dark:bg-gray-800 rounded-lg border border-purple-100 dark:border-purple-700">
+                        <div className="flex items-start gap-2">
+                          <Badge variant="outline" className="text-xs">
+                            {insight.type?.replace('_', ' ') || 'insight'}
+                          </Badge>
+                        </div>
+                        <h5 className="font-medium text-purple-900 dark:text-purple-100 mt-2">
+                          {insight.title}
+                        </h5>
+                        <p className="text-gray-600 dark:text-gray-300 mt-1">
+                          {insight.content}
+                        </p>
+                        {insight.confidence && (
+                          <div className="mt-2 flex items-center gap-2">
+                            <span className="text-xs text-gray-500">Confidence:</span>
+                            <div className="w-16 h-1.5 bg-gray-200 dark:bg-gray-600 rounded-full">
+                              <div 
+                                className="h-1.5 bg-purple-500 rounded-full"
+                                style={{ width: `${insight.confidence * 100}%` }}
+                              />
+                            </div>
+                            <span className="text-xs text-gray-500">{Math.round(insight.confidence * 100)}%</span>
+                          </div>
+                        )}
+                        {insight.actionable && (
+                          <Badge variant="secondary" className="mt-2 text-xs">
+                            Actionable
+                          </Badge>
+                        )}
+                      </div>
                     ))}
                   </div>
                 </div>
