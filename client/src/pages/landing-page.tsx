@@ -73,30 +73,29 @@ const stats = [
 ];
 
 export default function LandingPage() {
-  const [currentTestimonial, setCurrentTestimonial] = useState(0);
+  const [currentTestimonialGroup, setCurrentTestimonialGroup] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(true);
   
-  // Create infinite loop by duplicating testimonials
-  const extendedTestimonials = [...testimonials, ...testimonials.slice(0, 3)];
+  // Group testimonials into sets of 3
+  const testimonialsPerGroup = 3;
+  const totalGroups = Math.ceil(testimonials.length / testimonialsPerGroup);
+  
+  // Create groups of testimonials for display
+  const testimonialGroups = [];
+  for (let i = 0; i < totalGroups; i++) {
+    const startIndex = i * testimonialsPerGroup;
+    testimonialGroups.push(testimonials.slice(startIndex, startIndex + testimonialsPerGroup));
+  }
   
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentTestimonial((prev) => {
-        const next = prev + 1;
-        // Reset to beginning when reaching the end (creates seamless loop)
-        if (next >= testimonials.length) {
-          setTimeout(() => {
-            setIsTransitioning(false);
-            setCurrentTestimonial(0);
-            setTimeout(() => setIsTransitioning(true), 50);
-          }, 500);
-          return next;
-        }
+      setCurrentTestimonialGroup((prev) => {
+        const next = (prev + 1) % totalGroups;
         return next;
       });
     }, 4000);
     return () => clearInterval(interval);
-  }, []);
+  }, [totalGroups]);
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-gray-950">
       {/* Header */}
@@ -213,39 +212,51 @@ export default function LandingPage() {
           <div className="relative max-w-4xl mx-auto">
             <div className="overflow-hidden">
               <div 
-                className={`flex ${isTransitioning ? 'transition-transform duration-500 ease-in-out' : ''}`}
+                className={`flex transition-transform duration-500 ease-in-out`}
                 style={{
-                  transform: `translateX(-${currentTestimonial * (100 / 3)}%)`,
-                  width: `${(extendedTestimonials.length * 100) / 3}%`
+                  transform: `translateX(-${currentTestimonialGroup * 100}%)`,
+                  width: `${totalGroups * 100}%`
                 }}
               >
-                {extendedTestimonials.map((testimonial, index) => (
-                  <div key={`${testimonial.name}-${index}`} className="w-1/3 px-4">
-                    <Card className="p-6 h-full">
-                      <div className="flex items-center gap-4 mb-4">
-                        <img 
-                          src={testimonial.image} 
-                          alt={testimonial.name}
-                          className="w-12 h-12 rounded-full"
-                        />
-                        <div>
-                          <h4 className="font-semibold text-gray-900 dark:text-white">
-                            {testimonial.name}
-                          </h4>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {testimonial.role}
+                {testimonialGroups.map((group, groupIndex) => (
+                  <div key={groupIndex} className="w-full flex">
+                    {group.map((testimonial, index) => (
+                      <div key={`${testimonial.name}-${groupIndex}-${index}`} className="w-1/3 px-4">
+                        <Card className="p-6 h-full">
+                          <div className="flex items-center gap-4 mb-4">
+                            <img 
+                              src={testimonial.image} 
+                              alt={testimonial.name}
+                              className="w-12 h-12 rounded-full"
+                            />
+                            <div>
+                              <h4 className="font-semibold text-gray-900 dark:text-white">
+                                {testimonial.name}
+                              </h4>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                                {testimonial.role}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex gap-1 mb-3">
+                            {Array.from({ length: testimonial.rating }).map((_, i) => (
+                              <Star key={i} className="w-4 h-4 fill-yellow-500 text-yellow-500" />
+                            ))}
+                          </div>
+                          <p className="text-gray-700 dark:text-gray-300 italic text-sm">
+                            "{testimonial.content}"
                           </p>
+                        </Card>
+                      </div>
+                    ))}
+                    {/* Fill remaining slots if group has less than 3 testimonials */}
+                    {group.length < testimonialsPerGroup && Array.from({ length: testimonialsPerGroup - group.length }).map((_, emptyIndex) => (
+                      <div key={`empty-${groupIndex}-${emptyIndex}`} className="w-1/3 px-4">
+                        <div className="p-6 h-full opacity-0">
+                          {/* Empty placeholder for layout consistency */}
                         </div>
                       </div>
-                      <div className="flex gap-1 mb-3">
-                        {Array.from({ length: testimonial.rating }).map((_, i) => (
-                          <Star key={i} className="w-4 h-4 fill-yellow-500 text-yellow-500" />
-                        ))}
-                      </div>
-                      <p className="text-gray-700 dark:text-gray-300 italic text-sm">
-                        "{testimonial.content}"
-                      </p>
-                    </Card>
+                    ))}
                   </div>
                 ))}
               </div>
@@ -253,15 +264,14 @@ export default function LandingPage() {
             
             {/* Dots indicator */}
             <div className="flex justify-center gap-2 mt-8">
-              {Array.from({ length: testimonials.length }).map((_, index) => (
+              {Array.from({ length: totalGroups }).map((_, index) => (
                 <button
                   key={index}
                   onClick={() => {
-                    setIsTransitioning(true);
-                    setCurrentTestimonial(index);
+                    setCurrentTestimonialGroup(index);
                   }}
                   className={`w-2 h-2 rounded-full transition-colors ${
-                    currentTestimonial % testimonials.length === index ? 'bg-teal-600' : 'bg-gray-300'
+                    currentTestimonialGroup === index ? 'bg-teal-600' : 'bg-gray-300'
                   }`}
                 />
               ))}
