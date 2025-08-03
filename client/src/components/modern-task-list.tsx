@@ -105,15 +105,15 @@ export function ModernTaskList({ onAdvancedView, onTaskCompleted }: ModernTaskLi
   const emptyState = getEmptyStateMessage();
 
   return (
-    <Card className="w-full">
-      <CardHeader className="pb-3">
+    <Card className="border-0 shadow-sm bg-white dark:bg-gray-900">
+      <CardHeader className="pb-4 pt-6 px-6">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-xl font-semibold">Tasks</CardTitle>
+          <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">Tasks</CardTitle>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
-              className="h-8"
+              className="h-8 border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
             >
               <Filter className="w-4 h-4 mr-1" />
               Filter
@@ -121,7 +121,7 @@ export function ModernTaskList({ onAdvancedView, onTaskCompleted }: ModernTaskLi
             <Button
               variant="outline"
               size="sm"
-              className="h-8"
+              className="h-8 border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
             >
               <SortAsc className="w-4 h-4 mr-1" />
               Sort
@@ -130,36 +130,30 @@ export function ModernTaskList({ onAdvancedView, onTaskCompleted }: ModernTaskLi
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-4">
-        {/* Tab Navigation */}
+      <CardContent className="px-6 pb-6 space-y-4">
+        {/* Tab Navigation - Clean toggle design */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-gray-100 dark:bg-gray-800">
-            <TabsTrigger value="today" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-3 bg-gray-50 dark:bg-gray-800/50 p-1 rounded-lg">
+            <TabsTrigger 
+              value="today" 
+              className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm dark:data-[state=active]:bg-gray-700 dark:data-[state=active]:text-white rounded-md px-3 py-2 transition-all"
+            >
               {getTabIcon("today")}
-              <span>Today</span>
-              {Array.isArray(todayTasks) && todayTasks.length > 0 && (
-                <Badge variant="secondary" className="ml-1 text-xs">
-                  {todayTasks.length}
-                </Badge>
-              )}
+              <span className="font-medium">Today</span>
             </TabsTrigger>
-            <TabsTrigger value="all" className="flex items-center gap-2">
+            <TabsTrigger 
+              value="all"
+              className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm dark:data-[state=active]:bg-gray-700 dark:data-[state=active]:text-white rounded-md px-3 py-2 transition-all"
+            >
               {getTabIcon("all")}
-              <span>All</span>
-              {Array.isArray(incompleteTasks) && incompleteTasks.length > 0 && (
-                <Badge variant="secondary" className="ml-1 text-xs">
-                  {incompleteTasks.length}
-                </Badge>
-              )}
+              <span className="font-medium">All</span>
             </TabsTrigger>
-            <TabsTrigger value="completed" className="flex items-center gap-2">
+            <TabsTrigger 
+              value="completed"
+              className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm dark:data-[state=active]:bg-gray-700 dark:data-[state=active]:text-white rounded-md px-3 py-2 transition-all"
+            >
               {getTabIcon("completed")}
-              <span>Done</span>
-              {Array.isArray(completedTasks) && completedTasks.length > 0 && (
-                <Badge variant="secondary" className="ml-1 text-xs">
-                  {completedTasks.length}
-                </Badge>
-              )}
+              <span className="font-medium">Done</span>
             </TabsTrigger>
           </TabsList>
 
@@ -185,7 +179,7 @@ export function ModernTaskList({ onAdvancedView, onTaskCompleted }: ModernTaskLi
                   <Button
                     variant="outline"
                     onClick={() => setShowSmartInput(true)}
-                    className="w-full h-12 border-dashed border-2 hover:border-solid transition-all"
+                    className="w-full h-12 border-dashed border-2 hover:border-solid transition-all bg-gray-50/50 dark:bg-gray-800/50 hover:bg-gray-100/50 dark:hover:bg-gray-700/50"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Add a new task

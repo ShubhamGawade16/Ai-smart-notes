@@ -268,14 +268,14 @@ export default function SimpleDashboard() {
             {/* Task Progress Radar Chart */}
             <TaskProgressRadar />
             
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center gap-2">
+            <Card className="border-0 shadow-sm bg-white dark:bg-gray-900">
+              <CardHeader className="pb-4 pt-6 px-6">
+                <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-purple-600" />
                   AI Tools
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="px-6 pb-6 space-y-3">
                 <Button
                   variant="outline"
                   className="w-full justify-start"
@@ -307,14 +307,14 @@ export default function SimpleDashboard() {
             </Card>
 
             {/* Quick Stats */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center gap-2">
+            <Card className="border-0 shadow-sm bg-white dark:bg-gray-900">
+              <CardHeader className="pb-4 pt-6 px-6">
+                <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                   <TrendingUp className="w-5 h-5 text-green-600" />
                   Quick Stats
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="px-6 pb-6">
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">Active Tasks</span>

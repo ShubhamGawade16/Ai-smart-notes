@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Sparkles, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -105,30 +105,32 @@ export default function DailyMotivationQuote() {
   };
 
   return (
-    <Card className="p-6 bg-gradient-to-br from-teal-50 to-blue-50 dark:from-teal-900/20 dark:to-blue-900/20 border-0">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-teal-600 dark:text-teal-400" />
-          <h3 className="font-semibold text-gray-900 dark:text-gray-100">Daily Motivation</h3>
+    <Card className="border-0 shadow-sm bg-white dark:bg-gray-900">
+      <CardHeader className="pb-4 pt-6 px-6">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
+            💡 Daily Motivation
+          </CardTitle>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={refreshQuote}
+            className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-800"
+          >
+            <RefreshCw className={`w-4 h-4 ${isAnimating ? 'animate-spin' : ''}`} />
+          </Button>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={refreshQuote}
-          className="h-8 w-8 p-0"
-        >
-          <RefreshCw className={`w-4 h-4 ${isAnimating ? 'animate-spin' : ''}`} />
-        </Button>
-      </div>
-      
-      <div className={`transition-all duration-300 ${isAnimating ? 'opacity-0 transform scale-95' : 'opacity-100 transform scale-100'}`}>
-        <blockquote className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2 italic">
-          "{currentQuote.quote}"
-        </blockquote>
-        <cite className="text-sm text-gray-600 dark:text-gray-400 not-italic">
-          — {currentQuote.author}
-        </cite>
-      </div>
+      </CardHeader>
+      <CardContent className="px-6 pb-6">
+        <div className={`transition-all duration-300 ${isAnimating ? 'opacity-0 transform scale-95' : 'opacity-100 transform scale-100'}`}>
+          <blockquote className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+            "{currentQuote.quote}"
+          </blockquote>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-right">
+            — {currentQuote.author}
+          </p>
+        </div>
+      </CardContent>
     </Card>
   );
 }
