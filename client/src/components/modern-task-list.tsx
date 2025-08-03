@@ -11,8 +11,15 @@ import {
   Filter,
   SortAsc,
   Plus,
-  Clock
+  Clock,
+  ChevronDown
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ModernTaskItem } from "./modern-task-item";
 import { SmartTaskInput } from "./SmartTaskInput";
 import { SmartTiming } from "./smart-timing";
@@ -26,6 +33,8 @@ interface ModernTaskListProps {
 export function ModernTaskList({ onAdvancedView, onTaskCompleted }: ModernTaskListProps) {
   const [activeTab, setActiveTab] = useState("today");
   const [showSmartInput, setShowSmartInput] = useState(false);
+  const [sortBy, setSortBy] = useState<string>("newest");
+  const [filterBy, setFilterBy] = useState<string>("all");
 
   const { data: tasksResponse } = useQuery({
     queryKey: ['/api/tasks'],
@@ -51,16 +60,70 @@ export function ModernTaskList({ onAdvancedView, onTaskCompleted }: ModernTaskLi
   };
 
   const getTasksForTab = () => {
+    let tasks: Task[] = [];
     switch (activeTab) {
       case "today":
-        return todayTasks;
+        tasks = todayTasks;
+        break;
       case "all":
-        return incompleteTasks;
+        tasks = incompleteTasks;
+        break;
       case "completed":
-        return completedTasks;
+        tasks = completedTasks;
+        break;
       default:
-        return [];
+        tasks = [];
     }
+    
+    // Apply filtering
+    let filteredTasks = Array.isArray(tasks) ? tasks : [];
+    if (filterBy !== "all") {
+      filteredTasks = filteredTasks.filter((task: Task) => {
+        switch (filterBy) {
+          case "high":
+            return task.priority === "high";
+          case "medium":
+            return task.priority === "medium";
+          case "low":
+            return task.priority === "low";
+          case "work":
+            return task.category === "work";
+          case "personal":
+            return task.category === "personal";
+          case "health":
+            return task.category === "health";
+          case "learning":
+            return task.category === "learning";
+          default:
+            return true;
+        }
+      });
+    }
+    
+    // Apply sorting
+    const sortedTasks = [...filteredTasks].sort((a: Task, b: Task) => {
+      switch (sortBy) {
+        case "priority":
+          const priorityOrder = { high: 3, medium: 2, low: 1 };
+          const aPriority = priorityOrder[a.priority as keyof typeof priorityOrder] || 0;
+          const bPriority = priorityOrder[b.priority as keyof typeof priorityOrder] || 0;
+          return bPriority - aPriority;
+        case "alphabetical":
+          return a.title.localeCompare(b.title);
+        case "dueDate":
+          if (!a.dueDate && !b.dueDate) return 0;
+          if (!a.dueDate) return 1;
+          if (!b.dueDate) return -1;
+          return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+        case "oldest":
+          return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
+        case "newest":
+        default:
+          return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+      }
+    });
+    
+    return sortedTasks;
   };
 
   const tasks = getTasksForTab();
@@ -114,22 +177,82 @@ export function ModernTaskList({ onAdvancedView, onTaskCompleted }: ModernTaskLi
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">Tasks</CardTitle>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
-            >
-              <Filter className="w-4 h-4 mr-1" />
-              Filter
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
-            >
-              <SortAsc className="w-4 h-4 mr-1" />
-              Sort
-            </Button>
+            {/* Filter Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={`h-8 border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 ${
+                    filterBy !== "all" ? "bg-teal-50 border-teal-300 text-teal-700 dark:bg-teal-900/20 dark:border-teal-600 dark:text-teal-300" : ""
+                  }`}
+                >
+                  <Filter className="w-4 h-4 mr-1" />
+                  {filterBy !== "all" ? `Filtered` : "Filter"}
+                  <ChevronDown className="w-3 h-3 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setFilterBy("all")}>
+                  All Tasks
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilterBy("high")}>
+                  High Priority
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilterBy("medium")}>
+                  Medium Priority
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilterBy("low")}>
+                  Low Priority
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilterBy("work")}>
+                  Work Category
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilterBy("personal")}>
+                  Personal Category
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilterBy("health")}>
+                  Health Category
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilterBy("learning")}>
+                  Learning Category
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Sort Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={`h-8 border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 ${
+                    sortBy !== "newest" ? "bg-blue-50 border-blue-300 text-blue-700 dark:bg-blue-900/20 dark:border-blue-600 dark:text-blue-300" : ""
+                  }`}
+                >
+                  <SortAsc className="w-4 h-4 mr-1" />
+                  {sortBy !== "newest" ? `Sorted` : "Sort"}
+                  <ChevronDown className="w-3 h-3 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setSortBy("newest")}>
+                  Newest First
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy("oldest")}>
+                  Oldest First
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy("priority")}>
+                  By Priority
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy("alphabetical")}>
+                  Alphabetical
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy("dueDate")}>
+                  By Due Date
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </CardHeader>

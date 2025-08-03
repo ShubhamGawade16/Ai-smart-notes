@@ -801,9 +801,25 @@ Respond with JSON in this format:
       tomorrow.setDate(tomorrow.getDate() + 1);
 
       const todayTasks = allTasks.filter(task => {
-        if (!task.dueDate) return false;
-        const dueDate = new Date(task.dueDate);
-        return dueDate >= today && dueDate < tomorrow;
+        // Show incomplete tasks that are either:
+        // 1. Due today
+        // 2. Created today and have no due date (new tasks)
+        if (task.completed) return false;
+        
+        if (task.dueDate) {
+          const dueDate = new Date(task.dueDate);
+          dueDate.setHours(0, 0, 0, 0);
+          return dueDate >= today && dueDate < tomorrow;
+        }
+        
+        // If no due date, check if created today
+        if (task.createdAt) {
+          const createdDate = new Date(task.createdAt);
+          createdDate.setHours(0, 0, 0, 0);
+          return createdDate >= today && createdDate < tomorrow;
+        }
+        
+        return false;
       });
 
       res.json(todayTasks);
