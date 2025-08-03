@@ -634,12 +634,11 @@ Respond with JSON in this format:
 
       // Payment verified successfully, now upgrade the user
       const userId = req.user!.id;
-      const user = await storage.updateUserSubscription(userId, {
-        isPremium: true,
-        subscriptionTier: 'pro',
-        subscriptionStatus: 'active',
+      const user = await storage.updateUser(userId, {
+        tier: 'basic_pro',
         subscriptionId: razorpay_payment_id,
-        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+        subscriptionStatus: 'active',
+        subscriptionCurrentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
       });
 
       console.log(`User ${userId} upgraded to Pro subscription`);

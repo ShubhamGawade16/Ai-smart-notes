@@ -121,8 +121,23 @@ export function RazorpayPayment({ onSuccess, onError, userEmail }: RazorpayPayme
                 description: `Welcome to ${SUBSCRIPTION_PLAN.name}! Your premium features are now active.`,
               });
               
-              // Refresh subscription status
-              queryClient.invalidateQueries({ queryKey: ['/api/subscription-status'] });
+              // Clear all related caches and force fresh data
+              queryClient.removeQueries({ queryKey: ['/api/subscription-status'] });
+              queryClient.removeQueries({ queryKey: ['/api/user/profile'] });
+              
+              // Add delay to ensure backend has processed the update
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              
+              // Force fresh fetch
+              await queryClient.fetchQuery({ 
+                queryKey: ['/api/subscription-status'], 
+                queryFn: () => fetch('/api/subscription-status', {
+                  headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+                }).then(res => res.json()),
+                staleTime: 0
+              });
+              
+              console.log("Subscription data refreshed after payment");
               
               setLoading(false);
               onSuccess?.();
