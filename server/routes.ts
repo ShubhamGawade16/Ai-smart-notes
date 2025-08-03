@@ -82,7 +82,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const isDevelopment = process.env.NODE_ENV === 'development';
       
       const isPremium = user.tier !== 'free';
-      const dailyLimit = isPremium ? 999 : (isDevelopment ? 50 : 3); // Premium gets unlimited, dev free gets 50, prod free gets 3
+      const dailyLimit = isPremium ? 999 : 3; // Premium gets unlimited, free gets 3
       const currentUsage = user.dailyAiCalls || 0;
       const canUseAi = isPremium || currentUsage < dailyLimit;
 
