@@ -9,6 +9,7 @@ import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import SimpleDashboard from "@/pages/simple-dashboard";
 import LandingPage from "@/pages/landing-page";
 import AuthPage from "@/pages/auth-page";
+import AuthCallback from "@/pages/auth-callback";
 import EmailVerificationPage from "@/pages/email-verification-page";
 import OnboardingPage from "@/pages/onboarding-page";
 import AdvancedFeatures from "./pages/advanced-features";
@@ -34,6 +35,7 @@ function Router() {
         {user ? <Redirect to="/dashboard" /> : <LandingPage />}
       </Route>
       <Route path="/auth" component={AuthPage} />
+      <Route path="/auth/callback" component={AuthCallback} />
       <Route path="/verify-email" component={EmailVerificationPage} />
       
       {/* Protected routes */}

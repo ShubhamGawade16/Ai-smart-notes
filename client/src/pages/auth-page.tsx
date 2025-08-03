@@ -57,12 +57,17 @@ export default function AuthPage() {
   const handleGoogleSignIn = async () => {
     if (isSubmitting) return;
     
+    console.log('Google Sign-In button clicked');
     setIsSubmitting(true);
     try {
+      console.log('Calling signInWithGoogle...');
       await signInWithGoogle();
+      console.log('Google OAuth initiated successfully');
       // OAuth redirect will handle the rest
     } catch (error) {
       console.error('Google sign-in error:', error);
+      // Show error in console and user will see it
+      alert(error instanceof Error ? error.message : "Failed to sign in with Google");
     } finally {
       setIsSubmitting(false);
     }
