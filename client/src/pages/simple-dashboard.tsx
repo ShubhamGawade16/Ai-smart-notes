@@ -121,70 +121,53 @@ export default function SimpleDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Mobile-First Header */}
-      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-20">
-        <div className="px-3 sm:px-4 py-3">
-          {/* Top Row: Logo + Status */}
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-teal-400 to-teal-600 rounded-lg flex items-center justify-center shadow-sm">
-                <span className="text-white font-bold text-sm">P</span>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-teal-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      {/* Clean Modern Header */}
+      <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0 z-20 shadow-sm">
+        <div className="px-4 sm:px-6 py-4">
+          {/* Header Content */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                <span className="text-white font-bold text-lg">P</span>
               </div>
-              <h1 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">
-                Planify
-              </h1>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+                  Planify
+                </h1>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Good {getGreeting()}, {user?.displayName || user?.email?.split('@')[0] || 'there'}!
+                </p>
+              </div>
             </div>
             
-            {/* Subscription Status */}
+            {/* Subscription Badge */}
             <div className="flex items-center gap-2">
-              {user?.tier !== 'free' ? (
-                <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white text-xs px-2 py-1">
-                  <Crown className="w-3 h-3 mr-1" />
-                  {user?.tier === 'basic' ? 'Basic' : 'Pro'}
+              {subscriptionStatus.isPremium ? (
+                <Badge className="bg-gradient-to-r from-yellow-400 to-amber-500 text-white px-3 py-1 text-sm font-medium">
+                  <Crown className="w-4 h-4 mr-1" />
+                  Pro
                 </Badge>
               ) : (
-                <div className="flex items-center gap-1 sm:gap-2">
-                  <Badge variant="outline" className="text-xs px-2 py-1 hidden sm:flex">
+                <div className="text-right">
+                  <div className="text-xs text-gray-500 dark:text-gray-400">AI Usage</div>
+                  <Badge variant="outline" className="text-sm font-medium">
                     {subscriptionStatus.dailyAiUsage}/{subscriptionStatus.dailyAiLimit}
                   </Badge>
-                  <Button
-                    onClick={() => setShowUpgradeProModal(true)}
-                    size="sm"
-                    className="bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 text-white text-xs px-3 py-1.5"
-                  >
-                    <Crown className="w-3 h-3 mr-1" />
-                    <span className="hidden sm:inline">Upgrade</span>
-                    <span className="sm:hidden">Pro</span>
-                  </Button>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Welcome Message */}
-          <div className="mb-3">
-            <h2 className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
-              Good {getGreeting()}, {user?.displayName || user?.email?.split('@')[0] || 'there'}!
-            </h2>
-            {user?.tier === 'free' && (
-              <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                {subscriptionStatus.dailyAiUsage}/{subscriptionStatus.dailyAiLimit} AI requests used today
-              </p>
-            )}
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex flex-wrap gap-2">
+          {/* Action Buttons Row */}
+          <div className="flex flex-wrap gap-3">
             <Button
-              variant="outline"
-              size="sm"
               onClick={() => setShowSmartInput(!showSmartInput)}
-              className="flex items-center gap-1.5 sm:gap-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-xs sm:text-sm px-2 sm:px-3 py-1.5"
+              className="bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-600 hover:to-blue-700 text-white border-0 shadow-md"
+              size="sm"
             >
-              <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">Add Task</span>
-              <span className="sm:hidden">Add</span>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Task
             </Button>
             
             <Button
@@ -197,22 +180,20 @@ export default function SimpleDashboard() {
                   setShowUpgradeProModal(true);
                 }
               }}
-              className="flex items-center gap-1.5 sm:gap-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-xs sm:text-sm px-2 sm:px-3 py-1.5"
+              className="border-teal-200 dark:border-teal-700 text-teal-700 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-900/20"
             >
-              <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">AI Assistant</span>
-              <span className="sm:hidden">AI</span>
+              <MessageCircle className="w-4 h-4 mr-2" />
+              AI Assistant
             </Button>
 
-            {user?.tier === 'free' && (
+            {!subscriptionStatus.isPremium && (
               <Button
                 onClick={() => setShowUpgradeProModal(true)}
                 size="sm"
-                className="bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 text-white text-xs px-3 py-1.5 h-8"
+                className="bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white border-0 shadow-md"
               >
-                <Crown className="w-3 h-3 mr-1" />
-                <span className="hidden sm:inline">Upgrade</span>
-                <span className="sm:hidden">Pro</span>
+                <Crown className="w-4 h-4 mr-2" />
+                Upgrade
               </Button>
             )}
 
@@ -222,10 +203,10 @@ export default function SimpleDashboard() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex items-center gap-1.5 sm:gap-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-xs sm:text-sm px-2 sm:px-3 py-1.5"
+                  className="border-gray-200 dark:border-gray-600"
                 >
-                  <User className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline">Profile</span>
+                  <User className="w-4 h-4 mr-2" />
+                  Menu
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
@@ -248,18 +229,18 @@ export default function SimpleDashboard() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-6">
-          {/* Main Task Area */}
-          <div className="lg:col-span-3 space-y-4">
-            {/* Task Input */}
-            {showSmartInput && (
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+        <div className="space-y-6">
+          {/* Task Input */}
+          {showSmartInput && (
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 p-6">
               <SimpleTaskInput 
                 onTaskCreated={() => setShowSmartInput(false)}
                 onUpgradeRequired={() => setShowUpgradeProModal(true)}
                 onAiUsageIncrement={handleAiFeatureRequest}
               />
-            )}
+            </div>
+          )}
 
             {/* AI Task Refiner */}
             {showAIRefiner && (

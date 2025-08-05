@@ -6,7 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
-import SimpleDashboard from "@/pages/simple-dashboard";
+import MobileDashboard from "@/pages/mobile-dashboard";
 import LandingPage from "@/pages/landing-page";
 import AuthPage from "@/pages/auth-page";
 import AuthCallback from "@/pages/auth-callback";
@@ -45,7 +45,7 @@ function Router() {
       
       {/* Protected routes */}
       <Route path="/dashboard">
-        {user ? <SimpleDashboard /> : <Redirect to="/auth" />}
+        {user ? <MobileDashboard /> : <Redirect to="/auth" />}
       </Route>
       
       <Route path="/advanced-features">
