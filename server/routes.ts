@@ -584,6 +584,266 @@ Respond with JSON in this format:
     }
   });
 
+  // Smart Categorizer API
+  app.post("/api/ai/smart-categorizer", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      if (!req.userId) {
+        return res.status(401).json({ error: "User ID not found in token" });
+      }
+
+      const { text } = req.body;
+      if (!text) {
+        return res.status(400).json({ error: "Text is required" });
+      }
+
+      // Check and increment AI usage
+      const user = await storage.getUser(req.userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const limits = {
+        free: 3,
+        basic: 30,
+        pro: -1 // unlimited
+      };
+
+      const userLimit = limits[user.tier] || 3;
+      if (userLimit !== -1 && (user.dailyAiCalls || 0) >= userLimit) {
+        return res.status(429).json({ error: "Daily AI usage limit exceeded" });
+      }
+
+      await storage.incrementDailyAiCalls(req.userId);
+
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+      const prompt = `You are a task categorization expert. Analyze the following text and extract individual tasks, then categorize and tag each one.
+
+Text to analyze: "${text}"
+
+For each task you identify, provide:
+1. A clear, actionable title
+2. A brief description (if needed)
+3. An appropriate category (work, personal, health, learning, shopping, etc.)
+4. Relevant tags
+5. Priority level (low, medium, high)
+6. Task type (creative, routine, analytical, deep_work, communication, learning)
+
+Respond with JSON in this format:
+{
+  "categorizedTasks": [
+    {
+      "title": "Clear task title",
+      "description": "Brief description if needed",
+      "category": "appropriate category",
+      "tags": ["tag1", "tag2"],
+      "priority": "medium",
+      "taskType": "routine"
+    }
+  ]
+}`;
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [{ role: "user", content: prompt }],
+        response_format: { type: "json_object" }
+      });
+
+      const result = JSON.parse(response.choices[0].message.content || '{}');
+      res.json(result);
+    } catch (error) {
+      console.error('Smart categorizer error:', error);
+      res.status(500).json({ error: "Failed to categorize tasks" });
+    }
+  });
+
+  // Productivity Insights API
+  app.get("/api/ai/productivity-insights", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      if (!req.userId) {
+        return res.status(401).json({ error: "User ID not found in token" });
+      }
+
+      // Check and increment AI usage
+      const user = await storage.getUser(req.userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const limits = {
+        free: 3,
+        basic: 30,
+        pro: -1 // unlimited
+      };
+
+      const userLimit = limits[user.tier] || 3;
+      if (userLimit !== -1 && (user.dailyAiCalls || 0) >= userLimit) {
+        return res.status(429).json({ error: "Daily AI usage limit exceeded" });
+      }
+
+      await storage.incrementDailyAiCalls(req.userId);
+
+      // Get user's tasks for analysis
+      const tasks = await storage.getTasks(req.userId);
+      const completedTasks = tasks.filter(t => t.completed);
+      const incompleteTasks = tasks.filter(t => !t.completed);
+
+      // Calculate basic metrics
+      const totalTasks = tasks.length;
+      const completionRate = totalTasks > 0 ? Math.round((completedTasks.length / totalTasks) * 100) : 0;
+      const overallScore = Math.min(100, Math.max(0, completionRate + (completedTasks.length * 2)));
+
+      // Category performance analysis
+      const categoryPerformance: any = {};
+      tasks.forEach(task => {
+        if (task.category) {
+          if (!categoryPerformance[task.category]) {
+            categoryPerformance[task.category] = { total: 0, completed: 0, rate: 0 };
+          }
+          categoryPerformance[task.category].total++;
+          if (task.completed) {
+            categoryPerformance[task.category].completed++;
+          }
+        }
+      });
+
+      // Calculate rates
+      Object.keys(categoryPerformance).forEach(category => {
+        const data = categoryPerformance[category];
+        data.rate = data.total > 0 ? Math.round((data.completed / data.total) * 100) : 0;
+      });
+
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+      const prompt = `You are a productivity analysis expert. Analyze this user's task data and provide insights and recommendations.
+
+Task Data:
+- Total tasks: ${totalTasks}
+- Completed tasks: ${completedTasks.length}
+- Incomplete tasks: ${incompleteTasks.length}
+- Completion rate: ${completionRate}%
+- Categories: ${Object.keys(categoryPerformance).join(', ')}
+
+Recent completed tasks:
+${completedTasks.slice(-10).map(t => `- ${t.title} (${t.category || 'uncategorized'}, ${t.priority || 'medium'} priority)`).join('\n')}
+
+Recent incomplete tasks:
+${incompleteTasks.slice(0, 10).map(t => `- ${t.title} (${t.category || 'uncategorized'}, ${t.priority || 'medium'} priority)`).join('\n')}
+
+Provide:
+1. Key insights about their productivity patterns
+2. Specific, actionable recommendations for improvement
+3. Observations about their task management approach
+
+Respond with JSON in this format:
+{
+  "insights": [
+    "Specific insight about their productivity patterns",
+    "Another key observation"
+  ],
+  "recommendations": [
+    "Actionable recommendation for improvement",
+    "Another specific suggestion"
+  ]
+}`;
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [{ role: "user", content: prompt }],
+        response_format: { type: "json_object" }
+      });
+
+      const result = JSON.parse(response.choices[0].message.content || '{}');
+
+      res.json({
+        overallScore,
+        completionRate,
+        tasksCompleted: completedTasks.length,
+        avgDailyTasks: Math.round(totalTasks / 7), // Approximate daily average
+        categoryPerformance,
+        insights: result.insights || [],
+        recommendations: result.recommendations || []
+      });
+    } catch (error) {
+      console.error('Productivity insights error:', error);
+      res.status(500).json({ error: "Failed to get productivity insights" });
+    }
+  });
+
+  // AI Chat Assistant API
+  app.post("/api/ai/chat-assistant", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      if (!req.userId) {
+        return res.status(401).json({ error: "User ID not found in token" });
+      }
+
+      const { message, context } = req.body;
+      if (!message) {
+        return res.status(400).json({ error: "Message is required" });
+      }
+
+      // Check and increment AI usage
+      const user = await storage.getUser(req.userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const limits = {
+        free: 3,
+        basic: 30,
+        pro: -1 // unlimited
+      };
+
+      const userLimit = limits[user.tier] || 3;
+      if (userLimit !== -1 && (user.dailyAiCalls || 0) >= userLimit) {
+        return res.status(429).json({ error: "Daily AI usage limit exceeded" });
+      }
+
+      await storage.incrementDailyAiCalls(req.userId);
+
+      // Get user's tasks for context
+      const tasks = await storage.getTasks(req.userId);
+      const recentTasks = tasks.slice(-5).map(t => `${t.title} (${t.completed ? 'completed' : 'pending'})`);
+
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+      const systemPrompt = `You are Planify AI, a helpful productivity assistant. You help users plan tasks, organize their workflow, and provide productivity advice.
+
+Context about the user:
+- They have ${tasks.length} total tasks
+- Recent tasks: ${recentTasks.join(', ')}
+
+Guidelines:
+- Be helpful, encouraging, and practical
+- Focus on productivity and task management
+- Provide actionable advice
+- Keep responses conversational but concise
+- If they ask about creating tasks, guide them through the process
+- If they need motivation, provide personalized encouragement based on their progress`;
+
+      const messages = [
+        { role: "system", content: systemPrompt },
+        ...(context || []).map((msg: any) => ({
+          role: msg.type === 'user' ? 'user' : 'assistant',
+          content: msg.content
+        })),
+        { role: "user", content: message }
+      ];
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: messages.slice(-10), // Keep last 10 messages for context
+        max_tokens: 500,
+        temperature: 0.7
+      });
+
+      res.json({ response: response.choices[0].message.content });
+    } catch (error) {
+      console.error('Chat assistant error:', error);
+      res.status(500).json({ error: "Failed to get AI response" });
+    }
+  });
+
   // Dev endpoint to reset AI usage for testing
   app.post("/api/dev/reset-ai-usage", async (req: AuthRequest, res) => {
     try {

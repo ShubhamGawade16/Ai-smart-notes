@@ -12,6 +12,10 @@ import { ModernAIRefiner } from "@/components/modern-ai-refiner";
 import UpgradeModal from "@/components/upgrade-modal-new";
 import AdvancedTaskPopup from "@/components/advanced-task-popup";
 import AIFeaturesModal from "@/components/ai-features-modal";
+import SmartCategorizerModal from "@/components/smart-categorizer-modal";
+import TimingOptimizerModal from "@/components/timing-optimizer-modal";
+import ProductivityInsightsModal from "@/components/productivity-insights-modal";
+import AIChatAssistantModal from "@/components/ai-chat-assistant-modal";
 import ProfileModal from "@/components/profile-modal";
 import DevModeModal from "@/components/dev-mode-modal";
 import ConfettiBurst from "@/components/confetti-burst";
@@ -33,6 +37,10 @@ export default function MobileDashboard() {
   const [showProfile, setShowProfile] = useState(false);
   const [showDevMode, setShowDevMode] = useState(false);
   const [showAIFeatures, setShowAIFeatures] = useState(false);
+  const [showSmartCategorizer, setShowSmartCategorizer] = useState(false);
+  const [showTimingOptimizer, setShowTimingOptimizer] = useState(false);
+  const [showProductivityInsights, setShowProductivityInsights] = useState(false);
+  const [showAIChatAssistant, setShowAIChatAssistant] = useState(false);
 
   const handleAiFeatureRequest = async (): Promise<boolean> => {
     if (!checkAiUsageLimit()) {
@@ -48,6 +56,30 @@ export default function MobileDashboard() {
       console.error('Failed to increment AI usage:', error);
       setShowUpgradeProModal(true);
       return false;
+    }
+  };
+
+  const handleAIFeatureSelect = (feature: string) => {
+    setShowAIFeatures(false);
+    
+    switch (feature) {
+      case 'task-refiner':
+        setShowAIRefiner(true);
+        break;
+      case 'smart-categorizer':
+        setShowSmartCategorizer(true);
+        break;
+      case 'timing-optimizer':
+        setShowTimingOptimizer(true);
+        break;
+      case 'productivity-insights':
+        setShowProductivityInsights(true);
+        break;
+      case 'ai-assistant':
+        setShowAIChatAssistant(true);
+        break;
+      default:
+        console.log('Unknown feature:', feature);
     }
   };
 
@@ -272,13 +304,32 @@ export default function MobileDashboard() {
       <AIFeaturesModal
         isOpen={showAIFeatures}
         onClose={() => setShowAIFeatures(false)}
-        onFeatureSelect={(feature) => {
-          console.log('Selected AI feature:', feature);
-          if (feature === 'task-refiner' || feature === 'ai-assistant') {
-            setShowAIRefiner(true);
-          }
-        }}
+        onFeatureSelect={handleAIFeatureSelect}
         onUpgradeRequired={() => setShowUpgradeProModal(true)}
+      />
+
+      {/* Smart Categorizer Modal */}
+      <SmartCategorizerModal
+        isOpen={showSmartCategorizer}
+        onClose={() => setShowSmartCategorizer(false)}
+      />
+
+      {/* Timing Optimizer Modal */}
+      <TimingOptimizerModal
+        isOpen={showTimingOptimizer}
+        onClose={() => setShowTimingOptimizer(false)}
+      />
+
+      {/* Productivity Insights Modal */}
+      <ProductivityInsightsModal
+        isOpen={showProductivityInsights}
+        onClose={() => setShowProductivityInsights(false)}
+      />
+
+      {/* AI Chat Assistant Modal */}
+      <AIChatAssistantModal
+        isOpen={showAIChatAssistant}
+        onClose={() => setShowAIChatAssistant(false)}
       />
 
       {/* Profile Modal */}
