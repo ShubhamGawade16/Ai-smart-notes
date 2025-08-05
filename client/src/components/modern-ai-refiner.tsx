@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscription } from "@/hooks/use-subscription";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 interface TaskRefinement {
   refinedTasks: Array<{
@@ -124,12 +124,37 @@ export function ModernAIRefiner({
     }
   };
 
-  const handleUseRefinedTasks = (tasks: TaskRefinement['refinedTasks']) => {
-    onTasksRefined?.(tasks);
-    toast({
-      title: "Tasks Applied",
-      description: `${tasks.length} refined task(s) ready to be created.`,
-    });
+  const handleUseRefinedTasks = async (tasks: TaskRefinement['refinedTasks']) => {
+    try {
+      for (const task of tasks) {
+        await apiRequest("POST", "/api/tasks", {
+          title: task.title,
+          description: task.description,
+          priority: task.priority,
+          category: task.category,
+          tags: task.tags,
+          estimatedTime: task.estimatedTime
+        });
+      }
+      
+      // Invalidate tasks cache to refresh the task list
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks/today'] });
+      
+      toast({
+        title: "Tasks created successfully!",
+        description: `${tasks.length} task(s) have been added to your list.`,
+      });
+      
+      onTasksRefined?.(tasks);
+      onClose?.();
+    } catch (error) {
+      toast({
+        title: "Error creating tasks",
+        description: "Failed to create one or more tasks. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const exampleQueries = [

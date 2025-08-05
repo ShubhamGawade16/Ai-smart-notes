@@ -184,7 +184,7 @@ export function ModernTaskList({ onAdvancedView, onTaskCompleted, onAiView }: Mo
             <Button
               variant="outline"
               size="sm"
-              className="h-8 w-8 p-0 border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 hover:border-purple-300 hover:bg-purple-50 dark:hover:border-purple-600 dark:hover:bg-purple-900/20"
+              className="h-8 w-8 p-0 border-gray-200 dark:border-gray-700"
               onClick={onAiView}
               title="AI View"
             >
@@ -195,7 +195,7 @@ export function ModernTaskList({ onAdvancedView, onTaskCompleted, onAiView }: Mo
             <Button
               variant="outline"
               size="sm"
-              className="h-8 w-8 p-0 border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 hover:border-blue-300 hover:bg-blue-50 dark:hover:border-blue-600 dark:hover:bg-blue-900/20"
+              className="h-8 w-8 p-0 border-gray-200 dark:border-gray-700"
               onClick={() => {
                 if (safeTaskList.length > 0) {
                   onAdvancedView?.(safeTaskList[0]);

@@ -1162,6 +1162,55 @@ Respond with JSON in this format:
   // - Achievement System 
   // - Integration Hub (integrationRoutes)
 
+  // ============================================================================
+  // DEV MODE ROUTES
+  // ============================================================================
+
+  // Dev mode endpoints
+  app.post('/api/dev/toggle-tier', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const userId = req.userId;
+      if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      // Toggle between free and premium_pro
+      const newTier = user.tier === 'premium_pro' ? 'free' : 'premium_pro';
+      await storage.updateUser(userId, { tier: newTier });
+
+      res.json({ success: true, newTier });
+    } catch (error) {
+      console.error('Error toggling tier:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  app.post('/api/dev/reset-data', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const userId = req.userId;
+      if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      // Reset user's tasks and notes
+      await storage.deleteAllUserTasks(userId);
+      await storage.deleteAllUserNotes(userId);
+      
+      // Reset AI usage
+      await storage.resetDailyAiUsage(userId);
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error resetting data:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

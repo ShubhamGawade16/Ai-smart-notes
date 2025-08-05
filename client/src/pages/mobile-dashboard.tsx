@@ -10,7 +10,10 @@ import { SimpleTaskInput } from "@/components/simple-task-input";
 import { ModernTaskList } from "@/components/modern-task-list";
 import { ModernAIRefiner } from "@/components/modern-ai-refiner";
 import UpgradeModal from "@/components/upgrade-modal-new";
-// import AdvancedTaskView from "@/components/advanced-task-view";
+import AdvancedTaskPopup from "@/components/advanced-task-popup";
+import AIFeaturesModal from "@/components/ai-features-modal";
+import ProfileModal from "@/components/profile-modal";
+import DevModeModal from "@/components/dev-mode-modal";
 import ConfettiBurst from "@/components/confetti-burst";
 import { Plus, MessageCircle, Crown, User, Settings, LogOut, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -27,6 +30,9 @@ export default function MobileDashboard() {
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [isAdvancedViewOpen, setIsAdvancedViewOpen] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+  const [showDevMode, setShowDevMode] = useState(false);
+  const [showAIFeatures, setShowAIFeatures] = useState(false);
 
   const handleAiFeatureRequest = async (): Promise<boolean> => {
     if (!checkAiUsageLimit()) {
@@ -105,17 +111,11 @@ export default function MobileDashboard() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => {
-                if (checkAiUsageLimit()) {
-                  setShowAIRefiner(!showAIRefiner);
-                } else {
-                  setShowUpgradeProModal(true);
-                }
-              }}
-              className="border-teal-200 dark:border-teal-700 text-teal-700 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-900/20"
+              onClick={() => setShowAIFeatures(true)}
+              className="border-purple-200 dark:border-purple-700 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/20"
             >
-              <MessageCircle className="w-4 h-4 mr-2" />
-              AI Assistant
+              <Sparkles className="w-4 h-4 mr-2" />
+              AI Features
             </Button>
 
             {!subscriptionStatus.isPremium && (
@@ -146,9 +146,13 @@ export default function MobileDashboard() {
                   <p className="font-medium">{user?.firstName || "User"}</p>
                   <p className="text-gray-500 dark:text-gray-400">{user?.email}</p>
                 </div>
-                <DropdownMenuItem onClick={() => alert('Profile settings coming soon!')} className="cursor-pointer">
+                <DropdownMenuItem onClick={() => setShowProfile(true)} className="cursor-pointer">
                   <Settings className="w-4 h-4 mr-2" />
                   Profile Settings
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowDevMode(true)} className="cursor-pointer">
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  Dev Mode
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={signOut} className="cursor-pointer">
@@ -210,13 +214,7 @@ export default function MobileDashboard() {
               onTaskCompleted={() => {
                 setShowConfetti(true);
               }}
-              onAiView={() => {
-                if (checkAiUsageLimit()) {
-                  setShowAIRefiner(true);
-                } else {
-                  setShowUpgradeProModal(true);
-                }
-              }}
+              onAiView={() => setShowAIFeatures(true)}
             />
           </div>
 
@@ -260,36 +258,40 @@ export default function MobileDashboard() {
         </div>
       </div>
 
-      {/* Advanced Task View Dialog - Temporarily disabled */}
-      {isAdvancedViewOpen && selectedTask && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Task Details</h2>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setIsAdvancedViewOpen(false);
-                  setSelectedTask(null);
-                }}
-              >
-                Close
-              </Button>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-medium text-gray-900 dark:text-white">{selectedTask.title}</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{selectedTask.description}</p>
-              </div>
-              <div className="flex gap-2">
-                <Badge variant="outline">{selectedTask.priority}</Badge>
-                <Badge variant="outline">{selectedTask.category}</Badge>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Advanced Task Popup */}
+      <AdvancedTaskPopup
+        task={selectedTask}
+        isOpen={isAdvancedViewOpen}
+        onClose={() => {
+          setIsAdvancedViewOpen(false);
+          setSelectedTask(null);
+        }}
+      />
+
+      {/* AI Features Modal */}
+      <AIFeaturesModal
+        isOpen={showAIFeatures}
+        onClose={() => setShowAIFeatures(false)}
+        onFeatureSelect={(feature) => {
+          console.log('Selected AI feature:', feature);
+          if (feature === 'task-refiner' || feature === 'ai-assistant') {
+            setShowAIRefiner(true);
+          }
+        }}
+        onUpgradeRequired={() => setShowUpgradeProModal(true)}
+      />
+
+      {/* Profile Modal */}
+      <ProfileModal
+        isOpen={showProfile}
+        onClose={() => setShowProfile(false)}
+      />
+
+      {/* Dev Mode Modal */}
+      <DevModeModal
+        isOpen={showDevMode}
+        onClose={() => setShowDevMode(false)}
+      />
 
       {/* Upgrade Modal */}
       <UpgradeModal 
