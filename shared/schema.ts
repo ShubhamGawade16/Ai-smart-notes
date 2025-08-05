@@ -16,7 +16,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // Enums
-export const userTierEnum = pgEnum("user_tier", ["free", "basic_pro", "advanced_pro", "premium_pro"]);
+export const userTierEnum = pgEnum("user_tier", ["free", "basic", "pro"]);
 export const subscriptionStatusEnum = pgEnum("subscription_status", ["active", "canceled", "past_due", "incomplete"]);
 export const taskPriorityEnum = pgEnum("task_priority", ["low", "medium", "high", "urgent"]);
 export const taskTypeEnum = pgEnum("task_type", ["creative", "routine", "analytical", "deep_work", "communication", "learning"]);
@@ -61,6 +61,31 @@ export const users = pgTable("users", {
   primaryGoal: varchar("primary_goal", { length: 50 }),
   customGoals: text("custom_goals"),
   onboardingCompleted: boolean("onboarding_completed").default(false),
+  
+  // Enhanced user preferences for comprehensive functionality
+  preferences: jsonb("preferences").$default(() => ({
+    theme: 'light',
+    language: 'en',
+    notifications: {
+      email: true,
+      push: true,
+      reminders: true
+    },
+    accessibility: {
+      highContrast: false,
+      largeText: false,
+      reduceMotion: false
+    },
+    workingHours: {
+      start: '09:00',
+      end: '17:00',
+      timezone: 'UTC'
+    }
+  })),
+  
+  // Custom tags for enhanced task organization
+  customTags: text("custom_tags").array().$default(() => []),
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

@@ -13,6 +13,8 @@ import TaskProgressRadar from "@/components/task-progress-radar";
 import ConfettiBurst from "@/components/confetti-burst";
 import { CircularProgressChart } from "@/components/circular-progress-chart";
 import { TestimonialsSection } from "@/components/testimonials-section";
+import { UnlockProUI } from "@/components/unlock-pro-ui";
+import { useAccessibilityEnhancements } from "@/components/accessibility-improvements";
 import { 
   Brain, 
   MessageCircle, 
@@ -62,6 +64,9 @@ export default function SimpleDashboard() {
   const [showUpgradeProModal, setShowUpgradeProModal] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+
+  // Initialize accessibility enhancements
+  useAccessibilityEnhancements();
   
   const { user, signOut } = useAuth();
   const { subscriptionStatus, incrementAiUsage, checkAiUsageLimit, refreshStatus, resetAiUsage } = useSubscription();

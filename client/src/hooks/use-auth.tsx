@@ -14,9 +14,10 @@ type AuthContextType = {
   user: User | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<void>;
+  signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<any>;
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
+  resendVerification: (email: string) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -102,6 +103,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const resendVerification = async (email: string) => {
+    if (!supabase) {
+      throw new Error('Authentication not configured');
+    }
+
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth-callback`
+        }
+      });
+
+      if (error) {
+        toast({
+          title: "Failed to resend verification",
+          description: error.message,
+          variant: "destructive",
+        });
+        throw error;
+      }
+
+      toast({
+        title: "Verification email sent!",
+        description: "Please check your email for the verification link.",
+      });
+    } catch (error) {
+      throw error;
+    }
+  };
+
   const signIn = async (email: string, password: string) => {
     if (!supabase) {
       throw new Error('Authentication not configured');
@@ -109,18 +142,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        // Check if it's a user not found error
+        if (error.message.includes('Invalid login credentials') || error.message.includes('User not found')) {
+          toast({
+            title: "Account not found",
+            description: "Please create an account first.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Login failed",
+            description: error.message,
+            variant: "destructive",
+          });
+        }
+        throw error;
+      }
+
+      // Check if email is confirmed
+      if (data.user && !data.user.email_confirmed_at) {
         toast({
-          title: "Login failed",
-          description: error.message,
+          title: "Email not verified",
+          description: "Please check your email and verify your account first.",
           variant: "destructive",
         });
-        throw error;
+        throw new Error("Email not verified");
       }
 
       toast({
@@ -144,7 +196,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -152,6 +204,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             first_name: firstName,
             last_name: lastName,
           },
+          emailRedirectTo: `${window.location.origin}/auth-callback`
         },
       });
 
@@ -164,15 +217,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw error;
       }
 
-      toast({
-        title: "Registration successful!",
-        description: "Please check your email to verify your account.",
-      });
-
-      // Redirect to verification page
-      setTimeout(() => {
-        window.location.href = `/verify-email?email=${encodeURIComponent(email)}`;
-      }, 1000);
+      // Return verification status and email for the UI to handle
+      return {
+        needsVerification: !data.session,
+        email: email,
+        user: data.user
+      };
       
     } catch (error) {
       setIsLoading(false);
@@ -257,6 +307,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signUp,
     signOut,
     signInWithGoogle,
+    resendVerification,
   };
 
   return (

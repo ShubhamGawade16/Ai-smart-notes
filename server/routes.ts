@@ -385,10 +385,25 @@ Respond with JSON in this format: {"quote": "your motivational quote", "author":
       }
 
       // Check and increment AI usage
-      const canUse = await incrementAiUsageForUser(storage, req.userId);
-      if (!canUse) {
+      const user = await storage.getUser(req.userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Check daily AI usage limits based on tier
+      const limits = {
+        free: 3,
+        basic: 30,
+        pro: -1 // unlimited
+      };
+
+      const userLimit = limits[user.tier] || 3;
+      if (userLimit !== -1 && user.dailyAiCalls >= userLimit) {
         return res.status(429).json({ error: "Daily AI usage limit exceeded" });
       }
+
+      // Increment AI usage
+      await storage.incrementDailyAiCalls(req.userId);
 
       // Get user's incomplete tasks
       const tasks = await storage.getTasks(req.userId);
@@ -401,8 +416,8 @@ Respond with JSON in this format: {"quote": "your motivational quote", "author":
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
       // Get user timezone and current time context
-      const user = await storage.getUser(req.userId);
-      const userTimezone = user?.timezone || 'UTC';
+      const userProfile = await storage.getUser(req.userId);
+      const userTimezone = userProfile?.timezone || 'UTC';
       
       const now = new Date();
       const userTime = new Date(now.toLocaleString("en-US", { timeZone: userTimezone }));
@@ -635,7 +650,7 @@ Respond with JSON in this format:
       // Payment verified successfully, now upgrade the user
       const userId = req.user!.id;
       const user = await storage.updateUser(userId, {
-        tier: 'basic_pro',
+        tier: 'basic',
         subscriptionId: razorpay_payment_id,
         subscriptionStatus: 'active',
         subscriptionCurrentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
@@ -668,6 +683,39 @@ Respond with JSON in this format:
   // Cancel subscription
   app.post("/api/razorpay/subscription/:subscriptionId/cancel", authenticateToken, cancelRazorpaySubscription);
 
+  // Apply timing recommendation endpoint
+  app.post("/api/ai/apply-timing-recommendation", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { taskId, action } = req.body;
+      
+      if (!taskId || !action || !['accept', 'deny'].includes(action)) {
+        return res.status(400).json({ error: "Invalid request parameters" });
+      }
+
+      if (action === 'accept') {
+        // Update task with AI recommendation
+        const task = await storage.getTask(taskId);
+        if (!task || task.userId !== req.userId) {
+          return res.status(404).json({ error: "Task not found" });
+        }
+
+        // Apply AI timing recommendation (stub implementation)
+        await storage.updateTask(taskId, {
+          scheduledAt: new Date(Date.now() + 1000 * 60 * 60), // 1 hour from now
+          updatedAt: new Date()
+        });
+
+        res.json({ success: true, message: "Timing recommendation applied" });
+      } else {
+        // Just acknowledge dismissal
+        res.json({ success: true, message: "Timing recommendation dismissed" });
+      }
+    } catch (error) {
+      console.error("Error applying timing recommendation:", error);
+      res.status(500).json({ error: "Failed to apply timing recommendation" });
+    }
+  });
+
   // Toggle between free and premium user for testing
   app.post("/api/dev/toggle-premium", authenticateToken, async (req: AuthRequest, res) => {
     if (process.env.NODE_ENV !== 'development') {
@@ -689,8 +737,8 @@ Respond with JSON in this format:
         return res.status(404).json({ error: "User not found" });
       }
 
-      // Toggle between 'free' and 'basic_pro' tiers (correct enum values)
-      const newTier = user.tier === 'free' ? 'basic_pro' : 'free';
+      // Toggle between 'free' and 'pro' tiers (updated enum values)
+      const newTier = user.tier === 'free' ? 'pro' : 'free';
       await storage.updateUser(user.id, { 
         tier: newTier,
         // Reset AI usage when switching tiers

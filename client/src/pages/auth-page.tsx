@@ -46,7 +46,11 @@ export default function AuthPage() {
     
     setIsSubmitting(true);
     try {
-      await signUp(signupEmail, signupPassword, signupFirstName, signupLastName);
+      const result = await signUp(signupEmail, signupPassword, signupFirstName, signupLastName);
+      if (result?.needsVerification) {
+        // Redirect to verification page
+        window.location.href = `/verify-email?email=${encodeURIComponent(signupEmail)}`;
+      }
     } catch (error) {
       console.error('Signup error:', error);
     } finally {

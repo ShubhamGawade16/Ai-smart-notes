@@ -67,6 +67,11 @@ export function ModernAIRefiner({
 
   const refineMutation = useMutation({
     mutationFn: async ({ task, query }: { task: string; query: string }) => {
+      // Check AI usage limit before making request
+      if (!checkAiUsageLimit()) {
+        throw new Error("Daily AI usage limit exceeded");
+      }
+
       const response = await apiRequest('POST', '/api/ai/refine-task', {
         originalTask: task,
         userQuery: query,

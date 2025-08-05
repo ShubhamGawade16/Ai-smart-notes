@@ -36,7 +36,12 @@ function Router() {
       </Route>
       <Route path="/auth" component={AuthPage} />
       <Route path="/auth/callback" component={AuthCallback} />
-      <Route path="/verify-email" component={EmailVerificationPage} />
+      <Route path="/verify-email">
+        {() => {
+          const VerifyEmail = require("@/pages/verify-email").default;
+          return <VerifyEmail />;
+        }}
+      </Route>
       
       {/* Protected routes */}
       <Route path="/dashboard">

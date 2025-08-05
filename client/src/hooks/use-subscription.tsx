@@ -16,7 +16,7 @@ export function useSubscription() {
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus>({
     isPremium: false,
     dailyAiUsage: 0,
-    dailyAiLimit: 3, // Free users get 3 AI requests per day
+    dailyAiLimit: 3, // Free: 3, Basic: 30, Pro: unlimited
     canUseAi: true,
   });
   const [isLoading, setIsLoading] = useState(true);
