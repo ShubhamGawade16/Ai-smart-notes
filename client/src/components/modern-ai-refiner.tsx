@@ -39,20 +39,16 @@ interface ModernAIRefinerProps {
   initialTask?: string;
   onTasksRefined?: (tasks: TaskRefinement['refinedTasks']) => void;
   onClose?: () => void;
-}
-
-interface ModernAIRefinerProps {
-  initialTask?: string;
-  onTasksRefined?: (tasks: TaskRefinement['refinedTasks']) => void;
-  onClose?: () => void;
   onUpgradeRequired?: () => void;
+  onAiUsageIncrement?: () => Promise<boolean>;
 }
 
 export function ModernAIRefiner({ 
   initialTask = '', 
   onTasksRefined,
   onClose,
-  onUpgradeRequired
+  onUpgradeRequired,
+  onAiUsageIncrement
 }: ModernAIRefinerProps) {
   const [originalTask, setOriginalTask] = useState(initialTask);
   const [userQuery, setUserQuery] = useState('');
@@ -67,9 +63,22 @@ export function ModernAIRefiner({
 
   const refineMutation = useMutation({
     mutationFn: async ({ task, query }: { task: string; query: string }) => {
-      // Check AI usage limit before making request
-      if (!checkAiUsageLimit()) {
-        throw new Error("Daily AI usage limit exceeded");
+      // Check AI usage limit using provided function or fallback
+      if (onAiUsageIncrement) {
+        const canProceed = await onAiUsageIncrement();
+        if (!canProceed) {
+          throw new Error("Daily AI usage limit exceeded");
+        }
+      } else {
+        // Fallback to direct usage check
+        if (!checkAiUsageLimit()) {
+          throw new Error("Daily AI usage limit exceeded");
+        }
+        
+        const canProceed = await incrementAiUsage();
+        if (!canProceed) {
+          throw new Error("Daily AI usage limit exceeded");
+        }
       }
 
       const response = await apiRequest('POST', '/api/ai/refine-task', {
@@ -82,9 +91,6 @@ export function ModernAIRefiner({
       return await response.json();
     },
     onSuccess: async (data: TaskRefinement) => {
-      // Increment AI usage only after successful generation
-      await incrementAiUsage();
-      
       setConversation(prev => [...prev, 
         { type: 'user', content: userQuery },
         { type: 'ai', content: data.explanation, refinement: data }
@@ -108,14 +114,6 @@ export function ModernAIRefiner({
   const handleSubmit = async () => {
     if (!userQuery.trim() || !originalTask.trim()) return;
     
-    // Check AI usage limit first
-    if (!checkAiUsageLimit()) {
-      onUpgradeRequired?.();
-      return;
-    }
-    
-    // Make the AI request WITHOUT incrementing usage here
-    // Usage will be incremented only in onSuccess
     refineMutation.mutate({ task: originalTask, query: userQuery });
   };
 

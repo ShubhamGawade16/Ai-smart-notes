@@ -11,9 +11,10 @@ import { Plus, Sparkles, Loader2 } from "lucide-react";
 interface SimpleTaskInputProps {
   onTaskCreated?: () => void;
   onUpgradeRequired?: () => void;
+  onAiUsageIncrement?: () => Promise<boolean>;
 }
 
-export function SimpleTaskInput({ onTaskCreated, onUpgradeRequired }: SimpleTaskInputProps) {
+export function SimpleTaskInput({ onTaskCreated, onUpgradeRequired, onAiUsageIncrement }: SimpleTaskInputProps) {
   const [taskInput, setTaskInput] = useState("");
   const [isSmartMode, setIsSmartMode] = useState(false);
   const { toast } = useToast();
@@ -77,15 +78,24 @@ export function SimpleTaskInput({ onTaskCreated, onUpgradeRequired }: SimpleTask
     
     // Check AI usage limit if using smart mode
     if (isSmartMode) {
-      if (!checkAiUsageLimit()) {
-        onUpgradeRequired?.();
-        return;
-      }
-      
-      const canProceed = await incrementAiUsage();
-      if (!canProceed) {
-        onUpgradeRequired?.();
-        return;
+      if (onAiUsageIncrement) {
+        const canProceed = await onAiUsageIncrement();
+        if (!canProceed) {
+          onUpgradeRequired?.();
+          return;
+        }
+      } else {
+        // Fallback to direct usage check
+        if (!checkAiUsageLimit()) {
+          onUpgradeRequired?.();
+          return;
+        }
+        
+        const canProceed = await incrementAiUsage();
+        if (!canProceed) {
+          onUpgradeRequired?.();
+          return;
+        }
       }
     }
     
@@ -93,20 +103,21 @@ export function SimpleTaskInput({ onTaskCreated, onUpgradeRequired }: SimpleTask
   };
 
   return (
-    <Card className="p-4">
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <Card className="p-3 sm:p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+      <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
         {/* Smart Mode Toggle */}
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Add Task</span>
+          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Add New Task</span>
           <Button
             type="button"
             variant={isSmartMode ? "default" : "outline"}
             size="sm"
             onClick={() => setIsSmartMode(!isSmartMode)}
-            className="flex items-center gap-2"
+            className="flex items-center gap-1.5 text-xs px-2 py-1 h-7"
           >
-            <Sparkles className="w-4 h-4" />
-            {isSmartMode ? "Smart Mode" : "Basic Mode"}
+            <Sparkles className="w-3 h-3" />
+            <span className="hidden sm:inline">{isSmartMode ? "Smart Mode" : "Basic Mode"}</span>
+            <span className="sm:hidden">{isSmartMode ? "Smart" : "Basic"}</span>
           </Button>
         </div>
 
@@ -116,13 +127,14 @@ export function SimpleTaskInput({ onTaskCreated, onUpgradeRequired }: SimpleTask
             value={taskInput}
             onChange={(e) => setTaskInput(e.target.value)}
             placeholder={isSmartMode ? "Describe your task - AI will analyze it..." : "What do you need to do?"}
-            className="flex-1"
+            className="flex-1 text-sm"
             disabled={createTaskMutation.isPending}
           />
           <Button
             type="submit"
             disabled={!taskInput.trim() || createTaskMutation.isPending}
-            size="icon"
+            size="sm"
+            className="px-3 py-2"
           >
             {createTaskMutation.isPending ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -134,8 +146,8 @@ export function SimpleTaskInput({ onTaskCreated, onUpgradeRequired }: SimpleTask
 
         {/* Smart Mode Description */}
         {isSmartMode && (
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            Smart Mode: AI will automatically detect priority, category, tags, and time estimates
+          <p className="text-xs text-gray-500 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/20 p-2 rounded border border-blue-200 dark:border-blue-800">
+            🤖 Smart Mode: AI will automatically detect priority, category, tags, and time estimates
           </p>
         )}
       </form>

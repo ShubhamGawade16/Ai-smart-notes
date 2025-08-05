@@ -248,7 +248,7 @@ export default function SimpleDashboard() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-6">
           {/* Main Task Area */}
           <div className="lg:col-span-3 space-y-4">
@@ -256,7 +256,8 @@ export default function SimpleDashboard() {
             {showSmartInput && (
               <SimpleTaskInput 
                 onTaskCreated={() => setShowSmartInput(false)}
-                onUpgradeRequired={() => setShowUpgradeModal(true)}
+                onUpgradeRequired={() => setShowUpgradeProModal(true)}
+                onAiUsageIncrement={handleAiFeatureRequest}
               />
             )}
 
@@ -264,11 +265,12 @@ export default function SimpleDashboard() {
             {showAIRefiner && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold">AI Task Refiner</h2>
+                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100">AI Task Refiner</h2>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setShowAIRefiner(false)}
+                    className="text-xs px-2 py-1"
                   >
                     Close
                   </Button>
@@ -279,7 +281,8 @@ export default function SimpleDashboard() {
                     console.log('Refined tasks:', tasks);
                     setShowAIRefiner(false);
                   }}
-                  onUpgradeRequired={() => setShowUpgradeModal(true)}
+                  onUpgradeRequired={() => setShowUpgradeProModal(true)}
+                  onAiUsageIncrement={handleAiFeatureRequest}
                 />
               </div>
             )}
