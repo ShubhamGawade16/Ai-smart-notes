@@ -21,6 +21,15 @@ export function useSubscription() {
   });
   const [isLoading, setIsLoading] = useState(true);
 
+  // Get tier-based limits
+  const getTierLimits = (tier: string) => {
+    switch (tier) {
+      case 'basic': return 30;
+      case 'pro': return -1; // unlimited
+      default: return 3; // free
+    }
+  };
+
   const fetchSubscriptionStatus = async () => {
     if (!user) {
       setIsLoading(false);
@@ -68,8 +77,13 @@ export function useSubscription() {
   };
 
   const checkAiUsageLimit = () => {
-    if (subscriptionStatus.isPremium) return true;
-    return subscriptionStatus.dailyAiUsage < subscriptionStatus.dailyAiLimit;
+    const userTier = user?.tier || 'free';
+    const limit = getTierLimits(userTier);
+    
+    // Unlimited for pro users
+    if (limit === -1) return true;
+    
+    return subscriptionStatus.canUseAi && subscriptionStatus.dailyAiUsage < limit;
   };
 
   useEffect(() => {

@@ -114,7 +114,7 @@ export function ModernAIRefiner({
       return;
     }
     
-    // Only increment usage after successful AI response
+    // Make the AI request
     refineMutation.mutate({ task: originalTask, query: userQuery });
   };
 
