@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ModernTaskList } from "@/components/modern-task-list";
 import { AdvancedTaskView } from "@/components/advanced-task-view";
@@ -113,127 +114,128 @@ export default function SimpleDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Compact Header */}
-      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            {/* Logo and Brand */}
-            <div className="flex items-center gap-3">
-              <img 
-                src="/attached_assets/Planify_imresizer_1754161747016.jpg"
-                alt="Planify"
-                className="w-8 h-8 rounded-lg"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
-                  if (nextElement) nextElement.style.display = 'flex';
-                }}
-              />
-              <div className="w-8 h-8 bg-gradient-to-br from-teal-400 to-teal-600 rounded-lg flex items-center justify-center shadow-sm" style={{display: 'none'}}>
+      {/* Mobile-First Header */}
+      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-20">
+        <div className="px-3 sm:px-4 py-3">
+          {/* Top Row: Logo + Status */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-gradient-to-br from-teal-400 to-teal-600 rounded-lg flex items-center justify-center shadow-sm">
                 <span className="text-white font-bold text-sm">P</span>
               </div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+              <h1 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">
                 Planify
               </h1>
-              {!subscriptionStatus.isPremium && (
-                <div className="ml-4 px-3 py-1 bg-teal-100 dark:bg-teal-900 text-teal-800 dark:text-teal-200 text-xs rounded-full flex items-center gap-1">
-                  <Crown className="w-3 h-3" />
-                  {subscriptionStatus.dailyAiUsage}/{subscriptionStatus.dailyAiLimit} AI requests
-                </div>
-              )}
-              {subscriptionStatus.isPremium && (
-                <div className="ml-4 px-3 py-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs rounded-full flex items-center gap-1 font-medium">
-                  <Crown className="w-3 h-3" />
-                  Pro User
-                </div>
-              )}
             </div>
             
-            {/* Action Buttons */}
-            <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowSmartInput(!showSmartInput)}
-                className="flex items-center gap-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
-              >
-                <Plus className="w-4 h-4" />
-                Add Task
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  if (checkAiUsageLimit()) {
-                    setShowAIRefiner(!showAIRefiner);
-                  } else {
-                    setShowUpgradeProModal(true);
-                  }
-                }}
-                className="flex items-center gap-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
-              >
-                <MessageCircle className="w-4 h-4" />
-                AI Assistant
-              </Button>
-
-              {/* Profile Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+            {/* Subscription Status */}
+            <div className="flex items-center gap-2">
+              {user?.tier !== 'free' ? (
+                <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white text-xs px-2 py-1">
+                  <Crown className="w-3 h-3 mr-1" />
+                  {user?.tier === 'basic' ? 'Basic' : 'Pro'}
+                </Badge>
+              ) : (
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <Badge variant="outline" className="text-xs px-2 py-1 hidden sm:flex">
+                    {subscriptionStatus.dailyAiUsage}/{subscriptionStatus.dailyAiLimit}
+                  </Badge>
                   <Button
-                    variant="outline"
+                    onClick={() => setShowUpgradeProModal(true)}
                     size="sm"
-                    className="flex items-center gap-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    className="bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 text-white text-xs px-3 py-1.5"
                   >
-                    <User className="w-4 h-4" />
-                    Profile
+                    <Crown className="w-3 h-3 mr-1" />
+                    <span className="hidden sm:inline">Upgrade</span>
+                    <span className="sm:hidden">Pro</span>
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <div className="px-3 py-2 text-sm">
-                    <p className="font-medium">{user?.firstName || "User"}</p>
-                    <p className="text-gray-500 dark:text-gray-400">{user?.email}</p>
-                  </div>
-                  <DropdownMenuItem onClick={() => setShowProfile(true)} className="cursor-pointer">
-                    <Settings className="w-4 h-4 mr-2" />
-                    Profile Settings
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={signOut} className="cursor-pointer">
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Sign Out
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="cursor-pointer text-red-600 focus:text-red-600">
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Delete Account
-                      </DropdownMenuItem>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Account</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This action cannot be undone. This will permanently delete your account
-                          and remove all your data from our servers.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => deleteAccountMutation.mutate()}
-                          className="bg-red-600 hover:bg-red-700"
-                          disabled={deleteAccountMutation.isPending}
-                        >
-                          {deleteAccountMutation.isPending ? "Deleting..." : "Delete Account"}
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                </div>
+              )}
             </div>
+          </div>
+
+          {/* Welcome Message */}
+          <div className="mb-3">
+            <h2 className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+              Good {getGreeting()}, {user?.displayName || user?.email?.split('@')[0] || 'there'}!
+            </h2>
+            {user?.tier === 'free' && (
+              <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                {subscriptionStatus.dailyAiUsage}/{subscriptionStatus.dailyAiLimit} AI requests used today
+              </p>
+            )}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowSmartInput(!showSmartInput)}
+              className="flex items-center gap-1.5 sm:gap-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-xs sm:text-sm px-2 sm:px-3 py-1.5"
+            >
+              <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Add Task</span>
+              <span className="sm:hidden">Add</span>
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (checkAiUsageLimit()) {
+                  setShowAIRefiner(!showAIRefiner);
+                } else {
+                  setShowUpgradeProModal(true);
+                }
+              }}
+              className="flex items-center gap-1.5 sm:gap-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-xs sm:text-sm px-2 sm:px-3 py-1.5"
+            >
+              <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">AI Assistant</span>
+              <span className="sm:hidden">AI</span>
+            </Button>
+
+            {user?.tier === 'free' && (
+              <Button
+                onClick={() => setShowUpgradeProModal(true)}
+                size="sm"
+                className="bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 text-white text-xs px-3 py-1.5 h-8"
+              >
+                <Crown className="w-3 h-3 mr-1" />
+                <span className="hidden sm:inline">Upgrade</span>
+                <span className="sm:hidden">Pro</span>
+              </Button>
+            )}
+
+            {/* Profile Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-1.5 sm:gap-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-xs sm:text-sm px-2 sm:px-3 py-1.5"
+                >
+                  <User className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">Profile</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <div className="px-3 py-2 text-sm">
+                  <p className="font-medium">{user?.firstName || "User"}</p>
+                  <p className="text-gray-500 dark:text-gray-400">{user?.email}</p>
+                </div>
+                <DropdownMenuItem onClick={() => alert('Profile settings coming soon!')} className="cursor-pointer">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Profile Settings
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={signOut} className="cursor-pointer">
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>
