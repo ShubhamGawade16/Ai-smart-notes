@@ -77,6 +77,11 @@ export function useSubscription() {
   };
 
   const checkAiUsageLimit = () => {
+    // For premium_pro users, always allow AI usage
+    if (subscriptionStatus.isPremium) {
+      return true;
+    }
+    
     const userTier = user?.tier || 'free';
     const limit = getTierLimits(userTier);
     

@@ -157,7 +157,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Upgrade subscription (placeholder for payment integration)
+  // ============================================================================
+  // RAZORPAY PAYMENT INTEGRATION
+  // ============================================================================
+
+  // Create Razorpay order
+  app.post("/api/razorpay/create-order", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      if (!req.userId) {
+        return res.status(401).json({ error: "User ID not found in token" });
+      }
+
+      const { amount, currency, plan } = req.body;
+      
+      if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+        return res.status(500).json({ error: "Razorpay configuration missing" });
+      }
+
+      const Razorpay = require('razorpay');
+      const razorpay = new Razorpay({
+        key_id: process.env.RAZORPAY_KEY_ID,
+        key_secret: process.env.RAZORPAY_KEY_SECRET
+      });
+
+      const options = {
+        amount: amount * 100, // Convert to paise
+        currency: currency || 'INR',
+        receipt: `order_${req.userId}_${Date.now()}`,
+        notes: {
+          userId: req.userId,
+          plan: plan
+        }
+      };
+
+      const order = await razorpay.orders.create(options);
+      
+      res.json({
+        orderId: order.id,
+        amount: order.amount,
+        currency: order.currency
+      });
+    } catch (error) {
+      console.error("Failed to create Razorpay order:", error);
+      res.status(500).json({ error: "Failed to create payment order" });
+    }
+  });
+
+  // Verify Razorpay payment
+  app.post("/api/razorpay/verify-payment", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      if (!req.userId) {
+        return res.status(401).json({ error: "User ID not found in token" });
+      }
+
+      const { orderId, paymentId, signature, plan } = req.body;
+      
+      const crypto = require('crypto');
+      const expectedSignature = crypto
+        .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+        .update(`${orderId}|${paymentId}`)
+        .digest('hex');
+
+      if (signature !== expectedSignature) {
+        return res.status(400).json({ error: "Invalid payment signature" });
+      }
+
+      // Payment verified, upgrade user
+      const tierMap = {
+        'basic': 'basic',
+        'pro': 'premium_pro'
+      };
+
+      const updatedUser = await storage.updateUser(req.userId, {
+        tier: tierMap[plan] || 'basic',
+        subscriptionStatus: 'active',
+        subscriptionCurrentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+        paymentId: paymentId,
+        razorpayOrderId: orderId
+      });
+
+      res.json({ 
+        success: true, 
+        user: updatedUser,
+        message: "Payment verified and subscription upgraded successfully!" 
+      });
+    } catch (error) {
+      console.error("Failed to verify payment:", error);
+      res.status(500).json({ error: "Failed to verify payment" });
+    }
+  });
+
+  // Upgrade subscription (legacy endpoint for compatibility)
   app.post("/api/upgrade-subscription", authenticateToken, async (req: AuthRequest, res) => {
     try {
       if (!req.userId) {

@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Crown, Check, Sparkles, Infinity, Zap } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import RazorpayCheckout from './razorpay-checkout';
 
 interface UpgradeModalProps {
   isOpen: boolean;
@@ -12,13 +14,65 @@ interface UpgradeModalProps {
 
 export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
   const [selectedPlan, setSelectedPlan] = useState<'basic' | 'pro'>('basic');
+  const [showCheckout, setShowCheckout] = useState(false);
+  const { toast } = useToast();
+
+  // Load Razorpay script
+  useEffect(() => {
+    if (isOpen && !window.Razorpay) {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      document.body.appendChild(script);
+      
+      return () => {
+        document.body.removeChild(script);
+      };
+    }
+  }, [isOpen]);
 
   const handleUpgrade = (plan: 'basic' | 'pro') => {
     console.log(`Upgrading to ${plan} plan`);
-    // Would integrate with Razorpay payment processing
-    alert(`Payment integration for ${plan} plan would be implemented here with Razorpay.`);
-    onClose();
+    setSelectedPlan(plan);
+    setShowCheckout(true);
   };
+
+  const handlePaymentSuccess = () => {
+    setShowCheckout(false);
+    toast({
+      title: "Payment Successful!",
+      description: "Your subscription has been upgraded successfully.",
+    });
+    onClose();
+    // Refresh the page to update subscription status
+    window.location.reload();
+  };
+
+  const handleCheckoutClose = () => {
+    setShowCheckout(false);
+  };
+
+  if (showCheckout) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-900" aria-describedby="checkout-description">
+          <DialogHeader className="text-center space-y-4 pb-6">
+            <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white">
+              Complete Payment
+            </DialogTitle>
+            <DialogDescription id="checkout-description" className="text-gray-600 dark:text-gray-300">
+              You're about to upgrade to the {selectedPlan === 'basic' ? 'Basic' : 'Premium Pro'} plan
+            </DialogDescription>
+          </DialogHeader>
+          <RazorpayCheckout 
+            plan={selectedPlan}
+            onSuccess={handlePaymentSuccess}
+            onClose={handleCheckoutClose}
+          />
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
