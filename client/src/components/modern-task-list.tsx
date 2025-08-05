@@ -12,7 +12,9 @@ import {
   SortAsc,
   Plus,
   Clock,
-  ChevronDown
+  ChevronDown,
+  Sparkles,
+  Settings
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -28,9 +30,10 @@ import type { Task } from "@shared/schema";
 interface ModernTaskListProps {
   onAdvancedView?: (task: Task) => void;
   onTaskCompleted?: () => void;
+  onAiView?: () => void;
 }
 
-export function ModernTaskList({ onAdvancedView, onTaskCompleted }: ModernTaskListProps) {
+export function ModernTaskList({ onAdvancedView, onTaskCompleted, onAiView }: ModernTaskListProps) {
   const [activeTab, setActiveTab] = useState("today");
   const [showSmartInput, setShowSmartInput] = useState(false);
   const [sortBy, setSortBy] = useState<string>("newest");
@@ -177,6 +180,31 @@ export function ModernTaskList({ onAdvancedView, onTaskCompleted }: ModernTaskLi
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">Tasks</CardTitle>
           <div className="flex items-center gap-2">
+            {/* AI View Icon Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 w-8 p-0 border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 hover:border-purple-300 hover:bg-purple-50 dark:hover:border-purple-600 dark:hover:bg-purple-900/20"
+              onClick={onAiView}
+              title="AI View"
+            >
+              <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+            </Button>
+            
+            {/* Advanced View Icon Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 w-8 p-0 border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 hover:border-blue-300 hover:bg-blue-50 dark:hover:border-blue-600 dark:hover:bg-blue-900/20"
+              onClick={() => {
+                if (safeTaskList.length > 0) {
+                  onAdvancedView?.(safeTaskList[0]);
+                }
+              }}
+              title="Advanced View"
+            >
+              <Settings className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            </Button>
             {/* Filter Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

@@ -9,7 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { SimpleTaskInput } from "@/components/simple-task-input";
 import { ModernTaskList } from "@/components/modern-task-list";
 import { ModernAIRefiner } from "@/components/modern-ai-refiner";
-import UpgradeProModal from "@/components/upgrade-pro-modal";
+import UpgradeModal from "@/components/upgrade-modal-new";
 // import AdvancedTaskView from "@/components/advanced-task-view";
 import ConfettiBurst from "@/components/confetti-burst";
 import { Plus, MessageCircle, Crown, User, Settings, LogOut, Sparkles } from "lucide-react";
@@ -210,6 +210,13 @@ export default function MobileDashboard() {
               onTaskCompleted={() => {
                 setShowConfetti(true);
               }}
+              onAiView={() => {
+                if (checkAiUsageLimit()) {
+                  setShowAIRefiner(true);
+                } else {
+                  setShowUpgradeProModal(true);
+                }
+              }}
             />
           </div>
 
@@ -284,8 +291,8 @@ export default function MobileDashboard() {
         </div>
       )}
 
-      {/* Upgrade Pro Modal */}
-      <UpgradeProModal 
+      {/* Upgrade Modal */}
+      <UpgradeModal 
         isOpen={showUpgradeProModal} 
         onClose={() => setShowUpgradeProModal(false)} 
       />

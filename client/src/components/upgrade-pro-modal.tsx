@@ -24,7 +24,7 @@ interface UpgradeProModalProps {
 }
 
 export default function UpgradeProModal({ isOpen, onClose }: UpgradeProModalProps) {
-  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('monthly');
+  const [selectedPlan, setSelectedPlan] = useState<'basic' | 'pro'>('basic');
 
   const features = [
     {
