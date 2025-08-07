@@ -690,8 +690,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   );
 
   // AI motivation quote route
-  app.post("/api/ai/motivation-quote", async (req: AuthRequest, res) => {
+  app.post("/api/ai/motivation-quote", requireAuth, async (req: AuthRequest, res) => {
     try {
+      if (!req.userId) {
+        return res.status(401).json({ error: "User ID not found in token" });
+      }
+
+      // Check and increment AI usage
+      const user = await storage.getUser(req.userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Check AI usage limits (daily for free, monthly for basic, unlimited for pro)
+      const { allowed, userLimit, limitType } = checkAiUsageLimit(user);
+      const currentUsage = limitType === 'monthly' ? (user.monthlyAiCalls || 0) : (user.dailyAiCalls || 0);
+      console.log(`Motivation quote - User ${req.userId} (${user.email}) tier: ${user.tier}, limit: ${userLimit}, current usage: ${currentUsage}, limit type: ${limitType}, allowed: ${allowed}`);
+      
+      if (!allowed) {
+        return res.status(429).json({ error: `${limitType === 'monthly' ? 'Monthly' : 'Daily'} AI usage limit exceeded` });
+      }
+
       const { completedTasks, incompleteTasks, recentTasks } = req.body;
       
       if (!process.env.OPENAI_API_KEY) {

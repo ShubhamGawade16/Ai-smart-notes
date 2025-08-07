@@ -19,7 +19,10 @@ import AIChatAssistantModal from "@/components/ai-chat-assistant-modal";
 import ProfileModal from "@/components/profile-modal";
 import DevModeModal from "@/components/dev-mode-modal";
 import ConfettiBurst from "@/components/confetti-burst";
-import { Plus, MessageCircle, Crown, User, Settings, LogOut, Sparkles } from "lucide-react";
+import DailyMotivationQuote from "@/components/daily-motivation-quote";
+import TaskProgressRadar from "@/components/task-progress-radar";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { Plus, MessageCircle, Crown, User, Settings, LogOut, Sparkles, Sun, Moon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
@@ -112,8 +115,9 @@ export default function MobileDashboard() {
               </div>
             </div>
             
-            {/* Subscription Badge */}
+            {/* Theme Toggle and Subscription Badge */}
             <div className="flex items-center gap-2">
+              <ThemeToggle />
               {subscriptionStatus.isPremium ? (
                 <Badge className="bg-gradient-to-r from-yellow-400 to-amber-500 text-white px-3 py-1 text-sm font-medium">
                   <Crown className="w-4 h-4 mr-1" />
@@ -281,6 +285,12 @@ export default function MobileDashboard() {
               onAiView={() => setShowAIFeatures(true)}
             />
           </div>
+
+          {/* Daily Motivation Quote */}
+          <DailyMotivationQuote />
+
+          {/* Interactive Productivity Chart */}
+          <TaskProgressRadar />
 
           {/* Mobile-Only Quick Stats */}
           <div className="grid grid-cols-2 gap-4">

@@ -17,6 +17,7 @@ import SupabaseSetupGuide from "@/pages/supabase-setup-guide";
 import DebugAuthPage from "@/pages/debug-auth";
 import AdvancedFeatures from "./pages/advanced-features";
 import UpgradePage from "@/pages/upgrade";
+import OnboardingPage from "@/pages/onboarding";
 import NotFound from "@/pages/not-found";
 import { Loader2 } from "lucide-react";
 
@@ -67,6 +68,10 @@ function Router() {
       
       <Route path="/upgrade">
         {user ? <UpgradePage /> : <Redirect to="/" />}
+      </Route>
+      
+      <Route path="/onboarding">
+        {user ? <OnboardingPage /> : <Redirect to="/" />}
       </Route>
       
       <Route component={NotFound} />
