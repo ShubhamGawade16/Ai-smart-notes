@@ -177,10 +177,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: "Welcome to Planify! You can start using the app right away.",
       });
 
-      // Redirect to dashboard
-      setTimeout(() => {
-        window.location.href = "/dashboard";
-      }, 1000);
+      // Redirect to dashboard immediately
+      window.location.href = "/dashboard";
 
     } catch (error: any) {
       console.error('All signup methods failed:', error);
@@ -250,9 +248,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       // Force navigation after successful login
-      setTimeout(() => {
-        window.location.href = "/dashboard";
-      }, 500);
+      window.location.href = "/dashboard";
 
     } catch (error: any) {
       console.error('All login methods failed:', error);
