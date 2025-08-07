@@ -1,26 +1,47 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Mail, Clock, RefreshCw, CheckCircle, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
 
 export default function VerifyEmailPage() {
-  const { user, resendConfirmation } = useAuth();
   const { toast } = useToast();
   const [countdown, setCountdown] = useState(45);
   const [showResend, setShowResend] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [checkingVerification, setCheckingVerification] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   useEffect(() => {
+    // Get current user email
+    const checkUser = async () => {
+      if (supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.email) {
+          setUserEmail(session.user.email);
+          
+          // If email is already confirmed, redirect
+          if (session.user.email_confirmed_at) {
+            window.location.href = '/dashboard';
+            return;
+          }
+        }
+      }
+    };
+    
+    checkUser();
+
     // Auto-check verification status every 5 seconds
     const checkInterval = setInterval(async () => {
-      if (user?.emailConfirmed) {
-        clearInterval(checkInterval);
-        window.location.href = '/dashboard';
-        return;
+      if (supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.email_confirmed_at) {
+          clearInterval(checkInterval);
+          window.location.href = '/dashboard';
+          return;
+        }
       }
       
       setCheckingVerification(true);
@@ -44,14 +65,22 @@ export default function VerifyEmailPage() {
       clearInterval(checkInterval);
       clearInterval(countdownInterval);
     };
-  }, [user]);
+  }, []);
 
   const handleResendEmail = async () => {
-    if (!user?.email) return;
+    if (!userEmail || !supabase) return;
     
     setIsResending(true);
     try {
-      await resendConfirmation(user.email);
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: userEmail
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
       toast({
         title: "Verification Email Sent",
         description: "Please check your inbox and spam folder.",
@@ -108,7 +137,7 @@ export default function VerifyEmailPage() {
           </div>
 
           <Badge variant="outline" className="text-sm px-4 py-2">
-            {user?.email}
+            {userEmail}
           </Badge>
         </CardHeader>
 

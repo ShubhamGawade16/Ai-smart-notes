@@ -8,10 +8,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import MobileDashboard from "@/pages/mobile-dashboard";
 import LandingPage from "@/pages/landing-page";
-import AuthPage from "@/pages/auth-page";
-import AuthCallback from "@/pages/auth-callback";
-import EmailVerificationPage from "@/pages/email-verification-page";
-import OnboardingPage from "@/pages/onboarding-page";
+import AuthSimplePage from "@/pages/auth-simple";
+import VerifyEmailPage from "@/pages/verify-email";
 import AdvancedFeatures from "./pages/advanced-features";
 import UpgradePage from "@/pages/upgrade";
 import NotFound from "@/pages/not-found";
@@ -34,14 +32,8 @@ function Router() {
       <Route path="/">
         {user ? <Redirect to="/dashboard" /> : <LandingPage />}
       </Route>
-      <Route path="/auth" component={AuthPage} />
-      <Route path="/auth/callback" component={AuthCallback} />
-      <Route path="/verify-email">
-        {() => {
-          const VerifyEmail = require("@/pages/verify-email").default;
-          return <VerifyEmail />;
-        }}
-      </Route>
+      <Route path="/auth" component={AuthSimplePage} />
+      <Route path="/verify-email" component={VerifyEmailPage} />
       
       {/* Protected routes */}
       <Route path="/dashboard">
