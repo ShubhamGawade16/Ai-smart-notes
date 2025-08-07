@@ -8,8 +8,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 
 import { EmailAuthProvider, useEmailAuth } from "@/hooks/use-email-auth";
+import { useReplitAuth } from "@/hooks/use-replit-auth";
 import MobileDashboard from "@/pages/mobile-dashboard";
 import LandingPage from "@/pages/landing-page";
+import ReplitAuthLanding from "@/pages/replit-auth-landing";
 import EmailAuthPage from "@/pages/email-auth";
 import VerifyEmailPage from "@/pages/verify-email";
 import AuthCallbackPage from "@/pages/auth-callback";
@@ -26,7 +28,7 @@ const queryClient = new QueryClient({
     queries: {
       queryFn: async ({ queryKey }) => {
         const token = localStorage.getItem('auth_token');
-        return apiRequest("GET", queryKey[0] as string, undefined, token ? { Authorization: `Bearer ${token}` } : {});
+        return apiRequest("GET", queryKey[0] as string, undefined, token ? { Authorization: `Bearer ${token}` } : undefined);
       },
     },
   },
@@ -34,8 +36,9 @@ const queryClient = new QueryClient({
 
 function Router() {
   const { user, isLoading } = useEmailAuth();
+  const { user: replitUser, isLoading: replitLoading, isAuthenticated: replitAuthenticated } = useReplitAuth();
   
-  if (isLoading) {
+  if (isLoading || replitLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-teal-600" />
@@ -47,25 +50,28 @@ function Router() {
     <Switch>
       {/* Public routes */}
       <Route path="/">
-        {user ? <Redirect to="/dashboard" /> : <LandingPage />}
+        {(replitAuthenticated && replitUser) ? <Redirect to="/dashboard" /> : 
+         user ? <Redirect to="/dashboard" /> : 
+         <ReplitAuthLanding />}
       </Route>
       <Route path="/auth" component={EmailAuthPage} />
       <Route path="/auth/callback" component={AuthCallbackPage} />
       <Route path="/verify-email" component={VerifyEmailPage} />
       <Route path="/supabase-setup" component={SupabaseSetupGuide} />
       <Route path="/debug-auth" component={DebugAuthPage} />
+      <Route path="/replit-auth" component={ReplitAuthLanding} />
       
       {/* Protected routes */}
       <Route path="/dashboard">
-        {user ? <MobileDashboard /> : <Redirect to="/auth" />}
+        {(replitAuthenticated && replitUser) || user ? <MobileDashboard /> : <Redirect to="/" />}
       </Route>
       
       <Route path="/advanced-features">
-        {user ? <AdvancedFeatures /> : <Redirect to="/auth" />}
+        {(replitAuthenticated && replitUser) || user ? <AdvancedFeatures /> : <Redirect to="/" />}
       </Route>
       
       <Route path="/upgrade">
-        {user ? <UpgradePage /> : <Redirect to="/auth" />}
+        {(replitAuthenticated && replitUser) || user ? <UpgradePage /> : <Redirect to="/" />}
       </Route>
       
       <Route component={NotFound} />

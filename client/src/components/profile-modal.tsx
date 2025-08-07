@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useAuth } from '@/hooks/use-auth';
+import { useEmailAuth } from '@/hooks/use-email-auth';
+import { useReplitAuth } from '@/hooks/use-replit-auth';
 import { useToast } from '@/hooks/use-toast';
 import { User, Clock, Globe, X, Save } from 'lucide-react';
 import { useTimezone } from '@/hooks/use-timezone';
@@ -15,7 +16,9 @@ interface ProfileModalProps {
 }
 
 export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
-  const { user } = useAuth();
+  const { user: emailUser } = useEmailAuth();
+  const { user: replitUser } = useReplitAuth();
+  const user = replitUser || emailUser;
   const { toast } = useToast();
   const { detectedTimezone, userTimezone, isAutoDetected, autoUpdateTimezone, isUpdating } = useTimezone();
   

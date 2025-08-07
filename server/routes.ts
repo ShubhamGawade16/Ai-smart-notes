@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 import { storage } from "./storage";
 import { 
   authenticateToken, 
@@ -61,6 +62,14 @@ const authenticateToken = (req: any, res: any, next: any) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  
+  // Setup Replit Auth
+  try {
+    await setupAuth(app);
+    console.log('✅ Replit Auth configured successfully');
+  } catch (error) {
+    console.log('⚠️ Replit Auth not available (expected in development), using fallback auth');
+  }
   // Simple Authentication Routes
   app.post("/api/auth/signup", async (req, res) => {
     try {
@@ -1745,6 +1754,26 @@ Guidelines:
     } catch (error) {
       console.error('Error resetting data:', error);
       res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Replit Auth routes - user endpoint
+  app.get('/api/replit-auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "No user claims found" });
+      }
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching Replit Auth user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
     }
   });
 

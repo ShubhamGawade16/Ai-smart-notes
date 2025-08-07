@@ -3,7 +3,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/hooks/use-auth';
+import { useEmailAuth } from '@/hooks/use-email-auth';
+import { useReplitAuth } from '@/hooks/use-replit-auth';
 import { useSubscription } from '@/hooks/use-subscription';
 import { Code, Database, Zap, RefreshCw, X, Crown, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -16,7 +17,9 @@ interface DevModeModalProps {
 }
 
 export default function DevModeModal({ isOpen, onClose }: DevModeModalProps) {
-  const { user } = useAuth();
+  const { user: emailUser } = useEmailAuth();
+  const { user: replitUser } = useReplitAuth();
+  const user = replitUser || emailUser;
   const { subscriptionStatus } = useSubscription();
   const { toast } = useToast();
   const [isResetting, setIsResetting] = useState(false);
