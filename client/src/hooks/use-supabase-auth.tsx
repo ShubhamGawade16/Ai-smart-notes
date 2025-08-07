@@ -38,14 +38,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const syncUserData = async (supabaseUser: User | null) => {
     if (!supabaseUser) {
       setUser(null);
+      localStorage.removeItem('auth_token');
       return;
     }
 
     try {
+      // Get and store the access token for API requests
+      const session = (await supabase?.auth.getSession())?.data.session;
+      const accessToken = session?.access_token;
+      
+      if (accessToken) {
+        localStorage.setItem('auth_token', accessToken);
+      }
+
       // Get user data from our backend API
       const response = await fetch('/api/auth/me', {
         headers: {
-          'Authorization': `Bearer ${(await supabase?.auth.getSession())?.data.session?.access_token}`
+          'Authorization': `Bearer ${accessToken}`
         }
       });
 
@@ -58,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${(await supabase?.auth.getSession())?.data.session?.access_token}`
+            'Authorization': `Bearer ${accessToken}`
           },
           body: JSON.stringify({
             id: supabaseUser.id,
@@ -92,7 +101,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         lastName: existingFallbackUser.lastName,
         onboardingCompleted: true,
       };
+      // Ensure auth token is set for fallback user
+      localStorage.setItem('auth_token', `fallback_${existingFallbackUser.id}`);
       setUser(userData);
+      setIsLoading(false);
+      return;
+    }
+
+    // For immediate testing, create a temporary demo user if no auth exists
+    if (!localStorage.getItem('auth_token') && !supabase) {
+      console.log('🔧 Creating temporary demo user for testing');
+      const demoUser = {
+        id: 'demo-user',
+        email: 'demo@example.com',
+        firstName: 'Demo',
+        lastName: 'User',
+        onboardingCompleted: true,
+      };
+      localStorage.setItem('auth_token', 'fallback_demo-user');
+      setUser(demoUser);
       setIsLoading(false);
       return;
     }
@@ -107,6 +134,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const session = await getSession();
         if (session?.user) {
+          // Store access token immediately for API requests
+          if (session.access_token) {
+            localStorage.setItem('auth_token', session.access_token);
+            console.log('✅ Stored auth token for API requests');
+          }
           setSupabaseUser(session.user);
           await syncUserData(session.user);
         }
@@ -124,6 +156,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('Auth state changed:', event, session?.user?.email);
       
       if (session?.user) {
+        // Store access token for API requests
+        if (session.access_token) {
+          localStorage.setItem('auth_token', session.access_token);
+          console.log('✅ Updated auth token for API requests');
+        }
         setSupabaseUser(session.user);
         await syncUserData(session.user);
         
@@ -136,6 +173,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setSupabaseUser(null);
         setUser(null);
+        localStorage.removeItem('auth_token');
       }
     });
 
