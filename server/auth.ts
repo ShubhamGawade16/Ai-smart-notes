@@ -58,17 +58,6 @@ export const authenticateToken = async (
     const decoded = jwt.decode(token) as any;
     
     if (decoded && decoded.sub) {
-      // Development override: Always use demo-user for consistency with existing tasks
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Development mode: Using demo-user instead of JWT user');
-        req.userId = 'demo-user';
-        const demoUser = await storage.getUser('demo-user');
-        if (demoUser) {
-          req.user = demoUser;
-        }
-        return next();
-      }
-      
       // For Supabase JWT tokens, use the 'sub' field as user ID
       req.userId = decoded.sub;
       
@@ -90,17 +79,6 @@ export const authenticateToken = async (
         req.userId = dbUser.id;
       }
       
-      return next();
-    }
-    
-    // Development fallback for demo user
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Using demo user fallback for development');
-      req.userId = 'demo-user';
-      const demoUser = await storage.getUser('demo-user');
-      if (demoUser) {
-        req.user = demoUser;
-      }
       return next();
     }
     

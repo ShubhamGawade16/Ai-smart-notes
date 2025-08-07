@@ -498,7 +498,7 @@ Respond with JSON in this format: {"quote": "your motivational quote", "author":
 
       // Check daily AI usage limits
       const { allowed, userLimit } = checkAiUsageLimit(user);
-      console.log(`Smart timing - User ${req.userId} tier: ${user.tier}, limit: ${userLimit}, current usage: ${user.dailyAiCalls || 0}, allowed: ${allowed}`);
+      console.log(`Smart timing - User ${req.userId} (${user.email}) tier: ${user.tier}, limit: ${userLimit}, current usage: ${user.dailyAiCalls || 0}, allowed: ${allowed}`);
       
       if (!allowed) {
         return res.status(429).json({ error: "Daily AI usage limit exceeded" });
@@ -619,7 +619,7 @@ Respond with JSON in this format:
 
       // Check daily AI usage limits  
       const { allowed, userLimit } = checkAiUsageLimit(user);
-      console.log(`Smart categorizer - User ${req.userId} tier: ${user.tier}, limit: ${userLimit}, current usage: ${user.dailyAiCalls || 0}, allowed: ${allowed}`);
+      console.log(`Smart categorizer - User ${req.userId} (${user.email}) tier: ${user.tier}, limit: ${userLimit}, current usage: ${user.dailyAiCalls || 0}, allowed: ${allowed}`);
       
       if (!allowed) {
         return res.status(429).json({ error: "Daily AI usage limit exceeded" });
@@ -684,7 +684,7 @@ Respond with JSON in this format:
 
       // Check daily AI usage limits  
       const { allowed, userLimit } = checkAiUsageLimit(user);
-      console.log(`Productivity insights - User ${req.userId} tier: ${user.tier}, limit: ${userLimit}, current usage: ${user.dailyAiCalls || 0}, allowed: ${allowed}`);
+      console.log(`Productivity insights - User ${req.userId} (${user.email}) tier: ${user.tier}, limit: ${userLimit}, current usage: ${user.dailyAiCalls || 0}, allowed: ${allowed}`);
       
       if (!allowed) {
         return res.status(429).json({ error: "Daily AI usage limit exceeded" });
@@ -814,7 +814,7 @@ Respond with JSON in this format:
 
       // Check daily AI usage limits  
       const { allowed, userLimit } = checkAiUsageLimit(user);
-      console.log(`Chat assistant - User ${req.userId} tier: ${user.tier}, limit: ${userLimit}, current usage: ${user.dailyAiCalls || 0}, allowed: ${allowed}`);
+      console.log(`Chat assistant - User ${req.userId} (${user.email}) tier: ${user.tier}, limit: ${userLimit}, current usage: ${user.dailyAiCalls || 0}, allowed: ${allowed}`);
       
       if (!allowed) {
         return res.status(429).json({ error: "Daily AI usage limit exceeded" });
