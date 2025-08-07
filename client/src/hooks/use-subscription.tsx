@@ -4,10 +4,15 @@ import { apiRequest } from "@/lib/queryClient";
 
 export interface SubscriptionStatus {
   isPremium: boolean;
+  isBasic: boolean;
+  tier: 'free' | 'basic' | 'pro';
   dailyAiUsage: number;
   dailyAiLimit: number;
+  monthlyAiUsage: number;
+  monthlyAiLimit: number;
   canUseAi: boolean;
   subscriptionId?: string;
+  subscriptionStatus?: string;
   expiresAt?: string;
 }
 
@@ -15,8 +20,12 @@ export function useSubscription() {
   const { user } = useAuth();
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus>({
     isPremium: false,
+    isBasic: false,
+    tier: 'free',
     dailyAiUsage: 0,
-    dailyAiLimit: 3, // Free: 3, Basic: 30, Pro: unlimited
+    dailyAiLimit: 3,
+    monthlyAiUsage: 0,
+    monthlyAiLimit: -1,
     canUseAi: true,
   });
   const [isLoading, setIsLoading] = useState(true);
@@ -82,7 +91,7 @@ export function useSubscription() {
       return true;
     }
     
-    const userTier = (user && 'tier' in user ? user.tier : 'free') || 'free';
+    const userTier = subscriptionStatus.tier || 'free';
     const limit = getTierLimits(userTier);
     
     // Unlimited for pro users
@@ -109,6 +118,7 @@ export function useSubscription() {
     isLoading,
     incrementAiUsage,
     checkAiUsageLimit,
+    refetch: fetchSubscriptionStatus,
     refreshStatus: fetchSubscriptionStatus,
     resetAiUsage
   };

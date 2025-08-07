@@ -1262,20 +1262,17 @@ Guidelines:
   });
 
   // Dev endpoint to toggle between tiers for testing Basic plan
-  app.post("/api/dev/toggle-tier", async (req: AuthRequest, res) => {
+  app.post("/api/dev/toggle-tier", requireAuth, async (req: AuthRequest, res) => {
     try {
-      const userId = req.userId || 'demo-user';
+      const userId = req.userId;
+      if (!userId) {
+        return res.status(401).json({ error: "User ID not found in token" });
+      }
       
       // Ensure user exists first
       let user = await storage.getUser(userId);
       if (!user) {
-        user = await storage.createUser({
-          id: userId,
-          email: 'demo@example.com',
-          firstName: 'Demo',
-          lastName: 'User',
-          tier: 'free'
-        });
+        return res.status(404).json({ error: "User not found" });
       }
       
       // Cycle through tiers: free -> basic -> pro -> free
@@ -1296,6 +1293,8 @@ Guidelines:
         dailyAiCallsResetAt: new Date(),
         monthlyAiCallsResetAt: new Date()
       });
+      
+      console.log(`Dev mode: Successfully updated user ${userId} from ${user.tier} to ${newTier} tier. Updated user:`, updatedUser);
       
       res.json({ 
         success: true, 
