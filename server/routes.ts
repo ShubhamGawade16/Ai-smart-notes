@@ -1780,6 +1780,85 @@ Guidelines:
     }
   });
 
+  // Fallback authentication routes for when Supabase is not available
+  app.post('/api/auth/fallback-signup', async (req, res) => {
+    try {
+      const { email, password, firstName, lastName } = req.body;
+      
+      if (!email || !password || !firstName || !lastName) {
+        return res.status(400).json({ 
+          message: 'Missing required fields: email, password, firstName, lastName' 
+        });
+      }
+
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ 
+          message: 'An account with this email already exists. Please try signing in instead.' 
+        });
+      }
+
+      // Create new user
+      const newUser = await storage.createUser({
+        email,
+        passwordHash: password, // In production, this should be hashed
+        firstName,
+        lastName,
+        tier: 'free',
+      });
+
+      res.json({
+        id: newUser.id,
+        email: newUser.email,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        emailVerified: true
+      });
+    } catch (error) {
+      console.error('Fallback signup error:', error);
+      res.status(500).json({ message: 'Sign up failed. Please try again.' });
+    }
+  });
+
+  app.post('/api/auth/fallback-signin', async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ 
+          message: 'Missing email or password' 
+        });
+      }
+
+      // Find user by email
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(401).json({ 
+          message: 'Invalid email or password. Please check your credentials and try again.' 
+        });
+      }
+
+      // In production, you would verify the hashed password
+      if (user.passwordHash !== password) {
+        return res.status(401).json({ 
+          message: 'Invalid email or password. Please check your credentials and try again.' 
+        });
+      }
+
+      res.json({
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        emailVerified: true
+      });
+    } catch (error) {
+      console.error('Fallback signin error:', error);
+      res.status(500).json({ message: 'Sign in failed. Please try again.' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

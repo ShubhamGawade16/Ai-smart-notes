@@ -84,19 +84,44 @@ export const signInWithEmail = async (email: string, password: string) => {
   
   console.log('Attempting email sign in with:', { email, supabaseUrl: import.meta.env.VITE_SUPABASE_URL })
   
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  })
-  
-  console.log('Supabase auth response:', { data, error })
-  
-  if (error) {
-    console.error('Supabase auth error details:', error)
-    throw new Error(`Sign in failed: ${error.message}`)
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+    
+    console.log('Supabase auth response:', { data, error })
+    
+    if (error) {
+      console.error('Supabase auth error details:', error)
+      
+      // Handle specific error types
+      if (error.name === 'AuthRetryableFetchError' || error.status === 0) {
+        throw new Error('Network connection issue. Please check your internet connection and try again.')
+      }
+      
+      if (error.message.includes('Invalid login credentials')) {
+        throw new Error('Invalid email or password. Please check your credentials and try again.')
+      }
+      
+      if (error.message.includes('Email not confirmed')) {
+        throw new Error('Please check your email and click the verification link before signing in.')
+      }
+      
+      throw new Error(`Sign in failed: ${error.message}`)
+    }
+    
+    return data
+  } catch (networkError: any) {
+    console.error('Network or connection error:', networkError)
+    
+    // Handle network-level errors
+    if (networkError.name === 'TypeError' && networkError.message.includes('fetch')) {
+      throw new Error('Unable to connect to authentication service. Please check your internet connection.')
+    }
+    
+    throw networkError
   }
-  
-  return data
 }
 
 export const signUpWithEmail = async (email: string, password: string, firstName: string, lastName: string) => {
@@ -112,27 +137,56 @@ export const signUpWithEmail = async (email: string, password: string, firstName
     hasAnonKey: !!import.meta.env.VITE_SUPABASE_ANON_KEY
   })
   
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      emailRedirectTo: `${window.location.origin}/auth/verified`,
-      data: {
-        first_name: firstName,
-        last_name: lastName,
-        name: `${firstName} ${lastName}`,
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/verified`,
+        data: {
+          first_name: firstName,
+          last_name: lastName,
+          name: `${firstName} ${lastName}`,
+        }
       }
+    })
+    
+    console.log('Supabase signup response:', { data, error })
+    
+    if (error) {
+      console.error('Supabase signup error details:', error)
+      
+      // Handle specific error types
+      if (error.name === 'AuthRetryableFetchError' || error.status === 0) {
+        throw new Error('Network connection issue. Please check your internet connection and try again.')
+      }
+      
+      if (error.message.includes('User already registered')) {
+        throw new Error('An account with this email already exists. Please try signing in instead.')
+      }
+      
+      if (error.message.includes('Invalid email')) {
+        throw new Error('Please enter a valid email address.')
+      }
+      
+      if (error.message.includes('Password')) {
+        throw new Error('Password must be at least 6 characters long.')
+      }
+      
+      throw new Error(`Sign up failed: ${error.message}`)
     }
-  })
-  
-  console.log('Supabase signup response:', { data, error })
-  
-  if (error) {
-    console.error('Supabase signup error details:', error)
-    throw new Error(`Sign up failed: ${error.message}`)
+    
+    return data
+  } catch (networkError: any) {
+    console.error('Network or connection error:', networkError)
+    
+    // Handle network-level errors
+    if (networkError.name === 'TypeError' && networkError.message.includes('fetch')) {
+      throw new Error('Unable to connect to authentication service. Please check your internet connection.')
+    }
+    
+    throw networkError
   }
-  
-  return data
 }
 
 export const signOut = async () => {
