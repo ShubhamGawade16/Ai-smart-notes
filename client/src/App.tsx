@@ -7,7 +7,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 
-import { EmailAuthProvider, useEmailAuth } from "@/hooks/use-email-auth";
+import { SimpleAuthProvider, useAuth } from "@/hooks/use-simple-auth";
 import MobileDashboard from "@/pages/mobile-dashboard";
 import LandingPage from "@/pages/landing-page";
 import EmailAuthPage from "@/pages/email-auth";
@@ -25,14 +25,17 @@ const queryClient = new QueryClient({
     queries: {
       queryFn: async ({ queryKey }) => {
         const token = localStorage.getItem('auth_token');
-        return apiRequest("GET", queryKey[0] as string, undefined, token ? { Authorization: `Bearer ${token}` } : {});
+        const res = await apiRequest("GET", queryKey[0] as string, undefined, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        return res.json();
       },
     },
   },
 });
 
 function Router() {
-  const { user, isLoading } = useEmailAuth();
+  const { user, isLoading } = useAuth();
   
   if (isLoading) {
     return (
@@ -76,10 +79,10 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <TooltipProvider>
-          <EmailAuthProvider>
+          <SimpleAuthProvider>
             <Router />
             <Toaster />
-          </EmailAuthProvider>
+          </SimpleAuthProvider>
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
