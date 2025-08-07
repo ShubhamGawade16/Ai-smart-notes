@@ -22,6 +22,7 @@ import {
 import { checkTier, incrementUsage, getUserLimits, FREE_TIER_LIMITS } from "./middleware/tier-check";
 import { parseNaturalLanguageTask, optimizeTaskOrder, generateProductivityInsights, refineTask } from "./services/ai-service";
 import { notificationService } from "./services/notification-service";
+import OpenAI from 'openai';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Health check
@@ -492,16 +493,18 @@ Respond with JSON in this format: {"quote": "your motivational quote", "author":
         return res.status(429).json({ error: "Daily AI usage limit exceeded" });
       }
 
-      // Increment AI usage
-      await storage.incrementDailyAiCalls(req.userId);
-
-      // Get user's incomplete tasks
+      // Get user's incomplete tasks BEFORE incrementing usage  
       const tasks = await storage.getTasks(req.userId);
       const incompleteTasks = tasks.filter(task => !task.completed);
+
+      console.log(`Smart timing: Found ${tasks.length} total tasks, ${incompleteTasks.length} incomplete for user ${req.userId}`);
 
       if (incompleteTasks.length === 0) {
         return res.json({ analyses: [] });
       }
+
+      // Only increment AI usage if we have tasks to analyze
+      await storage.incrementDailyAiCalls(req.userId);
 
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -681,12 +684,26 @@ Respond with JSON in this format:
         return res.status(429).json({ error: "Daily AI usage limit exceeded" });
       }
 
-      await storage.incrementDailyAiCalls(req.userId);
-
-      // Get user's tasks for analysis
+      // Get user's tasks for analysis first
       const tasks = await storage.getTasks(req.userId);
       const completedTasks = tasks.filter(t => t.completed);
       const incompleteTasks = tasks.filter(t => !t.completed);
+
+      console.log(`Productivity insights: Found ${tasks.length} total tasks, ${completedTasks.length} completed for user ${req.userId}`);
+
+      if (tasks.length === 0) {
+        return res.json({
+          overallScore: 0,
+          completionRate: 0,
+          tasksCompleted: 0,
+          avgDailyTasks: 0,
+          categoryPerformance: {},
+          insights: ["No tasks found. Create some tasks to get productivity insights!"],
+          recommendations: ["Start by adding tasks to track your productivity patterns."]
+        });
+      }
+
+      await storage.incrementDailyAiCalls(req.userId);
 
       // Calculate basic metrics
       const totalTasks = tasks.length;
@@ -799,11 +816,13 @@ Respond with JSON in this format:
         return res.status(429).json({ error: "Daily AI usage limit exceeded" });
       }
 
-      await storage.incrementDailyAiCalls(req.userId);
-
-      // Get user's tasks for context
+      // Get user's tasks for context first
       const tasks = await storage.getTasks(req.userId);
       const recentTasks = tasks.slice(-5).map(t => `${t.title} (${t.completed ? 'completed' : 'pending'})`);
+
+      console.log(`Chat assistant: Found ${tasks.length} total tasks for user ${req.userId}`);
+
+      await storage.incrementDailyAiCalls(req.userId);
 
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
