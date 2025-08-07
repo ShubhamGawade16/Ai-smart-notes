@@ -3,44 +3,48 @@ import { AuthRequest } from '../auth';
 import { storage } from '../storage';
 import { User } from '@shared/schema';
 
-export type UserTier = 'free' | 'basic_pro' | 'advanced_pro' | 'premium_pro';
+export type UserTier = 'free' | 'basic' | 'pro';
 
 // Feature tier requirements mapping
 export const TIER_FEATURES = {
-  // Free tier features
-  basic_tasks: ['free', 'basic_pro', 'advanced_pro', 'premium_pro'],
-  manual_prioritization: ['free', 'basic_pro', 'advanced_pro', 'premium_pro'],
-  basic_streaks: ['free', 'basic_pro', 'advanced_pro', 'premium_pro'],
+  // Free tier features (0 cost)
+  basic_tasks: ['free', 'basic', 'pro'],
+  manual_prioritization: ['free', 'basic', 'pro'],
+  basic_streaks: ['free', 'basic', 'pro'],
   
-  // Basic Pro features (₹199/mo)
-  unlimited_tasks: ['basic_pro', 'advanced_pro', 'premium_pro'],
-  unlimited_ai_calls: ['basic_pro', 'advanced_pro', 'premium_pro'],
-  no_ads: ['basic_pro', 'advanced_pro', 'premium_pro'],
-  gmail_integration: ['basic_pro', 'advanced_pro', 'premium_pro'],
-  outlook_integration: ['basic_pro', 'advanced_pro', 'premium_pro'],
-  advanced_streaks: ['basic_pro', 'advanced_pro', 'premium_pro'],
+  // Basic tier features (₹299/mo)
+  unlimited_tasks: ['basic', 'pro'],
+  advanced_task_management: ['basic', 'pro'],
+  detailed_analytics: ['basic', 'pro'],
+  smart_timing_analysis: ['basic', 'pro'],
+  priority_email_support: ['basic', 'pro'],
   
-  // Advanced Pro features (₹499/mo)
-  focus_forecast: ['advanced_pro', 'premium_pro'],
-  auto_schedule: ['advanced_pro', 'premium_pro'],
-  zoom_integration: ['advanced_pro', 'premium_pro'],
-  meet_integration: ['advanced_pro', 'premium_pro'],
-  burnout_prediction: ['advanced_pro', 'premium_pro'],
-  
-  // Premium Pro features (₹799/mo)
-  focus_forecast_7day: ['premium_pro'],
-  slack_integration: ['premium_pro'],
-  teams_integration: ['premium_pro'],
-  custom_webhooks: ['premium_pro'],
-  priority_support: ['premium_pro'],
-  advanced_analytics: ['premium_pro'],
+  // Pro tier features (₹499/mo)
+  unlimited_ai_calls: ['pro'],
+  focus_forecast: ['pro'],
+  auto_schedule: ['pro'],
+  advanced_integrations: ['pro'],
+  priority_support: ['pro'],
+  custom_workflows: ['pro'],
 } as const;
 
-// Daily limits for free tier
-export const FREE_TIER_LIMITS = {
-  daily_ai_calls: 5,
-  monthly_tasks: 50,
-  conversational_refiner_calls: 5,
+// Tier limits configuration
+export const TIER_LIMITS = {
+  free: {
+    daily_ai_calls: 3,
+    monthly_ai_calls: -1, // No monthly limit for free (daily only)
+    monthly_tasks: 20,
+  },
+  basic: {
+    daily_ai_calls: -1, // No daily limit for basic
+    monthly_ai_calls: 30, // 30 AI requests per month
+    monthly_tasks: -1, // Unlimited tasks
+  },
+  pro: {
+    daily_ai_calls: -1, // Unlimited
+    monthly_ai_calls: -1, // Unlimited
+    monthly_tasks: -1, // Unlimited
+  },
 } as const;
 
 export interface TierCheckOptions {

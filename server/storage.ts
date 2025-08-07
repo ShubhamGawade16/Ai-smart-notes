@@ -45,8 +45,10 @@ export interface IStorage {
   resetDailyLimits(userId: string): Promise<void>;
   resetMonthlyLimits(userId: string): Promise<void>;
   incrementDailyAiCalls(userId: string): Promise<void>;
+  incrementMonthlyAiCalls(userId: string): Promise<void>;
   incrementMonthlyTaskCount(userId: string): Promise<void>;
   resetDailyAiUsage(userId: string): Promise<void>;
+  resetMonthlyAiUsage(userId: string): Promise<void>;
 }
 
 // In-memory storage implementation
@@ -132,6 +134,8 @@ export class MemStorage implements IStorage {
         dailyAiCalls: 0,
         dailyAiCallsResetAt: new Date(),
         monthlySubscriptionAmount: null,
+        monthlyAiCalls: 0,
+        monthlyAiCallsResetAt: new Date(),
         monthlyTaskCount: 0,
         monthlyTaskCountResetAt: new Date(),
         totalXp: 0,
@@ -328,6 +332,33 @@ export class MemStorage implements IStorage {
     }
   }
 
+  async incrementMonthlyAiCalls(userId: string): Promise<void> {
+    const userIndex = this.users.findIndex(user => user.id === userId);
+    if (userIndex !== -1) {
+      const user = this.users[userIndex];
+      const now = new Date();
+      const resetDate = new Date(user.monthlyAiCallsResetAt);
+      
+      // Check if we need to reset monthly calls (new month)
+      if (now.getMonth() !== resetDate.getMonth() || now.getFullYear() !== resetDate.getFullYear()) {
+        // Reset monthly calls for new month
+        this.users[userIndex] = {
+          ...user,
+          monthlyAiCalls: 1, // First call of new month
+          monthlyAiCallsResetAt: new Date(now.getFullYear(), now.getMonth(), 1), // 1st of current month
+          updatedAt: new Date()
+        };
+      } else {
+        // Increment monthly calls
+        this.users[userIndex] = {
+          ...user,
+          monthlyAiCalls: (user.monthlyAiCalls || 0) + 1,
+          updatedAt: new Date()
+        };
+      }
+    }
+  }
+
   async incrementMonthlyTaskCount(userId: string): Promise<void> {
     const userIndex = this.users.findIndex(user => user.id === userId);
     if (userIndex !== -1) {
@@ -346,6 +377,19 @@ export class MemStorage implements IStorage {
         ...this.users[userIndex],
         dailyAiCalls: 0,
         dailyAiCallsResetAt: new Date(),
+        updatedAt: new Date()
+      };
+    }
+  }
+
+  async resetMonthlyAiUsage(userId: string): Promise<void> {
+    const userIndex = this.users.findIndex(user => user.id === userId);
+    if (userIndex !== -1) {
+      const now = new Date();
+      this.users[userIndex] = {
+        ...this.users[userIndex],
+        monthlyAiCalls: 0,
+        monthlyAiCallsResetAt: new Date(now.getFullYear(), now.getMonth(), 1), // 1st of current month
         updatedAt: new Date()
       };
     }

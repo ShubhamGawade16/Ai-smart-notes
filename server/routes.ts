@@ -26,19 +26,45 @@ import { parseNaturalLanguageTask, optimizeTaskOrder, generateProductivityInsigh
 import { notificationService } from "./services/notification-service";
 import OpenAI from 'openai';
 
-// Helper function to check AI usage limits
-function checkAiUsageLimit(user: any): { allowed: boolean; userLimit: number } {
-  const limits = {
-    free: 3,
-    basic: 30,
-    pro: -1, // unlimited
-    premium_pro: -1 // unlimited for legacy
-  };
+// Helper function to check AI usage limits with Basic tier monthly tracking
+function checkAiUsageLimit(user: any): { allowed: boolean; userLimit: number; limitType: 'daily' | 'monthly' | 'unlimited' } {
+  // Pro tier - unlimited AI calls
+  if (user.tier === 'pro') {
+    return { allowed: true, userLimit: -1, limitType: 'unlimited' };
+  }
   
-  const userLimit = limits[user.tier as keyof typeof limits] || 3;
-  const allowed = userLimit === -1 || (user.dailyAiCalls || 0) < userLimit;
+  // Free tier - 3 AI calls per day (resets daily)
+  if (user.tier === 'free') {
+    const currentUsage = user.dailyAiCalls || 0;
+    const dailyLimit = 3;
+    const allowed = currentUsage < dailyLimit;
+    return { allowed, userLimit: dailyLimit, limitType: 'daily' };
+  }
   
-  return { allowed, userLimit };
+  // Basic tier - 30 AI calls per month (resets monthly on 1st)
+  if (user.tier === 'basic') {
+    const currentUsage = user.monthlyAiCalls || 0;
+    const monthlyLimit = 30;
+    
+    // Check if monthly reset is needed (1st of month)
+    const now = new Date();
+    const resetDate = new Date(user.monthlyAiCallsResetAt);
+    
+    if (now.getMonth() !== resetDate.getMonth() || now.getFullYear() !== resetDate.getFullYear()) {
+      // Month changed, reset needed but will be handled by incrementMonthlyAiCalls
+      const allowed = true; // Allow first call of new month
+      return { allowed, userLimit: monthlyLimit, limitType: 'monthly' };
+    }
+    
+    const allowed = currentUsage < monthlyLimit;
+    return { allowed, userLimit: monthlyLimit, limitType: 'monthly' };
+  }
+  
+  // Default to free tier limits
+  const currentUsage = user.dailyAiCalls || 0;
+  const dailyLimit = 3;
+  const allowed = currentUsage < dailyLimit;
+  return { allowed, userLimit: dailyLimit, limitType: 'daily' };
 }
 
 // JWT secret for signing tokens
@@ -241,7 +267,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // SUBSCRIPTION & FREEMIUM ROUTES
   // ============================================================================
 
-  // Get subscription status
+  // Get subscription status with Basic tier support
   app.get("/api/subscription-status", requireAuth, async (req, res) => {
     try {
       if (!req.userId) {
@@ -262,33 +288,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'Expires': '0'
       });
 
-      // Check if daily limit needs reset
+      // Determine tier and limits
+      const tier = user.tier || 'free';
+      const isPremium = tier === 'pro';
+      const isBasic = tier === 'basic';
+      
+      // Check if daily/monthly limits need reset
       const now = new Date();
-      const resetTime = user.dailyAiCallsResetAt ? new Date(user.dailyAiCallsResetAt) : new Date();
-      const shouldReset = now.getTime() - resetTime.getTime() > 24 * 60 * 60 * 1000;
+      const dailyResetTime = user.dailyAiCallsResetAt ? new Date(user.dailyAiCallsResetAt) : new Date();
+      const monthlyResetTime = user.monthlyAiCallsResetAt ? new Date(user.monthlyAiCallsResetAt) : new Date();
+      
+      const shouldResetDaily = now.getTime() - dailyResetTime.getTime() > 24 * 60 * 60 * 1000;
+      const shouldResetMonthly = now.getMonth() !== monthlyResetTime.getMonth() || now.getFullYear() !== monthlyResetTime.getFullYear();
 
-      if (shouldReset) {
+      // Reset counters if needed
+      if (shouldResetDaily && tier === 'free') {
         await storage.updateUser(user.id, {
           dailyAiCalls: 0,
           dailyAiCallsResetAt: now
         });
         user.dailyAiCalls = 0;
       }
+      
+      if (shouldResetMonthly && tier === 'basic') {
+        await storage.updateUser(user.id, {
+          monthlyAiCalls: 0,
+          monthlyAiCallsResetAt: new Date(now.getFullYear(), now.getMonth(), 1)
+        });
+        user.monthlyAiCalls = 0;
+      }
 
-      // In development mode, respect the user tier but provide generous limits for testing
-      const isDevelopment = process.env.NODE_ENV === 'development';
-      
-      const isPremium = user.tier !== 'free' && user.tier !== null;
-      const dailyLimit = isPremium ? 999 : 3; // Premium gets unlimited, free gets 3
-      const currentUsage = user.dailyAiCalls || 0;
-      
-      // Pro users always have access, free users check limit
-      const canUseAi = isPremium || currentUsage < dailyLimit;
+      // Calculate current usage and limits based on tier
+      let dailyAiUsage = user.dailyAiCalls || 0;
+      let monthlyAiUsage = user.monthlyAiCalls || 0;
+      let dailyAiLimit = 3; // Free tier default
+      let monthlyAiLimit = -1; // No monthly limit for free
+      let canUseAi = false;
+
+      if (isPremium) {
+        dailyAiLimit = -1; // Unlimited
+        monthlyAiLimit = -1; // Unlimited
+        canUseAi = true;
+      } else if (isBasic) {
+        dailyAiLimit = -1; // No daily limit for basic
+        monthlyAiLimit = 30; // 30 per month
+        canUseAi = monthlyAiUsage < 30;
+      } else {
+        // Free tier
+        canUseAi = dailyAiUsage < 3;
+      }
 
       res.json({
         isPremium,
-        dailyAiUsage: currentUsage,
-        dailyAiLimit: dailyLimit,
+        isBasic,
+        tier,
+        dailyAiUsage,
+        dailyAiLimit,
+        monthlyAiUsage,
+        monthlyAiLimit,
         canUseAi,
         subscriptionId: user.subscriptionId,
         subscriptionStatus: user.subscriptionStatus,
@@ -812,15 +869,24 @@ Respond with JSON in this format:
         return res.status(404).json({ error: "User not found" });
       }
 
-      // Check daily AI usage limits  
-      const { allowed, userLimit } = checkAiUsageLimit(user);
-      console.log(`Smart categorizer - User ${req.userId} (${user.email}) tier: ${user.tier}, limit: ${userLimit}, current usage: ${user.dailyAiCalls || 0}, allowed: ${allowed}`);
+      // Check AI usage limits (daily for free, monthly for basic, unlimited for pro)
+      const { allowed, userLimit, limitType } = checkAiUsageLimit(user);
+      const currentUsage = limitType === 'monthly' ? (user.monthlyAiCalls || 0) : (user.dailyAiCalls || 0);
+      console.log(`Smart categorizer - User ${req.userId} (${user.email}) tier: ${user.tier}, limit: ${userLimit}, current usage: ${currentUsage}, limit type: ${limitType}, allowed: ${allowed}`);
       
       if (!allowed) {
-        return res.status(429).json({ error: "Daily AI usage limit exceeded" });
+        const limitMessage = limitType === 'monthly' 
+          ? "Monthly AI usage limit exceeded. Upgrade to Pro for unlimited access or wait until next month."
+          : "Daily AI usage limit exceeded. Upgrade to Basic or Pro for more access.";
+        return res.status(429).json({ error: limitMessage });
       }
 
-      await storage.incrementDailyAiCalls(req.userId);
+      // Increment appropriate counter based on tier
+      if (user.tier === 'basic') {
+        await storage.incrementMonthlyAiCalls(req.userId);
+      } else {
+        await storage.incrementDailyAiCalls(req.userId);
+      }
 
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -1007,12 +1073,16 @@ Respond with JSON in this format:
         return res.status(404).json({ error: "User not found" });
       }
 
-      // Check daily AI usage limits  
-      const { allowed, userLimit } = checkAiUsageLimit(user);
-      console.log(`Chat assistant - User ${req.userId} (${user.email}) tier: ${user.tier}, limit: ${userLimit}, current usage: ${user.dailyAiCalls || 0}, allowed: ${allowed}`);
+      // Check AI usage limits (daily for free, monthly for basic, unlimited for pro)
+      const { allowed, userLimit, limitType } = checkAiUsageLimit(user);
+      const currentUsage = limitType === 'monthly' ? (user.monthlyAiCalls || 0) : (user.dailyAiCalls || 0);
+      console.log(`Chat assistant - User ${req.userId} (${user.email}) tier: ${user.tier}, limit: ${userLimit}, current usage: ${currentUsage}, limit type: ${limitType}, allowed: ${allowed}`);
       
       if (!allowed) {
-        return res.status(429).json({ error: "Daily AI usage limit exceeded" });
+        const limitMessage = limitType === 'monthly' 
+          ? "Monthly AI usage limit exceeded. Upgrade to Pro for unlimited access or wait until next month."
+          : "Daily AI usage limit exceeded. Upgrade to Basic or Pro for more access.";
+        return res.status(429).json({ error: limitMessage });
       }
 
       // Get user's tasks for context first
@@ -1022,7 +1092,12 @@ Respond with JSON in this format:
       console.log(`Chat assistant: Found ${tasks.length} total tasks for user ${req.userId}`);
       console.log(`Chat assistant: Sample tasks:`, tasks.slice(0, 3).map(t => ({ id: t.id, title: t.title, userId: t.userId })));
 
-      await storage.incrementDailyAiCalls(req.userId);
+      // Increment appropriate counter based on tier
+      if (user.tier === 'basic') {
+        await storage.incrementMonthlyAiCalls(req.userId);
+      } else {
+        await storage.incrementDailyAiCalls(req.userId);
+      }
 
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -1164,6 +1239,54 @@ Guidelines:
     } catch (error) {
       console.error("Failed to auto-update timezone:", error);
       res.status(500).json({ error: "Failed to auto-update timezone" });
+    }
+  });
+
+  // Dev endpoint to toggle between tiers for testing Basic plan
+  app.post("/api/dev/toggle-tier", async (req: AuthRequest, res) => {
+    try {
+      const userId = req.userId || 'demo-user';
+      
+      // Ensure user exists first
+      let user = await storage.getUser(userId);
+      if (!user) {
+        user = await storage.createUser({
+          id: userId,
+          email: 'demo@example.com',
+          firstName: 'Demo',
+          lastName: 'User',
+          tier: 'free'
+        });
+      }
+      
+      // Cycle through tiers: free -> basic -> pro -> free
+      let newTier: 'free' | 'basic' | 'pro' = 'free';
+      if (user.tier === 'free') {
+        newTier = 'basic';
+      } else if (user.tier === 'basic') {
+        newTier = 'pro';
+      } else {
+        newTier = 'free';
+      }
+      
+      // Reset AI usage when changing tiers
+      const updatedUser = await storage.updateUser(userId, {
+        tier: newTier,
+        dailyAiCalls: 0,
+        monthlyAiCalls: 0,
+        dailyAiCallsResetAt: new Date(),
+        monthlyAiCallsResetAt: new Date()
+      });
+      
+      res.json({ 
+        success: true, 
+        newTier,
+        message: `Tier changed to ${newTier}`,
+        user: updatedUser
+      });
+    } catch (error) {
+      console.error("Error toggling tier:", error);
+      res.status(500).json({ error: "Failed to toggle tier" });
     }
   });
 

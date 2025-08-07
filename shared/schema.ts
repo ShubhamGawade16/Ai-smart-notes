@@ -50,6 +50,8 @@ export const users = pgTable("users", {
   isTrialUsed: boolean("is_trial_used").default(false),
   dailyAiCalls: integer("daily_ai_calls").default(0),
   dailyAiCallsResetAt: timestamp("daily_ai_calls_reset_at").defaultNow(),
+  monthlyAiCalls: integer("monthly_ai_calls").default(0),
+  monthlyAiCallsResetAt: timestamp("monthly_ai_calls_reset_at").defaultNow(),
   monthlySubscriptionAmount: decimal("monthly_subscription_amount", { precision: 10, scale: 2 }),
   monthlyTaskCount: integer("monthly_task_count").default(0),
   monthlyTaskCountResetAt: timestamp("monthly_task_count_reset_at").defaultNow(),
