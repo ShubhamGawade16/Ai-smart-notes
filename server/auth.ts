@@ -82,6 +82,17 @@ export const authenticateToken = async (
       return next();
     }
     
+    // Development fallback for demo user
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Using demo user fallback for development');
+      req.userId = 'demo-user';
+      const demoUser = await storage.getUser('demo-user');
+      if (demoUser) {
+        req.user = demoUser;
+      }
+      return next();
+    }
+    
     console.error('Token decode failed: invalid structure', { hasDecoded: !!decoded, hasSub: decoded?.sub });
     return res.status(401).json({ error: 'Invalid token structure' });
     

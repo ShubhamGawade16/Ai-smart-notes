@@ -509,6 +509,7 @@ Respond with JSON in this format: {"quote": "your motivational quote", "author":
       const incompleteTasks = tasks.filter(task => !task.completed);
 
       console.log(`Smart timing: Found ${tasks.length} total tasks, ${incompleteTasks.length} incomplete for user ${req.userId}`);
+      console.log(`Smart timing: Sample tasks:`, tasks.slice(0, 3).map(t => ({ id: t.id, title: t.title, userId: t.userId })));
 
       if (incompleteTasks.length === 0) {
         return res.json({ analyses: [] });
@@ -695,6 +696,7 @@ Respond with JSON in this format:
       const incompleteTasks = tasks.filter(t => !t.completed);
 
       console.log(`Productivity insights: Found ${tasks.length} total tasks, ${completedTasks.length} completed for user ${req.userId}`);
+      console.log(`Productivity insights: Sample tasks:`, tasks.slice(0, 3).map(t => ({ id: t.id, title: t.title, userId: t.userId, completed: t.completed })));
 
       if (tasks.length === 0) {
         return res.json({
@@ -823,6 +825,7 @@ Respond with JSON in this format:
       const recentTasks = tasks.slice(-5).map(t => `${t.title} (${t.completed ? 'completed' : 'pending'})`);
 
       console.log(`Chat assistant: Found ${tasks.length} total tasks for user ${req.userId}`);
+      console.log(`Chat assistant: Sample tasks:`, tasks.slice(0, 3).map(t => ({ id: t.id, title: t.title, userId: t.userId })));
 
       await storage.incrementDailyAiCalls(req.userId);
 
