@@ -79,7 +79,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    // Initialize fallback auth first
+    const fallbackAuth = FallbackAuth.getInstance();
+    
+    // Check for existing fallback user
+    const existingFallbackUser = fallbackAuth.getCurrentUser();
+    if (existingFallbackUser) {
+      const userData = {
+        id: existingFallbackUser.id,
+        email: existingFallbackUser.email,
+        firstName: existingFallbackUser.firstName,
+        lastName: existingFallbackUser.lastName,
+        onboardingCompleted: true,
+      };
+      setUser(userData);
+      setIsLoading(false);
+      return;
+    }
+
     if (!supabase) {
+      setIsLoading(false);
       return;
     }
 
@@ -91,8 +110,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setSupabaseUser(session.user);
           await syncUserData(session.user);
         }
+        setIsLoading(false);
       } catch (error) {
         console.error('Error initializing auth:', error);
+        setIsLoading(false);
       }
     };
 
@@ -118,8 +139,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
+    // Set up fallback auth listener
+    const fallbackUnsubscribe = fallbackAuth.onAuthStateChange((fallbackUser) => {
+      if (fallbackUser) {
+        const userData = {
+          id: fallbackUser.id,
+          email: fallbackUser.email,
+          firstName: fallbackUser.firstName,
+          lastName: fallbackUser.lastName,
+          onboardingCompleted: true,
+        };
+        setUser(userData);
+      }
+      setIsLoading(false);
+    });
+
     return () => {
       subscription.unsubscribe();
+      fallbackUnsubscribe.unsubscribe();
     };
   }, []);
 
@@ -178,7 +215,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       // Redirect to dashboard immediately
-      window.location.href = "/dashboard";
+      setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 100);
 
     } catch (error: any) {
       console.error('All signup methods failed:', error);
@@ -248,7 +287,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       // Force navigation after successful login
-      window.location.href = "/dashboard";
+      setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 100);
 
     } catch (error: any) {
       console.error('All login methods failed:', error);
