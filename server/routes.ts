@@ -1,5 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 import { storage } from "./storage";
 import { 
   authenticateToken, 
@@ -39,7 +41,152 @@ function checkAiUsageLimit(user: any): { allowed: boolean; userLimit: number } {
   return { allowed, userLimit };
 }
 
+// JWT secret for signing tokens
+const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
+
+// Simple auth middleware
+const authenticateToken = (req: any, res: any, next: any) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.sendStatus(401);
+  }
+
+  jwt.verify(token, JWT_SECRET, (err: any, user: any) => {
+    if (err) return res.sendStatus(403);
+    req.user = user;
+    next();
+  });
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Simple Authentication Routes
+  app.post("/api/auth/signup", async (req, res) => {
+    try {
+      const { email, password, firstName, lastName } = req.body;
+
+      if (!email || !password || !firstName || !lastName) {
+        return res.status(400).json({ message: "All fields are required" });
+      }
+
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: "Email already registered" });
+      }
+
+      // Hash password
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Create user using database schema
+      const insertUserData = {
+        email,
+        passwordHash: hashedPassword,
+        firstName,
+        lastName,
+        onboardingCompleted: true,
+      };
+      const newUser = await storage.createUser(insertUserData);
+
+      // Generate JWT token
+      const token = jwt.sign(
+        { 
+          id: newUser.id, 
+          email: newUser.email,
+          firstName: newUser.firstName,
+          lastName: newUser.lastName 
+        },
+        JWT_SECRET,
+        { expiresIn: '30d' }
+      );
+
+      res.json({
+        token,
+        user: {
+          id: newUser.id,
+          email: newUser.email,
+          firstName: newUser.firstName,
+          lastName: newUser.lastName,
+        }
+      });
+    } catch (error: any) {
+      console.error('Signup error:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/auth/signin", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
+      }
+
+      // Find user by email
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+
+      // Check password
+      const validPassword = await bcrypt.compare(password, user.passwordHash || '');
+      if (!validPassword) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+
+      // Generate JWT token
+      const token = jwt.sign(
+        { 
+          id: user.id, 
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName 
+        },
+        JWT_SECRET,
+        { expiresIn: '30d' }
+      );
+
+      res.json({
+        token,
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+        }
+      });
+    } catch (error: any) {
+      console.error('Signin error:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/auth/me", authenticateToken, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      });
+    } catch (error: any) {
+      console.error('Get user error:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/auth/signout", (req, res) => {
+    // For JWT, we just need to remove the token on the client side
+    // In a production app, you might want to maintain a blacklist of tokens
+    res.json({ message: "Signed out successfully" });
+  });
   // Health check
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });

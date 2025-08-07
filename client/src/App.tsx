@@ -1,41 +1,51 @@
-import { Switch, Route, Redirect } from "wouter";
-import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { Route, Switch, Redirect } from "wouter";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+import { apiRequest } from "@/lib/queryClient";
+
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 
-import { AuthProvider, useAuth } from "@/hooks/use-auth-simple";
+import { SimpleAuthProvider, useSimpleAuth } from "@/hooks/use-simple-auth";
 import MobileDashboard from "@/pages/mobile-dashboard";
 import LandingPage from "@/pages/landing-page";
-import AuthSimplePage from "@/pages/auth-simple";
-import VerifyEmailPage from "@/pages/verify-email";
-import AuthCallbackPage from "@/pages/auth-callback";
+import SimpleAuthPage from "@/pages/simple-auth";
 import AdvancedFeatures from "./pages/advanced-features";
 import UpgradePage from "@/pages/upgrade";
 import NotFound from "@/pages/not-found";
 import { Loader2 } from "lucide-react";
 
+// Create query client with auth token
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      queryFn: async ({ queryKey }) => {
+        const token = localStorage.getItem('auth_token');
+        return apiRequest("GET", queryKey[0] as string, undefined, token ? { Authorization: `Bearer ${token}` } : {});
+      },
+    },
+  },
+});
+
 function Router() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading } = useSimpleAuth();
   
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-teal-600" />
       </div>
     );
   }
-  
+
   return (
     <Switch>
       {/* Public routes */}
       <Route path="/">
         {user ? <Redirect to="/dashboard" /> : <LandingPage />}
       </Route>
-      <Route path="/auth" component={AuthSimplePage} />
-      <Route path="/auth/callback" component={AuthCallbackPage} />
-      <Route path="/verify-email" component={VerifyEmailPage} />
+      <Route path="/auth" component={SimpleAuthPage} />
       
       {/* Protected routes */}
       <Route path="/dashboard">
@@ -55,19 +65,17 @@ function Router() {
   );
 }
 
-function App() {
+export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <ThemeProvider>
-          <TooltipProvider>
-            <Toaster />
+      <ThemeProvider>
+        <TooltipProvider>
+          <SimpleAuthProvider>
             <Router />
-          </TooltipProvider>
-        </ThemeProvider>
-      </AuthProvider>
+            <Toaster />
+          </SimpleAuthProvider>
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
-
-export default App;
