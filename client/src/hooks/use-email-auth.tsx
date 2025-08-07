@@ -35,7 +35,7 @@ export function EmailAuthProvider({ children }: { children: ReactNode }) {
     // Get initial session
     const initAuth = async () => {
       try {
-        const { data: { session } } = await supabase!.auth.getSession();
+        const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
           // Check if email is verified
           if (session.user.email_confirmed_at) {
@@ -90,7 +90,7 @@ export function EmailAuthProvider({ children }: { children: ReactNode }) {
                 description: "Welcome to Planify! Redirecting to your dashboard...",
               });
             }
-          } else if (event === 'SIGNED_UP' as any) {
+          } else if (event === 'SIGNED_UP') {
             // User signed up but email not verified yet
             console.log('User signed up, waiting for email verification');
           }
