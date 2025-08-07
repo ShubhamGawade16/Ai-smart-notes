@@ -1757,6 +1757,9 @@ Guidelines:
     }
   });
 
+  // Set up Replit Auth middleware first
+  await setupAuth(app);
+
   // Replit Auth routes - user endpoint
   app.get('/api/replit-auth/user', isAuthenticated, async (req: any, res) => {
     try {

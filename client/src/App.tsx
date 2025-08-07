@@ -38,6 +38,7 @@ function Router() {
   const { user, isLoading } = useEmailAuth();
   const { user: replitUser, isLoading: replitLoading, isAuthenticated: replitAuthenticated } = useReplitAuth();
   
+  // Show loading only if we're actually loading auth state
   if (isLoading || replitLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -46,14 +47,24 @@ function Router() {
     );
   }
 
+  // Log for debugging
+  console.log("Auth state:", { 
+    emailUser: user, 
+    replitUser, 
+    replitAuthenticated, 
+    isLoading, 
+    replitLoading 
+  });
+
   return (
     <Switch>
       {/* Public routes */}
       <Route path="/">
-        {(replitAuthenticated && replitUser) ? <Redirect to="/dashboard" /> : 
+        {(replitAuthenticated && replitUser && Object.keys(replitUser).length > 0) ? <Redirect to="/dashboard" /> : 
          user ? <Redirect to="/dashboard" /> : 
          <ReplitAuthLanding />}
       </Route>
+      <Route path="/landing" component={LandingPage} />
       <Route path="/auth" component={EmailAuthPage} />
       <Route path="/auth/callback" component={AuthCallbackPage} />
       <Route path="/verify-email" component={VerifyEmailPage} />
@@ -63,15 +74,15 @@ function Router() {
       
       {/* Protected routes */}
       <Route path="/dashboard">
-        {(replitAuthenticated && replitUser) || user ? <MobileDashboard /> : <Redirect to="/" />}
+        {(replitAuthenticated && replitUser && Object.keys(replitUser).length > 0) || user ? <MobileDashboard /> : <Redirect to="/" />}
       </Route>
       
       <Route path="/advanced-features">
-        {(replitAuthenticated && replitUser) || user ? <AdvancedFeatures /> : <Redirect to="/" />}
+        {(replitAuthenticated && replitUser && Object.keys(replitUser).length > 0) || user ? <AdvancedFeatures /> : <Redirect to="/" />}
       </Route>
       
       <Route path="/upgrade">
-        {(replitAuthenticated && replitUser) || user ? <UpgradePage /> : <Redirect to="/" />}
+        {(replitAuthenticated && replitUser && Object.keys(replitUser).length > 0) || user ? <UpgradePage /> : <Redirect to="/" />}
       </Route>
       
       <Route component={NotFound} />

@@ -85,7 +85,7 @@ export function useSubscription() {
       return true;
     }
     
-    const userTier = user?.tier || 'free';
+    const userTier = (user && 'tier' in user ? user.tier : 'free') || 'free';
     const limit = getTierLimits(userTier);
     
     // Unlimited for pro users

@@ -9,6 +9,6 @@ export function useReplitAuth() {
   return {
     user,
     isLoading,
-    isAuthenticated: !!user,
+    isAuthenticated: !!user && Object.keys(user || {}).length > 0,
   };
 }
