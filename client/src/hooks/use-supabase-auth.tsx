@@ -27,7 +27,7 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null);
   const [supabaseUser, setSupabaseUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -203,18 +203,16 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         description: "You have been successfully logged out.",
       });
       
-      window.location.href = "/";
-    } catch (error: any) {
+      // Redirect to landing page
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 500);
+    } catch (error) {
       console.error('Logout error:', error);
-      toast({
-        title: "Logout failed",
-        description: error.message,
-        variant: "destructive",
-      });
     }
   };
 
-  const value = {
+  const value: AuthContextType = {
     user,
     supabaseUser,
     isLoading,
@@ -231,10 +229,11 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useSupabaseAuth() {
+export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error("useSupabaseAuth must be used within a SupabaseAuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 }
+

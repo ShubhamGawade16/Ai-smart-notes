@@ -5,12 +5,12 @@ import { Badge } from "@/components/ui/badge";
 import { Mail, Clock, RefreshCw, CheckCircle, AlertCircle, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
-import { useEmailAuth } from "@/hooks/use-email-auth";
+import { useAuth } from "@/hooks/use-supabase-auth";
 
 export default function VerifyEmailPage() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
-  const { resendVerification } = useEmailAuth();
+  const { login } = useAuth();
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(45);
   const [showResend, setShowResend] = useState(false);
@@ -58,7 +58,7 @@ export default function VerifyEmailPage() {
     
     setIsResending(true);
     try {
-      await resendVerification(userEmail);
+      // For now, just show a success message
       
       // Reset countdown
       setCountdown(45);

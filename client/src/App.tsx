@@ -7,11 +7,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 
-import { EmailAuthProvider, useEmailAuth } from "@/hooks/use-email-auth";
-import { useReplitAuth } from "@/hooks/use-replit-auth";
+import { AuthProvider, useAuth } from "@/hooks/use-supabase-auth";
 import MobileDashboard from "@/pages/mobile-dashboard";
-import LandingPage from "@/pages/landing-page";
-import ReplitAuthLanding from "@/pages/replit-auth-landing";
+import LandingPage from "@/pages/landing";
 import EmailAuthPage from "@/pages/email-auth";
 import VerifyEmailPage from "@/pages/verify-email";
 import AuthCallbackPage from "@/pages/auth-callback";
@@ -28,18 +26,16 @@ const queryClient = new QueryClient({
     queries: {
       queryFn: async ({ queryKey }) => {
         const token = localStorage.getItem('auth_token');
-        return apiRequest("GET", queryKey[0] as string, undefined, token ? { Authorization: `Bearer ${token}` } : undefined);
+        return apiRequest("GET", queryKey[0] as string, undefined, token ? { headers: { Authorization: `Bearer ${token}` } } : undefined);
       },
     },
   },
 });
 
 function Router() {
-  const { user, isLoading } = useEmailAuth();
-  const { user: replitUser, isLoading: replitLoading, isAuthenticated: replitAuthenticated } = useReplitAuth();
+  const { user, isLoading } = useAuth();
   
-  // Show loading only if we're actually loading auth state
-  if (isLoading || replitLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-teal-600" />
@@ -47,42 +43,29 @@ function Router() {
     );
   }
 
-  // Log for debugging
-  console.log("Auth state:", { 
-    emailUser: user, 
-    replitUser, 
-    replitAuthenticated, 
-    isLoading, 
-    replitLoading 
-  });
-
   return (
     <Switch>
       {/* Public routes */}
       <Route path="/">
-        {(replitAuthenticated && replitUser && Object.keys(replitUser).length > 0) ? <Redirect to="/dashboard" /> : 
-         user ? <Redirect to="/dashboard" /> : 
-         <ReplitAuthLanding />}
+        {user ? <Redirect to="/dashboard" /> : <LandingPage />}
       </Route>
-      <Route path="/landing" component={LandingPage} />
       <Route path="/auth" component={EmailAuthPage} />
       <Route path="/auth/callback" component={AuthCallbackPage} />
       <Route path="/verify-email" component={VerifyEmailPage} />
       <Route path="/supabase-setup" component={SupabaseSetupGuide} />
       <Route path="/debug-auth" component={DebugAuthPage} />
-      <Route path="/replit-auth" component={ReplitAuthLanding} />
       
       {/* Protected routes */}
       <Route path="/dashboard">
-        {(replitAuthenticated && replitUser && Object.keys(replitUser).length > 0) || user ? <MobileDashboard /> : <Redirect to="/" />}
+        {user ? <MobileDashboard /> : <Redirect to="/" />}
       </Route>
       
       <Route path="/advanced-features">
-        {(replitAuthenticated && replitUser && Object.keys(replitUser).length > 0) || user ? <AdvancedFeatures /> : <Redirect to="/" />}
+        {user ? <AdvancedFeatures /> : <Redirect to="/" />}
       </Route>
       
       <Route path="/upgrade">
-        {(replitAuthenticated && replitUser && Object.keys(replitUser).length > 0) || user ? <UpgradePage /> : <Redirect to="/" />}
+        {user ? <UpgradePage /> : <Redirect to="/" />}
       </Route>
       
       <Route component={NotFound} />
@@ -95,10 +78,10 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <TooltipProvider>
-          <EmailAuthProvider>
+          <AuthProvider>
             <Router />
             <Toaster />
-          </EmailAuthProvider>
+          </AuthProvider>
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>

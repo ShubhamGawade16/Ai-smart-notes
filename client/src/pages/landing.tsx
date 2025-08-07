@@ -33,18 +33,18 @@ export default function LandingPage() {
               <Brain className="h-5 w-5 text-white" />
             </div>
             <span className="text-xl font-bold text-gray-900 dark:text-white">
-              Smart To-Do AI
+              Planify
             </span>
           </div>
           <div className="flex items-center space-x-4">
-            <Link href="/onboarding">
-              <Button className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700">
-                Start Free Trial
+            <Link href="/auth">
+              <Button className="bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700">
+                Get Started Free
               </Button>
             </Link>
-            <Link href="/">
+            <Link href="/auth">
               <Button variant="outline">
-                Try Demo
+                Sign In
               </Button>
             </Link>
           </div>

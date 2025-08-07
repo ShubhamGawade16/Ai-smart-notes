@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { useEmailAuth } from "./use-email-auth";
-import { useReplitAuth } from "./use-replit-auth";
+import { useAuth } from "./use-supabase-auth";
 import { apiRequest } from "@/lib/queryClient";
 
 export interface SubscriptionStatus {
@@ -13,9 +12,7 @@ export interface SubscriptionStatus {
 }
 
 export function useSubscription() {
-  const { user: emailUser } = useEmailAuth();
-  const { user: replitUser } = useReplitAuth();
-  const user = replitUser || emailUser;
+  const { user } = useAuth();
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus>({
     isPremium: false,
     dailyAiUsage: 0,

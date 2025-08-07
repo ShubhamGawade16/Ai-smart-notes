@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEmailAuth } from "@/hooks/use-email-auth";
-import { useReplitAuth } from "@/hooks/use-replit-auth";
+import { useAuth } from "@/hooks/use-supabase-auth";
 import { useSubscription } from "@/hooks/use-subscription";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,11 +23,7 @@ import { Plus, MessageCircle, Crown, User, Settings, LogOut, Sparkles } from "lu
 import { useToast } from "@/hooks/use-toast";
 
 export default function MobileDashboard() {
-  const { user, signOut } = useEmailAuth();
-  const { user: replitUser, isAuthenticated: replitAuthenticated } = useReplitAuth();
-  
-  const currentUser = replitUser || user;
-  const isReplitAuth = replitAuthenticated && replitUser;
+  const { user, logout } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { subscriptionStatus, checkAiUsageLimit, incrementAiUsage } = useSubscription();
@@ -193,7 +188,7 @@ export default function MobileDashboard() {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
-                  onClick={() => isReplitAuth ? window.location.href = "/api/logout" : signOut()} 
+                  onClick={logout} 
                   className="cursor-pointer"
                 >
                   <LogOut className="w-4 h-4 mr-2" />

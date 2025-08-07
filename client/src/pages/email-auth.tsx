@@ -7,12 +7,12 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Mail, Lock, User, ArrowLeft, Brain, Target, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useEmailAuth } from "@/hooks/use-email-auth";
+import { useAuth } from "@/hooks/use-supabase-auth";
 
 export default function EmailAuthPage() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const { signIn, signUp } = useEmailAuth();
+  const { login, signup } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Login form state
@@ -38,7 +38,7 @@ export default function EmailAuthPage() {
     
     setIsSubmitting(true);
     try {
-      await signIn(loginEmail, loginPassword);
+      await login(loginEmail, loginPassword);
       // Redirect happens automatically in auth state change
     } catch (error: any) {
       console.error('Login error:', error);
@@ -70,12 +70,8 @@ export default function EmailAuthPage() {
     
     setIsSubmitting(true);
     try {
-      const result = await signUp(signupEmail, signupPassword, signupFirstName, signupLastName);
-      if (result.needsVerification) {
-        // Store email for verification page
-        localStorage.setItem('verification_email', signupEmail);
-        navigate('/verify-email');
-      }
+      await signup(signupEmail, signupPassword, signupFirstName, signupLastName);
+      // Redirect happens automatically in signup function
     } catch (error: any) {
       console.error('Signup error:', error);
       // Error toast is handled in signUp function
