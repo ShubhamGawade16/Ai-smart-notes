@@ -67,13 +67,26 @@ export const authenticateToken = async (
         if (!dbUser) {
           // Create user from JWT token data
           console.log(`Creating new user from JWT: ${decoded.email}`);
-          dbUser = await storage.createUser({
-            email: decoded.email,
-            firstName: decoded.user_metadata?.first_name || decoded.given_name || '',
-            lastName: decoded.user_metadata?.last_name || decoded.family_name || '',
-            tier: 'free',
-            onboardingCompleted: true, // Skip onboarding for OAuth users
-          });
+          try {
+            dbUser = await storage.createUser({
+              email: decoded.email,
+              firstName: decoded.user_metadata?.first_name || decoded.given_name || '',
+              lastName: decoded.user_metadata?.last_name || decoded.family_name || '',
+              tier: 'free',
+              onboardingCompleted: true, // Skip onboarding for OAuth users
+            });
+          } catch (createError: any) {
+            // If user creation fails due to duplicate email, try to get existing user
+            if (createError.message?.includes('duplicate key') || createError.message?.includes('users_email_unique')) {
+              console.log(`User ${decoded.email} already exists, fetching existing user`);
+              dbUser = await storage.getUserByEmail(decoded.email);
+              if (!dbUser) {
+                throw new Error(`Failed to create or retrieve user for ${decoded.email}`);
+              }
+            } else {
+              throw createError;
+            }
+          }
         }
         req.user = dbUser;
         req.userId = dbUser.id;

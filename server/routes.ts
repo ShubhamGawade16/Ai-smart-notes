@@ -1233,11 +1233,15 @@ Guidelines:
   // ============================================================================
 
   // Get all tasks (works with or without auth for testing)
-  app.get("/api/tasks", async (req: AuthRequest, res) => {
+  app.get("/api/tasks", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      // Use demo user ID if no auth token provided
-      const userId = req.userId || 'demo-user';
-      const tasks = await storage.getTasks(userId);
+      if (!req.userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+      
+      console.log(`Getting tasks for user: ${req.userId} (${req.user?.email || 'unknown email'})`);
+      const tasks = await storage.getTasks(req.userId);
+      console.log(`Found ${tasks.length} tasks for user ${req.userId}`);
       res.json({ tasks });
     } catch (error) {
       console.error("Get tasks error:", error);
@@ -1245,11 +1249,13 @@ Guidelines:
     }
   });
 
-  // Get today's tasks (works with or without auth for testing)
-  app.get("/api/tasks/today", async (req: AuthRequest, res) => {
+  // Get today's tasks
+  app.get("/api/tasks/today", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      // Use demo user ID if no auth token provided
-      const userId = req.userId || 'demo-user';
+      if (!req.userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+      const userId = req.userId;
       const allTasks = await storage.getTasks(userId);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -1286,10 +1292,12 @@ Guidelines:
   });
 
   // Enhanced task creation with AI parsing (no auth required for testing)
-  app.post("/api/tasks", async (req: AuthRequest, res) => {
+  app.post("/api/tasks", authenticateToken, async (req: AuthRequest, res) => {
       try {
-        // Use demo user ID if no auth token provided
-        const userId = req.userId || 'demo-user';
+        if (!req.userId) {
+          return res.status(401).json({ error: "User not authenticated" });
+        }
+        const userId = req.userId;
 
         // Check if this is a natural language input that needs AI parsing
         const { title, useAiParsing, ...otherData } = req.body;
@@ -1336,10 +1344,12 @@ Guidelines:
   );
 
   // Update task (works with or without auth for testing)
-  app.patch("/api/tasks/:id", async (req: AuthRequest, res) => {
+  app.patch("/api/tasks/:id", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      // Use demo user ID if no auth token provided
-      const userId = req.userId || 'demo-user';
+      if (!req.userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+      const userId = req.userId;
 
       const taskId = req.params.id;
       if (!taskId) {
@@ -1376,10 +1386,12 @@ Guidelines:
   });
 
   // Delete task (works with or without auth for testing)
-  app.delete("/api/tasks/:id", async (req: AuthRequest, res) => {
+  app.delete("/api/tasks/:id", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      // Use demo user ID if no auth token provided
-      const userId = req.userId || 'demo-user';
+      if (!req.userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+      const userId = req.userId;
 
       const taskId = req.params.id;
       if (!taskId) {
@@ -1410,11 +1422,13 @@ Guidelines:
   // NOTE ROUTES
   // ============================================================================
 
-  // Get all notes (works with or without auth for testing)
-  app.get("/api/notes", async (req: AuthRequest, res) => {
+  // Get all notes
+  app.get("/api/notes", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      // Use demo user ID if no auth token provided
-      const userId = req.userId || 'demo-user';
+      if (!req.userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+      const userId = req.userId;
       const notes = await storage.getNotes(userId);
       res.json({ notes });
     } catch (error) {
@@ -1451,10 +1465,12 @@ Guidelines:
   // ANALYTICS ROUTES
   // ============================================================================
 
-  app.get("/api/analytics/stats", async (req: AuthRequest, res) => {
+  app.get("/api/analytics/stats", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      // Use demo user ID if no auth token provided
-      const userId = req.userId || 'demo-user';
+      if (!req.userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+      const userId = req.userId;
       
       const tasks = await storage.getTasks(userId);
       const notes = await storage.getNotes(userId);
