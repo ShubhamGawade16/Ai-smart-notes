@@ -334,7 +334,7 @@ Examples of refinement:
       max_tokens: 1000,
     });
 
-    const content = response.choices[0]?.message?.content;
+    let content = response.choices[0]?.message?.content;
     if (!content) {
       throw new Error("No response from AI");
     }

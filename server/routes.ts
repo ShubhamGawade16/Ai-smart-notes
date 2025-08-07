@@ -794,9 +794,16 @@ Respond with JSON in this format:
         return res.status(401).json({ error: "User ID not found in token" });
       }
 
-      const { text } = req.body;
-      if (!text) {
-        return res.status(400).json({ error: "Text is required" });
+      const { text, tasks } = req.body;
+      let inputText = text;
+      
+      // Handle tasks array parameter
+      if (!inputText && Array.isArray(tasks)) {
+        inputText = tasks.join(', ');
+      }
+      
+      if (!inputText) {
+        return res.status(400).json({ error: "Text or tasks are required" });
       }
 
       // Check and increment AI usage
@@ -819,7 +826,7 @@ Respond with JSON in this format:
 
       const prompt = `You are a task categorization expert. Analyze the following text and extract individual tasks, then categorize and tag each one.
 
-Text to analyze: "${text}"
+Text to analyze: "${inputText}"
 
 For each task you identify, provide:
 1. A clear, actionable title
@@ -1035,10 +1042,6 @@ Guidelines:
 
       const messages = [
         { role: "system", content: systemPrompt },
-        ...(context || []).map((msg: any) => ({
-          role: msg.type === 'user' ? 'user' : 'assistant',
-          content: msg.content
-        })),
         { role: "user", content: message }
       ];
 
