@@ -21,7 +21,6 @@ import DevModeModal from "@/components/dev-mode-modal";
 import ConfettiBurst from "@/components/confetti-burst";
 import DailyMotivationQuote from "@/components/daily-motivation-quote";
 import TaskProgressRadar from "@/components/task-progress-radar";
-import CustomAiPrompt from "@/components/custom-ai-prompt";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Plus, MessageCircle, Crown, User, Settings, LogOut, Sparkles, Sun, Moon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -312,9 +311,6 @@ export default function MobileDashboard() {
 
           {/* Interactive Productivity Chart */}
           <TaskProgressRadar />
-          
-          {/* Custom AI Prompt Interface */}
-          <CustomAiPrompt />
 
           {/* Mobile-Only Quick Stats */}
           <div className="grid grid-cols-2 gap-4">

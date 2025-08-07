@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
 import { Task } from '@shared/schema';
-import { apiRequest } from '@/lib/queryClient';
 
 interface CategoryProgress {
   category: string;
@@ -14,8 +13,6 @@ interface CategoryProgress {
 
 export default function TaskProgressRadar() {
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
-  const [smartCategories, setSmartCategories] = useState<Map<string, string>>(new Map());
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const { data: tasksResponse } = useQuery({
     queryKey: ['/api/tasks'],
@@ -23,68 +20,19 @@ export default function TaskProgressRadar() {
 
   const tasks: Task[] = (tasksResponse as any)?.tasks || [];
 
-  // AI-powered task categorization for tasks without categories
-  const analyzeTaskCategories = async (tasksToAnalyze: Task[]) => {
-    if (tasksToAnalyze.length === 0) return;
-    
-    setIsAnalyzing(true);
-    try {
-      const response = await apiRequest('POST', '/api/ai/categorize-tasks', {
-        tasks: tasksToAnalyze.map(t => ({
-          id: t.id,
-          title: t.title,
-          description: t.description,
-          currentCategory: t.category
-        }))
-      });
-      const data = await response.json();
-      
-      if (data.categorizations) {
-        const newCategories = new Map();
-        data.categorizations.forEach((cat: any) => {
-          newCategories.set(cat.taskId, cat.suggestedCategory);
-        });
-        setSmartCategories(newCategories);
-      }
-    } catch (error) {
-      console.error('Failed to analyze task categories:', error);
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
-  // Analyze tasks without categories when component mounts or tasks change
-  useEffect(() => {
-    const uncategorizedTasks = tasks.filter(task => !task.category || task.category === 'other');
-    if (uncategorizedTasks.length > 0) {
-      analyzeTaskCategories(uncategorizedTasks);
-    }
-  }, [tasks.length]);
-
-  // Calculate progress by category using smart AI categorization
+  // Calculate progress by category
   const calculateCategoryProgress = (): CategoryProgress[] => {
     const categoryMap = new Map<string, { completed: number; total: number }>();
     
     // Default categories
-    const defaultCategories = ['work', 'personal', 'health', 'learning', 'creative', 'communication'];
+    const defaultCategories = ['work', 'personal', 'health', 'learning', 'creative', 'other'];
     defaultCategories.forEach(cat => {
       categoryMap.set(cat, { completed: 0, total: 0 });
     });
 
-    // Count tasks by category (use AI suggestion if available)
+    // Count tasks by category
     tasks.forEach(task => {
-      let category = task.category;
-      
-      // Use AI-suggested category if task doesn't have one or is 'other'
-      if ((!category || category === 'other') && smartCategories.has(task.id)) {
-        category = smartCategories.get(task.id);
-      }
-      
-      // Fallback to 'personal' for uncategorized tasks
-      if (!category || category === 'other') {
-        category = 'personal';
-      }
-      
+      const category = task.category || 'other';
       const current = categoryMap.get(category) || { completed: 0, total: 0 };
       
       current.total += 1;
@@ -95,15 +43,13 @@ export default function TaskProgressRadar() {
       categoryMap.set(category, current);
     });
 
-    // Only return categories that have tasks
-    return Array.from(categoryMap.entries())
-      .filter(([_, data]) => data.total > 0)
-      .map(([category, data]) => ({
-        category: category.charAt(0).toUpperCase() + category.slice(1),
-        completed: data.completed,
-        total: data.total,
-        percentage: data.total > 0 ? Math.round((data.completed / data.total) * 100) : 0
-      }));
+    // Convert to array format for radar chart
+    return Array.from(categoryMap.entries()).map(([category, data]) => ({
+      category: category.charAt(0).toUpperCase() + category.slice(1),
+      completed: data.completed,
+      total: data.total,
+      percentage: data.total > 0 ? Math.round((data.completed / data.total) * 100) : 0
+    }));
   };
 
   const radarData = calculateCategoryProgress();
@@ -131,11 +77,6 @@ export default function TaskProgressRadar() {
       <CardHeader className="pb-4 pt-6 px-6">
         <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
           📊 Task Progress
-          {isAnalyzing && (
-            <span className="text-xs bg-gradient-to-r from-purple-500 to-teal-500 bg-clip-text text-transparent">
-              ✨ AI Analyzing...
-            </span>
-          )}
         </CardTitle>
       </CardHeader>
       <CardContent className="px-6 pb-6">

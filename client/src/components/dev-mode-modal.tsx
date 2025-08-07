@@ -17,7 +17,7 @@ interface DevModeModalProps {
 
 export default function DevModeModal({ isOpen, onClose }: DevModeModalProps) {
   const { user } = useAuth();
-  const { subscriptionStatus } = useSubscription();
+  const { subscriptionStatus, refetch } = useSubscription();
   const { toast } = useToast();
   const [isResetting, setIsResetting] = useState(false);
   const queryClient = useQueryClient();
