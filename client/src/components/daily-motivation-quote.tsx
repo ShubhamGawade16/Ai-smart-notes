@@ -117,24 +117,43 @@ export default function DailyMotivationQuote() {
     return randomQuote;
   };
 
-  // Set initial quote based on the day
+  // Load AI quote on mount and whenever tasks change
   useEffect(() => {
-    const dayOfYear = Math.floor((new Date().getTime() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
-    const quoteIndex = dayOfYear % productivityQuotes.length;
-    setCurrentQuote(productivityQuotes[quoteIndex]);
-  }, []);
+    if (tasks.length > 0) {
+      refreshQuote();
+    } else {
+      // Default quote if no tasks
+      const dayOfYear = Math.floor((new Date().getTime() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+      const quoteIndex = dayOfYear % productivityQuotes.length;
+      setCurrentQuote(productivityQuotes[quoteIndex]);
+    }
+  }, [tasks.length]);
 
   const refreshQuote = async () => {
     setIsAnimating(true);
     try {
+      // Get auth token
+      const token = localStorage.getItem('supabase_auth_token');
+      if (!token) {
+        throw new Error('No auth token');
+      }
+
       // Always try to get AI quote first
       const response = await fetch('/api/ai/motivation-quote', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           completedTasks: completedTasks.length,
           incompleteTasks: incompleteTasks.length,
-          recentTasks: tasks.slice(0, 3).map((t: any) => ({ title: t.title, completed: t.completed }))
+          recentTasks: tasks.slice(0, 5).map((t: any) => ({ 
+            title: t.title, 
+            completed: t.completed,
+            category: t.category,
+            priority: t.priority 
+          }))
         })
       });
       
@@ -152,6 +171,7 @@ export default function DailyMotivationQuote() {
           setIsAiQuote(false);
         }
       } else {
+        console.error('AI quote API error:', response.status);
         setCurrentQuote(getPersonalizedQuote());
         setIsAiQuote(false);
       }

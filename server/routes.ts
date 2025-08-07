@@ -743,6 +743,82 @@ Respond with JSON in this format: {"quote": "your motivational quote", "author":
     }
   });
 
+  // AI Task Categorization endpoint
+  app.post("/api/ai/categorize-tasks", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      if (!req.userId) {
+        return res.status(401).json({ error: "User ID not found in token" });
+      }
+
+      // Check and increment AI usage
+      const user = await storage.getUser(req.userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Check AI usage limits (use same logic as other AI endpoints)
+      const { allowed, userLimit, limitType } = checkAiUsageLimit(user);
+      const currentUsage = limitType === 'monthly' ? (user.monthlyAiCalls || 0) : (user.dailyAiCalls || 0);
+      console.log(`Task categorization - User ${req.userId} (${user.email}) tier: ${user.tier}, limit: ${userLimit}, current usage: ${currentUsage}, limit type: ${limitType}, allowed: ${allowed}`);
+      
+      if (!allowed) {
+        return res.status(429).json({ error: `${limitType === 'monthly' ? 'Monthly' : 'Daily'} AI usage limit exceeded` });
+      }
+
+      const { tasks } = req.body;
+      
+      if (!Array.isArray(tasks) || tasks.length === 0) {
+        return res.json({ categorizations: [] });
+      }
+
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(500).json({ error: "OpenAI API key not configured" });
+      }
+
+      const { default: OpenAI } = await import('openai');
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+      const prompt = `Analyze the following tasks and categorize each one into the most appropriate category. Use these categories only:
+- work: Professional tasks, meetings, projects, deadlines
+- personal: Personal errands, family time, personal projects
+- health: Exercise, medical appointments, wellness activities
+- learning: Education, reading, courses, skill development
+- creative: Art, writing, design, creative projects
+- communication: Calls, emails, messaging, social activities
+
+Tasks to categorize:
+${tasks.map((t: any, i: number) => `${i + 1}. "${t.title}" ${t.description ? `- ${t.description}` : ''}`).join('\n')}
+
+Respond with JSON in this format:
+{
+  "categorizations": [
+    {"taskId": "task_id_1", "suggestedCategory": "category_name"},
+    {"taskId": "task_id_2", "suggestedCategory": "category_name"}
+  ]
+}
+
+Be specific and accurate. Consider the task content and context.`;
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+        messages: [{ role: "user", content: prompt }],
+        response_format: { type: "json_object" }
+      });
+
+      // Increment usage only after successful API call
+      await storage.incrementDailyAiCalls(req.userId);
+      if (limitType === 'monthly') {
+        await storage.incrementMonthlyAiCalls(req.userId);
+      }
+
+      const result = JSON.parse(response.choices[0].message.content || '{"categorizations": []}');
+      res.json(result);
+    } catch (error) {
+      console.error('AI task categorization error:', error);
+      res.status(500).json({ error: "Failed to categorize tasks" });
+    }
+  });
+
   // Smart Timing Analysis endpoint
   app.get("/api/ai/smart-timing", requireAuth, async (req: AuthRequest, res) => {
     try {
