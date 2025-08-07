@@ -372,17 +372,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // In development mode, still track usage but be more generous for free users
       const isDevelopment = process.env.NODE_ENV === 'development';
 
-      const isPremium = user.tier !== 'free' && user.tier !== null;
-      if (isPremium) {
-        // Premium users have unlimited usage
+      // Check tier-based permissions first
+      const tier = user.tier || 'free';
+      
+      if (tier === 'pro') {
+        // Pro users have unlimited usage - still increment for tracking
+        const newCount = (user.dailyAiCalls || 0) + 1;
+        await storage.updateUser(req.userId, {
+          dailyAiCalls: newCount,
+          dailyAiCallsResetAt: new Date()
+        });
+        
         res.json({
-          dailyAiUsage: user.dailyAiCalls || 0,
+          dailyAiUsage: newCount,
           canUseAi: true
         });
         return;
       }
+      
+      if (tier === 'basic') {
+        // Basic users have monthly limits
+        const now = new Date();
+        const monthlyResetTime = user.monthlyAiCallsResetAt ? new Date(user.monthlyAiCallsResetAt) : new Date();
+        const shouldResetMonthly = now.getMonth() !== monthlyResetTime.getMonth() || now.getFullYear() !== monthlyResetTime.getFullYear();
+        
+        let newMonthlyCount = user.monthlyAiCalls || 0;
+        if (shouldResetMonthly) {
+          newMonthlyCount = 0;
+        }
+        
+        const monthlyLimit = 30;
+        const canUseAi = newMonthlyCount < monthlyLimit;
+        
+        if (canUseAi) {
+          newMonthlyCount += 1;
+          await storage.updateUser(req.userId, {
+            monthlyAiCalls: newMonthlyCount,
+            monthlyAiCallsResetAt: shouldResetMonthly ? new Date(now.getFullYear(), now.getMonth(), 1) : user.monthlyAiCallsResetAt
+          });
+        }
+        
+        res.json({
+          dailyAiUsage: 0, // No daily limit for basic
+          monthlyAiUsage: newMonthlyCount,
+          canUseAi: newMonthlyCount < monthlyLimit
+        });
+        return;
+      }
 
-      // Check if daily limit needs reset
+      // Free tier - Check if daily limit needs reset
       const now = new Date();
       const resetTime = user.dailyAiCallsResetAt ? new Date(user.dailyAiCallsResetAt) : new Date();
       const shouldReset = now.getTime() - resetTime.getTime() > 24 * 60 * 60 * 1000;
@@ -392,8 +430,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         newDailyCount = 0;
       }
 
-      const dailyLimit = 3;
-      const canUseAi = newDailyCount < dailyLimit;
+      // Get tier-based limits for free tier
+      const getDailyLimit = (userTier: string) => {
+        switch (userTier) {
+          case 'basic': return -1; // No daily limit for basic (monthly only)
+          case 'pro': return -1; // No daily limit for pro (unlimited)
+          default: return 3; // free tier
+        }
+      };
+      
+      const dailyLimit = getDailyLimit(tier);
+      const canUseAi = dailyLimit === -1 || newDailyCount < dailyLimit;
 
       if (canUseAi) {
         newDailyCount += 1;
@@ -405,7 +452,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({
         dailyAiUsage: newDailyCount,
-        canUseAi: newDailyCount < dailyLimit
+        canUseAi: dailyLimit === -1 || newDailyCount < dailyLimit
       });
     } catch (error) {
       console.error("Failed to increment AI usage:", error);
