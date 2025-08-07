@@ -1883,13 +1883,55 @@ Guidelines:
         return res.status(404).json({ error: 'User not found' });
       }
 
-      // Toggle between free and premium_pro
-      const newTier = user.tier === 'premium_pro' ? 'free' : 'premium_pro';
+      // Cycle through tiers: free → basic → pro → free
+      let newTier: string;
+      switch (user.tier) {
+        case 'free':
+          newTier = 'basic';
+          break;
+        case 'basic':
+          newTier = 'pro';
+          break;
+        case 'pro':
+          newTier = 'free';
+          break;
+        default:
+          newTier = 'basic';
+      }
+
       await storage.updateUser(userId, { tier: newTier });
 
       res.json({ success: true, newTier });
     } catch (error) {
       console.error('Error toggling tier:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Reset AI usage counters (both daily and monthly)
+  app.post('/api/dev/reset-ai-usage', requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const userId = req.userId;
+      if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      // Reset both daily and monthly AI usage counters
+      await storage.updateUser(userId, {
+        dailyAiCalls: 0,
+        monthlyAiCalls: 0,
+        dailyAiCallsResetAt: new Date(),
+        monthlyAiCallsResetAt: new Date()
+      });
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error resetting AI usage:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   });
@@ -1905,8 +1947,13 @@ Guidelines:
       await storage.deleteAllUserTasks(userId);
       await storage.deleteAllUserNotes(userId);
       
-      // Reset AI usage
-      await storage.resetDailyAiUsage(userId);
+      // Reset AI usage (both daily and monthly)
+      await storage.updateUser(userId, {
+        dailyAiCalls: 0,
+        monthlyAiCalls: 0,
+        dailyAiCallsResetAt: new Date(),
+        monthlyAiCallsResetAt: new Date()
+      });
 
       res.json({ success: true });
     } catch (error) {
