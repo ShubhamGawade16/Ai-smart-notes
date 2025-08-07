@@ -118,16 +118,26 @@ export default function MobileDashboard() {
             {/* Theme Toggle and Subscription Badge */}
             <div className="flex items-center gap-2">
               <ThemeToggle />
-              {subscriptionStatus.isPremium ? (
-                <Badge className="bg-gradient-to-r from-yellow-400 to-amber-500 text-white px-3 py-1 text-sm font-medium">
+              {subscriptionStatus.tier === 'pro' ? (
+                <Badge className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-3 py-1 text-sm font-medium">
                   <Crown className="w-4 h-4 mr-1" />
                   Pro
                 </Badge>
+              ) : subscriptionStatus.tier === 'basic' ? (
+                <Badge className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-1 text-sm font-medium">
+                  <Crown className="w-4 h-4 mr-1" />
+                  Basic
+                </Badge>
               ) : (
                 <div className="text-right">
-                  <div className="text-xs text-gray-500 dark:text-gray-400">AI Usage</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    Free • {subscriptionStatus.tier === 'free' && subscriptionStatus.monthlyAiLimit > 0 ? 'Monthly' : 'Daily'} AI
+                  </div>
                   <Badge variant="outline" className="text-sm font-medium">
-                    {subscriptionStatus.dailyAiUsage}/{subscriptionStatus.dailyAiLimit}
+                    {subscriptionStatus.tier === 'basic' ? 
+                      `${subscriptionStatus.monthlyAiUsage}/${subscriptionStatus.monthlyAiLimit}` :
+                      `${subscriptionStatus.dailyAiUsage}/${subscriptionStatus.dailyAiLimit}`
+                    }
                   </Badge>
                 </div>
               )}
@@ -155,7 +165,7 @@ export default function MobileDashboard() {
               AI Features
             </Button>
 
-            {!subscriptionStatus.isPremium && (
+            {subscriptionStatus.tier === 'free' && (
               <Button
                 onClick={() => setShowUpgradeProModal(true)}
                 size="sm"
@@ -163,6 +173,16 @@ export default function MobileDashboard() {
               >
                 <Crown className="w-4 h-4 mr-2" />
                 Upgrade
+              </Button>
+            )}
+            {subscriptionStatus.tier === 'basic' && (
+              <Button
+                onClick={() => setShowUpgradeProModal(true)}
+                size="sm"
+                className="bg-gradient-to-r from-purple-400 to-purple-500 hover:from-purple-500 hover:to-purple-600 text-white border-0 shadow-md"
+              >
+                <Crown className="w-4 h-4 mr-2" />
+                Upgrade to Pro
               </Button>
             )}
 
@@ -297,13 +317,26 @@ export default function MobileDashboard() {
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 p-4">
               <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">AI Usage</h3>
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                {subscriptionStatus.dailyAiUsage}/{subscriptionStatus.dailyAiLimit}
+                {subscriptionStatus.tier === 'basic' ? 
+                  `${subscriptionStatus.monthlyAiUsage}/${subscriptionStatus.monthlyAiLimit === -1 ? '∞' : subscriptionStatus.monthlyAiLimit}` :
+                  `${subscriptionStatus.dailyAiUsage}/${subscriptionStatus.dailyAiLimit === -1 ? '∞' : subscriptionStatus.dailyAiLimit}`
+                }
+              </div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">
+                {subscriptionStatus.tier === 'basic' ? 'Monthly' : 
+                 subscriptionStatus.tier === 'pro' ? 'Unlimited' : 'Daily'}
               </div>
             </div>
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 p-4">
               <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Status</h3>
-              <div className="text-lg font-semibold text-teal-600 dark:text-teal-400">
-                {subscriptionStatus.isPremium ? 'Pro User' : 'Free Plan'}
+              <div className={`text-lg font-semibold ${
+                subscriptionStatus.tier === 'pro' ? 'text-purple-600 dark:text-purple-400' :
+                subscriptionStatus.tier === 'basic' ? 'text-blue-600 dark:text-blue-400' :
+                'text-gray-600 dark:text-gray-400'
+              }`}>
+                {subscriptionStatus.tier === 'pro' ? 'Pro User' :
+                 subscriptionStatus.tier === 'basic' ? 'Basic Plan' :
+                 'Free Plan'}
               </div>
             </div>
           </div>

@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/use-supabase-auth';
 import { useSubscription } from '@/hooks/use-subscription';
 import { Code, Database, Zap, RefreshCw, X, Crown, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 
 interface DevModeModalProps {
@@ -17,20 +17,30 @@ interface DevModeModalProps {
 
 export default function DevModeModal({ isOpen, onClose }: DevModeModalProps) {
   const { user } = useAuth();
-  const { subscriptionStatus } = useSubscription();
+  const { subscriptionStatus, refetch } = useSubscription();
   const { toast } = useToast();
   const [isResetting, setIsResetting] = useState(false);
+  const queryClient = useQueryClient();
 
   const toggleTierMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest("POST", "/api/dev/toggle-tier");
+      const response = await apiRequest("POST", "/api/dev/toggle-tier");
+      return response.json();
     },
-    onSuccess: () => {
+    onSuccess: async (data) => {
+      // Immediately invalidate and refetch subscription data
+      await queryClient.invalidateQueries({ queryKey: ['/api/subscription-status'] });
+      await refetch();
+      
       toast({
-        title: "Tier Toggled",
-        description: "User tier has been toggled successfully.",
+        title: "Tier Updated",
+        description: `Successfully switched to ${data.newTier} tier`,
       });
-      window.location.reload(); // Refresh to update subscription status
+      
+      // Close modal after a short delay
+      setTimeout(() => {
+        onClose();
+      }, 1500);
     },
     onError: () => {
       toast({
