@@ -70,11 +70,19 @@ export function useSubscription() {
       const response = await apiRequest("POST", "/api/increment-ai-usage");
       if (response.ok) {
         const data = await response.json();
+        console.log('AI usage incremented:', data);
+        
+        // Update subscription status with the response data
         setSubscriptionStatus(prev => ({
           ...prev,
-          dailyAiUsage: data.dailyAiUsage,
+          dailyAiUsage: data.dailyAiUsage || data.monthlyAiUsage || prev.dailyAiUsage,
+          monthlyAiUsage: data.monthlyAiUsage || prev.monthlyAiUsage,
           canUseAi: data.canUseAi
         }));
+        
+        // Force refresh subscription status to get latest data
+        setTimeout(() => fetchSubscriptionStatus(), 100);
+        
         return data.canUseAi;
       } else {
         console.error("Failed to increment AI usage:", response.status, response.statusText);
@@ -92,12 +100,17 @@ export function useSubscription() {
     }
     
     const userTier = subscriptionStatus.tier || 'free';
-    const limit = getTierLimits(userTier);
     
-    // Unlimited for pro users
-    if (limit === -1) return true;
-    
-    return subscriptionStatus.canUseAi && subscriptionStatus.dailyAiUsage < limit;
+    // Check tier-specific limits
+    if (userTier === 'pro') {
+      return true; // Unlimited
+    } else if (userTier === 'basic') {
+      // Basic tier: 30 monthly
+      return subscriptionStatus.canUseAi && (subscriptionStatus.monthlyAiUsage || 0) < 30;
+    } else {
+      // Free tier: 3 daily
+      return subscriptionStatus.canUseAi && (subscriptionStatus.dailyAiUsage || 0) < 3;
+    }
   };
 
   useEffect(() => {
