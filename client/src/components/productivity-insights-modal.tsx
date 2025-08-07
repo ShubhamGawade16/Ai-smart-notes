@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Lightbulb, X, Loader2, TrendingUp, Target, Calendar, BarChart3 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import { useSubscription } from '@/hooks/use-subscription';
 
 interface ProductivityInsightsModalProps {
   isOpen: boolean;
@@ -15,8 +16,29 @@ export default function ProductivityInsightsModal({ isOpen, onClose }: Productiv
   const [isLoading, setIsLoading] = useState(false);
   const [insights, setInsights] = useState<any>(null);
   const { toast } = useToast();
+  const { incrementAiUsage, checkAiUsageLimit } = useSubscription();
 
   const fetchInsights = async () => {
+    if (!checkAiUsageLimit()) {
+      toast({
+        title: "AI Usage Limit Reached",
+        description: "You've reached your AI usage limit for this period",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Increment AI usage before making the call
+    const canProceed = await incrementAiUsage();
+    if (!canProceed) {
+      toast({
+        title: "AI Usage Limit Reached",
+        description: "You've reached your AI usage limit for this period",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       const response = await apiRequest("GET", "/api/ai/productivity-insights");
@@ -59,7 +81,7 @@ export default function ProductivityInsightsModal({ isOpen, onClose }: Productiv
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto" aria-describedby="insights-description">
         <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-r from-amber-500 to-orange-500 rounded-lg flex items-center justify-center">
@@ -67,7 +89,7 @@ export default function ProductivityInsightsModal({ isOpen, onClose }: Productiv
             </div>
             <div>
               <DialogTitle className="text-xl font-bold">Productivity Insights</DialogTitle>
-              <p className="text-sm text-gray-600 dark:text-gray-400">AI analysis of your productivity patterns</p>
+              <p id="insights-description" className="text-sm text-gray-600 dark:text-gray-400">AI analysis of your productivity patterns</p>
             </div>
           </div>
           <Button variant="outline" size="sm" onClick={onClose} className="h-8 w-8 p-0">

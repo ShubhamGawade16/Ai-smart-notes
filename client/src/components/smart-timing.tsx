@@ -48,7 +48,7 @@ interface TimingAnalysisResponse {
 export function SmartTiming() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const { toast } = useToast();
-  const { subscriptionStatus, checkAiUsageLimit } = useSubscription();
+  const { subscriptionStatus, checkAiUsageLimit, incrementAiUsage } = useSubscription();
 
   // Fetch user's tasks for analysis
   const { data: tasksResponse } = useQuery({
@@ -69,6 +69,17 @@ export function SmartTiming() {
       toast({
         title: "AI Usage Limit Reached",
         description: "Upgrade to Pro for unlimited AI analysis",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Increment AI usage before making the call
+    const canProceed = await incrementAiUsage();
+    if (!canProceed) {
+      toast({
+        title: "AI Usage Limit Reached",
+        description: "You've reached your AI usage limit for this period",
         variant: "destructive",
       });
       return;

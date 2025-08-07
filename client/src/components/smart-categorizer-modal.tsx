@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Target, ArrowRight, X, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
+import { useSubscription } from '@/hooks/use-subscription';
 
 interface SmartCategorizerModalProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ export default function SmartCategorizerModal({ isOpen, onClose }: SmartCategori
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<any>(null);
   const { toast } = useToast();
+  const { incrementAiUsage, checkAiUsageLimit } = useSubscription();
 
   const handleCategorize = async () => {
     if (!input.trim()) {
@@ -24,6 +26,26 @@ export default function SmartCategorizerModal({ isOpen, onClose }: SmartCategori
         title: "Input Required",
         description: "Please enter some tasks to categorize.",
         variant: "destructive"
+      });
+      return;
+    }
+
+    if (!checkAiUsageLimit()) {
+      toast({
+        title: "AI Usage Limit Reached",
+        description: "You've reached your AI usage limit for this period",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Increment AI usage before making the call
+    const canProceed = await incrementAiUsage();
+    if (!canProceed) {
+      toast({
+        title: "AI Usage Limit Reached",
+        description: "You've reached your AI usage limit for this period",
+        variant: "destructive",
       });
       return;
     }
@@ -91,7 +113,7 @@ export default function SmartCategorizerModal({ isOpen, onClose }: SmartCategori
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto" aria-describedby="categorizer-description">
         <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center">
@@ -99,7 +121,7 @@ export default function SmartCategorizerModal({ isOpen, onClose }: SmartCategori
             </div>
             <div>
               <DialogTitle className="text-xl font-bold">Smart Categorizer</DialogTitle>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Automatically categorize and tag your tasks with AI</p>
+              <p id="categorizer-description" className="text-sm text-gray-600 dark:text-gray-400">Automatically categorize and tag your tasks with AI</p>
             </div>
           </div>
           <Button variant="outline" size="sm" onClick={onClose} className="h-8 w-8 p-0">

@@ -4,6 +4,7 @@ import { Sparkles, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
+import { useSubscription } from '@/hooks/use-subscription';
 
 const productivityQuotes = [
   {
@@ -62,6 +63,7 @@ export default function DailyMotivationQuote() {
   const [currentQuote, setCurrentQuote] = useState(productivityQuotes[0]);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isAiQuote, setIsAiQuote] = useState(false);
+  const { incrementAiUsage, checkAiUsageLimit } = useSubscription();
 
   // Fetch user's tasks for AI context
   const { data: tasksResponse } = useQuery({
@@ -72,9 +74,10 @@ export default function DailyMotivationQuote() {
   const completedTasks = tasks.filter((task: any) => task.completed);
   const incompleteTasks = tasks.filter((task: any) => !task.completed);
 
-  // Get AI-generated personalized quote
+  // Get AI-generated personalized quote (NO AI USAGE TRACKING - Exception as requested)
   const getAiPersonalizedQuote = async () => {
     try {
+      // Note: AI usage NOT tracked for daily quotes as per user request (exception)
       const response = await apiRequest('POST', '/api/ai/motivation-quote', {
         completedTasks: completedTasks.length,
         incompleteTasks: incompleteTasks.length,

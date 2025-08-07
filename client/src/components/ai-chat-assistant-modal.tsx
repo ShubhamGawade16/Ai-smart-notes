@@ -5,6 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { MessageCircle, X, Send, User, Bot, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import { useSubscription } from '@/hooks/use-subscription';
 
 interface Message {
   id: string;
@@ -30,6 +31,7 @@ export default function AIChatAssistantModal({ isOpen, onClose }: AIChatAssistan
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { incrementAiUsage, checkAiUsageLimit } = useSubscription();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -42,6 +44,26 @@ export default function AIChatAssistantModal({ isOpen, onClose }: AIChatAssistan
 
   const handleSendMessage = async () => {
     if (!input.trim() || isLoading) return;
+
+    if (!checkAiUsageLimit()) {
+      toast({
+        title: "AI Usage Limit Reached",
+        description: "You've reached your AI usage limit for this period",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Increment AI usage before making the call
+    const canProceed = await incrementAiUsage();
+    if (!canProceed) {
+      toast({
+        title: "AI Usage Limit Reached",
+        description: "You've reached your AI usage limit for this period",
+        variant: "destructive",
+      });
+      return;
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -112,7 +134,7 @@ export default function AIChatAssistantModal({ isOpen, onClose }: AIChatAssistan
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl h-[85vh] flex flex-col">
+      <DialogContent className="max-w-2xl h-[85vh] flex flex-col" aria-describedby="chat-description">
         <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-lg flex items-center justify-center">
@@ -120,7 +142,7 @@ export default function AIChatAssistantModal({ isOpen, onClose }: AIChatAssistan
             </div>
             <div>
               <DialogTitle className="text-xl font-bold">AI Chat Assistant</DialogTitle>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Chat with AI to plan and organize your tasks</p>
+              <p id="chat-description" className="text-sm text-gray-600 dark:text-gray-400">Chat with AI to plan and organize your tasks</p>
             </div>
           </div>
           <div className="flex gap-2">
