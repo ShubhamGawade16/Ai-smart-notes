@@ -53,19 +53,19 @@ export default function DevModeModal({ isOpen, onClose }: DevModeModalProps) {
 
   const resetDataMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest("POST", "/api/dev/reset-data");
+      return apiRequest("POST", "/api/dev/reset-ai-usage");
     },
     onSuccess: () => {
       toast({
-        title: "Data Reset",
-        description: "All user data has been reset successfully.",
+        title: "AI Usage Reset",
+        description: "AI usage counters have been reset successfully.",
       });
-      window.location.reload();
+      refetch();
     },
     onError: () => {
       toast({
         title: "Error", 
-        description: "Failed to reset data.",
+        description: "Failed to reset AI usage.",
         variant: "destructive"
       });
     }
@@ -95,13 +95,13 @@ export default function DevModeModal({ isOpen, onClose }: DevModeModalProps) {
       }`
     },
     {
-      title: 'Reset All Data',
-      description: 'Clear all tasks, notes, and user data',
-      icon: <RefreshCw className="w-6 h-6 text-red-600" />,
+      title: 'Reset AI Usage',
+      description: 'Reset daily and monthly AI usage counters',
+      icon: <RefreshCw className="w-6 h-6 text-blue-600" />,
       action: handleResetData,
       loading: resetDataMutation.isPending,
-      buttonText: 'Reset Data',
-      destructive: true
+      buttonText: 'Reset AI Usage',
+      destructive: false
     },
     {
       title: 'Database Status',

@@ -1308,6 +1308,35 @@ Guidelines:
     }
   });
 
+  // Dev endpoint to reset AI usage for testing
+  app.post("/api/dev/reset-ai-usage", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const userId = req.userId;
+      if (!userId) {
+        return res.status(401).json({ error: "User ID not found in token" });
+      }
+      
+      // Reset AI usage counters
+      const updatedUser = await storage.updateUser(userId, {
+        dailyAiCalls: 0,
+        monthlyAiCalls: 0,
+        dailyAiCallsResetAt: new Date(),
+        monthlyAiCallsResetAt: new Date()
+      });
+      
+      console.log(`Dev mode: Reset AI usage for user ${userId}. Updated user:`, updatedUser);
+      
+      res.json({ 
+        success: true, 
+        message: "AI usage counters reset successfully",
+        user: updatedUser
+      });
+    } catch (error) {
+      console.error("Error resetting AI usage:", error);
+      res.status(500).json({ error: "Failed to reset AI usage" });
+    }
+  });
+
   // ============================================================================
   // RAZORPAY PAYMENT ROUTES
   // ============================================================================
