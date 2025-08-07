@@ -7,10 +7,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 
-import { SimpleAuthProvider, useSimpleAuth } from "@/hooks/use-simple-auth";
+import { EmailAuthProvider, useEmailAuth } from "@/hooks/use-email-auth";
 import MobileDashboard from "@/pages/mobile-dashboard";
 import LandingPage from "@/pages/landing-page";
-import SimpleAuthPage from "@/pages/simple-auth";
+import EmailAuthPage from "@/pages/email-auth";
+import VerifyEmailPage from "@/pages/verify-email";
+import AuthCallbackPage from "@/pages/auth-callback";
 import AdvancedFeatures from "./pages/advanced-features";
 import UpgradePage from "@/pages/upgrade";
 import NotFound from "@/pages/not-found";
@@ -29,7 +31,7 @@ const queryClient = new QueryClient({
 });
 
 function Router() {
-  const { user, isLoading } = useSimpleAuth();
+  const { user, isLoading } = useEmailAuth();
   
   if (isLoading) {
     return (
@@ -45,7 +47,9 @@ function Router() {
       <Route path="/">
         {user ? <Redirect to="/dashboard" /> : <LandingPage />}
       </Route>
-      <Route path="/auth" component={SimpleAuthPage} />
+      <Route path="/auth" component={EmailAuthPage} />
+      <Route path="/auth/callback" component={AuthCallbackPage} />
+      <Route path="/verify-email" component={VerifyEmailPage} />
       
       {/* Protected routes */}
       <Route path="/dashboard">
@@ -70,10 +74,10 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <TooltipProvider>
-          <SimpleAuthProvider>
+          <EmailAuthProvider>
             <Router />
             <Toaster />
-          </SimpleAuthProvider>
+          </EmailAuthProvider>
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>

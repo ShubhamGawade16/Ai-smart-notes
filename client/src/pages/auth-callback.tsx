@@ -43,6 +43,9 @@ export default function AuthCallbackPage() {
             description: "Welcome to Planify! Redirecting to your dashboard...",
           });
           
+          // Clear verification email from storage
+          localStorage.removeItem('verification_email');
+          
           // Redirect to dashboard after successful verification
           setTimeout(() => {
             window.location.href = '/dashboard';

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/use-auth";
+import { useEmailAuth } from "@/hooks/use-email-auth";
 import { useSubscription } from "@/hooks/use-subscription";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,7 +23,7 @@ import { Plus, MessageCircle, Crown, User, Settings, LogOut, Sparkles } from "lu
 import { useToast } from "@/hooks/use-toast";
 
 export default function MobileDashboard() {
-  const { user, signOut } = useAuth();
+  const { user, signOut } = useEmailAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { subscriptionStatus, checkAiUsageLimit, incrementAiUsage } = useSubscription();

@@ -5,32 +5,31 @@ import { Badge } from "@/components/ui/badge";
 import { Mail, Clock, RefreshCw, CheckCircle, AlertCircle, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
-import { useAuth } from "@/hooks/use-auth-simple";
+import { useEmailAuth } from "@/hooks/use-email-auth";
 
 export default function VerifyEmailPage() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
-  const { user, resendConfirmation } = useAuth();
+  const { resendVerification } = useEmailAuth();
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(45);
   const [showResend, setShowResend] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [checkingVerification, setCheckingVerification] = useState(false);
 
   useEffect(() => {
-    // Redirect if user is already verified
-    if (user?.email_confirmed_at) {
-      window.location.href = '/dashboard';
+    // Get email from localStorage (set during signup)
+    const email = localStorage.getItem('verification_email');
+    if (email) {
+      setUserEmail(email);
+    } else {
+      // If no email stored, redirect to auth
+      navigate('/auth');
       return;
     }
 
-    // Auto-check verification status every 3 seconds
+    // Auto-check verification status every 3 seconds by calling auth check
     const checkInterval = setInterval(() => {
-      if (user?.email_confirmed_at) {
-        clearInterval(checkInterval);
-        window.location.href = '/dashboard';
-        return;
-      }
-      
       setCheckingVerification(true);
       // Add a small delay to show checking state
       setTimeout(() => setCheckingVerification(false), 500);
@@ -52,14 +51,14 @@ export default function VerifyEmailPage() {
       clearInterval(checkInterval);
       clearInterval(countdownInterval);
     };
-  }, [user]);
+  }, [navigate]);
 
   const handleResendEmail = async () => {
-    if (!user?.email) return;
+    if (!userEmail) return;
     
     setIsResending(true);
     try {
-      await resendConfirmation(user.email);
+      await resendVerification(userEmail);
       
       // Reset countdown
       setCountdown(45);
@@ -125,7 +124,7 @@ export default function VerifyEmailPage() {
           </div>
 
           <Badge variant="outline" className="text-sm px-4 py-2">
-            {user?.email}
+            {userEmail}
           </Badge>
         </CardHeader>
 
