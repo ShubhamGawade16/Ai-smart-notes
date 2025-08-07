@@ -310,7 +310,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         user.dailyAiCalls = 0;
       }
       
-      if (shouldResetMonthly && tier === 'basic') {
+      // Only reset monthly if user has active Basic subscription
+      if (shouldResetMonthly && tier === 'basic' && user.subscriptionStatus === 'active') {
         await storage.updateUser(user.id, {
           monthlyAiCalls: 0,
           monthlyAiCallsResetAt: new Date(now.getFullYear(), now.getMonth(), 1)
@@ -331,8 +332,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         canUseAi = true;
       } else if (isBasic) {
         dailyAiLimit = -1; // No daily limit for basic
-        monthlyAiLimit = 30; // 30 per month
-        canUseAi = monthlyAiUsage < 30;
+        monthlyAiLimit = 120; // 120 per month
+        canUseAi = monthlyAiUsage < 120;
       } else {
         // Free tier
         canUseAi = dailyAiUsage < 3;
@@ -391,17 +392,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       if (tier === 'basic') {
-        // Basic users have monthly limits
+        // Basic users have monthly limits - only reset if subscription is active
         const now = new Date();
         const monthlyResetTime = user.monthlyAiCallsResetAt ? new Date(user.monthlyAiCallsResetAt) : new Date();
         const shouldResetMonthly = now.getMonth() !== monthlyResetTime.getMonth() || now.getFullYear() !== monthlyResetTime.getFullYear();
         
         let newMonthlyCount = user.monthlyAiCalls || 0;
-        if (shouldResetMonthly) {
+        if (shouldResetMonthly && user.subscriptionStatus === 'active') {
           newMonthlyCount = 0;
         }
         
-        const monthlyLimit = 30;
+        const monthlyLimit = 120;
         const canUseAi = newMonthlyCount < monthlyLimit;
         
         if (canUseAi) {
@@ -415,7 +416,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json({
           dailyAiUsage: 0, // No daily limit for basic
           monthlyAiUsage: newMonthlyCount,
-          canUseAi: newMonthlyCount < monthlyLimit
+          canUseAi: newMonthlyCount < monthlyLimit,
+          monthlyAiLimit: monthlyLimit
         });
         return;
       }

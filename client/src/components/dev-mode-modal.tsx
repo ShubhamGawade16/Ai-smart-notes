@@ -159,15 +159,25 @@ export default function DevModeModal({ isOpen, onClose }: DevModeModalProps) {
                 </Badge>
               </div>
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Daily AI Usage</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {subscriptionStatus.tier === 'basic' ? 'Monthly AI Usage' : 'Daily AI Usage'}
+                </p>
                 <p className="font-medium text-gray-900 dark:text-white">
-                  {subscriptionStatus.dailyAiUsage}/{subscriptionStatus.dailyAiLimit === -1 ? '∞' : subscriptionStatus.dailyAiLimit}
+                  {subscriptionStatus.tier === 'basic' ? 
+                    `${subscriptionStatus.monthlyAiUsage || 0}/${subscriptionStatus.monthlyAiLimit === -1 ? '∞' : subscriptionStatus.monthlyAiLimit || '∞'}` :
+                    `${subscriptionStatus.dailyAiUsage}/${subscriptionStatus.dailyAiLimit === -1 ? '∞' : subscriptionStatus.dailyAiLimit}`
+                  }
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Monthly AI Usage</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {subscriptionStatus.tier === 'basic' ? 'Daily AI Usage' : 'Monthly AI Usage'}
+                </p>
                 <p className="font-medium text-gray-900 dark:text-white">
-                  {subscriptionStatus.monthlyAiUsage || 0}/{subscriptionStatus.monthlyAiLimit === -1 ? '∞' : subscriptionStatus.monthlyAiLimit || '∞'}
+                  {subscriptionStatus.tier === 'basic' ? 
+                    'No daily limit' :
+                    `${subscriptionStatus.monthlyAiUsage || 0}/${subscriptionStatus.monthlyAiLimit === -1 ? '∞' : subscriptionStatus.monthlyAiLimit || '∞'}`
+                  }
                 </p>
               </div>
               <div>

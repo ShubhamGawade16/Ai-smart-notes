@@ -33,7 +33,7 @@ export function useSubscription() {
   // Get tier-based limits
   const getTierLimits = (tier: string) => {
     switch (tier) {
-      case 'basic': return 30;
+      case 'basic': return 120; // 120 AI requests per month
       case 'pro': return -1; // unlimited
       default: return 3; // free
     }
@@ -105,8 +105,8 @@ export function useSubscription() {
     if (userTier === 'pro') {
       return true; // Unlimited
     } else if (userTier === 'basic') {
-      // Basic tier: 30 monthly
-      return subscriptionStatus.canUseAi && (subscriptionStatus.monthlyAiUsage || 0) < 30;
+      // Basic tier: 120 monthly
+      return subscriptionStatus.canUseAi && (subscriptionStatus.monthlyAiUsage || 0) < 120;
     } else {
       // Free tier: 3 daily
       return subscriptionStatus.canUseAi && (subscriptionStatus.dailyAiUsage || 0) < 3;
