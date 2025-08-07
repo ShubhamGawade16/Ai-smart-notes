@@ -179,97 +179,132 @@ export default function LandingPage() {
           </p>
         </div>
 
-        <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8">
+        <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8">
           {/* Free Forever */}
           <Card className="relative border-2 border-gray-200 dark:border-gray-700">
             <CardHeader className="text-center pb-8">
-              <CardTitle className="text-3xl mb-2">Free Forever</CardTitle>
-              <div className="text-6xl font-bold text-gray-900 dark:text-white mb-4">₹0</div>
-              <CardDescription className="text-lg">Perfect for getting started with AI-powered productivity</CardDescription>
+              <CardTitle className="text-3xl mb-2">Free</CardTitle>
+              <div className="text-6xl font-bold text-gray-900 dark:text-white mb-4">₹0<span className="text-lg text-gray-500">/month</span></div>
+              <CardDescription className="text-lg">Perfect for getting started</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4 mb-8">
                 <div className="flex items-center">
                   <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-                  <span>Unlimited tasks</span>
+                  <span>3 AI requests per day</span>
                 </div>
                 <div className="flex items-center">
                   <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-                  <span>25 notes/month</span>
+                  <span>Basic task management</span>
                 </div>
                 <div className="flex items-center">
                   <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-                  <span>3 AI calls/day</span>
+                  <span>Simple analytics</span>
                 </div>
                 <div className="flex items-center">
                   <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-                  <span>Basic streaks & analytics</span>
-                </div>
-                <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-                  <span>Up to 3 habits</span>
-                </div>
-                <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-                  <span>Mobile app</span>
+                  <span>Community support</span>
                 </div>
               </div>
-              <Link href="/">
+              <Link href="/auth">
                 <Button className="w-full text-lg py-6" variant="outline">
-                  Get Started Free
+                  Current Plan
                 </Button>
               </Link>
             </CardContent>
           </Card>
 
-          {/* Pro All-Inclusive */}
-          <Card className="relative border-2 border-indigo-500 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 shadow-2xl">
+          {/* Basic Plan */}
+          <Card className="relative border-2 border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 shadow-xl">
             <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-              <Badge className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-2 text-lg">
-                Most Popular
+              <Badge className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 text-lg">
+                Popular Choice
               </Badge>
             </div>
             <CardHeader className="text-center pb-8">
-              <CardTitle className="text-3xl mb-2">Pro All-Inclusive</CardTitle>
+              <CardTitle className="text-3xl mb-2">Basic ⚡</CardTitle>
               <div className="flex items-baseline justify-center space-x-2 mb-4">
-                <div className="text-6xl font-bold text-indigo-600">₹12</div>
-                <div className="text-lg text-gray-600 dark:text-gray-300">/mo</div>
+                <div className="text-6xl font-bold text-blue-600">₹299</div>
+                <div className="text-lg text-gray-600 dark:text-gray-300">/month</div>
               </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                or ₹79/yr (2 months free)
-              </div>
-              <CardDescription className="text-lg">Everything you need for peak productivity</CardDescription>
+              <CardDescription className="text-lg">Great for regular users</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4 mb-8">
                 <div className="flex items-center">
                   <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-                  <span><strong>Unlimited</strong> tasks, notes & AI calls</span>
+                  <span>30 AI requests per month</span>
                 </div>
                 <div className="flex items-center">
                   <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-                  <span><strong>Unlimited</strong> habits with smart reminders</span>
-                </div>
-                <div className="flex items-center">
-                  <Sparkles className="h-5 w-5 text-indigo-500 mr-3" />
-                  <span><strong>Focus Forecast</strong> & burnout alerts</span>
-                </div>
-                <div className="flex items-center">
-                  <Sparkles className="h-5 w-5 text-indigo-500 mr-3" />
-                  <span><strong>Auto-Schedule</strong> to calendar</span>
-                </div>
-                <div className="flex items-center">
-                  <Sparkles className="h-5 w-5 text-indigo-500 mr-3" />
-                  <span><strong>Advanced insights</strong> & optimization</span>
+                  <span>Advanced task management</span>
                 </div>
                 <div className="flex items-center">
                   <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-                  <span>Priority support</span>
+                  <span>Detailed analytics</span>
+                </div>
+                <div className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                  <span>Smart timing analysis</span>
+                </div>
+                <div className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                  <span>Priority email support</span>
                 </div>
               </div>
-              <Link href="/">
-                <Button className="w-full text-lg py-6 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700">
-                  Start 7-Day Free Trial
+              <Link href="/auth">
+                <Button className="w-full text-lg py-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+                  Choose Basic Plan
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          {/* Pro Plan */}
+          <Card className="relative border-2 border-amber-500 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 shadow-2xl">
+            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+              <Badge className="bg-gradient-to-r from-amber-600 to-orange-600 text-white px-6 py-2 text-lg">
+                Best Value
+              </Badge>
+            </div>
+            <CardHeader className="text-center pb-8">
+              <CardTitle className="text-3xl mb-2">Pro 👑</CardTitle>
+              <div className="flex items-baseline justify-center space-x-2 mb-4">
+                <div className="text-6xl font-bold text-amber-600">₹499</div>
+                <div className="text-lg text-gray-600 dark:text-gray-300">/month</div>
+              </div>
+              <CardDescription className="text-lg">For power users and teams</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4 mb-8">
+                <div className="flex items-center">
+                  <Sparkles className="h-5 w-5 text-amber-500 mr-3" />
+                  <span><strong>∞ Unlimited</strong> AI requests</span>
+                </div>
+                <div className="flex items-center">
+                  <Sparkles className="h-5 w-5 text-amber-500 mr-3" />
+                  <span><strong>Advanced AI insights</strong></span>
+                </div>
+                <div className="flex items-center">
+                  <Sparkles className="h-5 w-5 text-amber-500 mr-3" />
+                  <span><strong>Smart scheduling & automation</strong></span>
+                </div>
+                <div className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                  <span>Team collaboration features</span>
+                </div>
+                <div className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                  <span>24/7 priority support</span>
+                </div>
+                <div className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                  <span>Custom integrations</span>
+                </div>
+              </div>
+              <Link href="/auth">
+                <Button className="w-full text-lg py-6 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700">
+                  👑 Choose Pro Plan
                 </Button>
               </Link>
             </CardContent>
@@ -278,12 +313,12 @@ export default function LandingPage() {
 
         <div className="text-center mt-12">
           <p className="text-lg text-gray-600 dark:text-gray-400 mb-4">
-            ✨ 7-day free trial for Pro • Annual billing: 2 months free • Cancel anytime
+            ✨ Start with Free plan • Upgrade to Basic or Pro anytime • Cancel anytime
           </p>
           <div className="flex justify-center items-center space-x-8 text-sm text-gray-500">
-            <span className="flex items-center"><CheckCircle className="h-4 w-4 mr-2" /> No credit card required</span>
+            <span className="flex items-center"><CheckCircle className="h-4 w-4 mr-2" /> No credit card required for Free</span>
             <span className="flex items-center"><CheckCircle className="h-4 w-4 mr-2" /> Cancel anytime</span>
-            <span className="flex items-center"><CheckCircle className="h-4 w-4 mr-2" /> 30-day money back</span>
+            <span className="flex items-center"><CheckCircle className="h-4 w-4 mr-2" /> Secure payments</span>
           </div>
         </div>
       </section>

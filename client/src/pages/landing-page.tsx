@@ -237,38 +237,58 @@ export default function LandingPage() {
             Start free, upgrade when you're ready for unlimited AI power
           </p>
           
-          <div className="grid md:grid-cols-2 gap-8 max-w-2xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {/* Free Plan */}
             <div className="p-6 border-2 border-gray-200 dark:border-gray-700 rounded-xl">
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Free</h3>
-              <div className="text-3xl font-bold text-gray-900 dark:text-white mb-4">$0<span className="text-sm text-gray-500">/month</span></div>
+              <div className="text-3xl font-bold text-gray-900 dark:text-white mb-4">₹0<span className="text-sm text-gray-500">/month</span></div>
               <ul className="text-left space-y-3 text-gray-600 dark:text-gray-300 mb-6">
-                <li className="flex items-center gap-2">✓ Basic task management</li>
                 <li className="flex items-center gap-2">✓ 3 AI requests per day</li>
-                <li className="flex items-center gap-2">✓ Simple task creation</li>
-                <li className="flex items-center gap-2">✓ Mobile app access</li>
+                <li className="flex items-center gap-2">✓ Basic task management</li>
+                <li className="flex items-center gap-2">✓ Simple analytics</li>
+                <li className="flex items-center gap-2">✓ Community support</li>
               </ul>
               <Link href="/auth?mode=signup">
-                <Button variant="outline" className="w-full">Get Started Free</Button>
+                <Button variant="outline" className="w-full">Current Plan</Button>
               </Link>
             </div>
             
-            {/* Premium Plan */}
-            <div className="p-6 border-2 border-teal-500 rounded-xl relative bg-teal-50 dark:bg-teal-900/20">
-              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-teal-500 text-white px-4 py-1 rounded-full text-sm font-medium">
-                Popular
+            {/* Basic Plan */}
+            <div className="p-6 border-2 border-blue-500 rounded-xl relative bg-blue-50 dark:bg-blue-900/20">
+              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-medium">
+                Popular Choice
               </div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Premium</h3>
-              <div className="text-3xl font-bold text-gray-900 dark:text-white mb-4">$5<span className="text-sm text-gray-500">/month</span></div>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Basic ⚡</h3>
+              <div className="text-3xl font-bold text-gray-900 dark:text-white mb-4">₹299<span className="text-sm text-gray-500">/month</span></div>
               <ul className="text-left space-y-3 text-gray-600 dark:text-gray-300 mb-6">
-                <li className="flex items-center gap-2">✓ Everything in Free</li>
-                <li className="flex items-center gap-2">✓ Unlimited AI requests</li>
-                <li className="flex items-center gap-2">✓ AI task breakdown</li>
-                <li className="flex items-center gap-2">✓ Smart scheduling</li>
-                <li className="flex items-center gap-2">✓ Priority support</li>
+                <li className="flex items-center gap-2">✓ 30 AI requests per month</li>
+                <li className="flex items-center gap-2">✓ Advanced task management</li>
+                <li className="flex items-center gap-2">✓ Detailed analytics</li>
+                <li className="flex items-center gap-2">✓ Smart timing analysis</li>
+                <li className="flex items-center gap-2">✓ Priority email support</li>
               </ul>
               <Link href="/auth?mode=signup">
-                <Button className="w-full">Start Premium Trial</Button>
+                <Button className="w-full bg-blue-600 hover:bg-blue-700">Choose Basic Plan</Button>
+              </Link>
+            </div>
+            
+            {/* Pro Plan */}
+            <div className="p-6 border-2 border-amber-500 rounded-xl relative bg-amber-50 dark:bg-amber-900/20">
+              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-amber-500 text-white px-4 py-1 rounded-full text-sm font-medium">
+                Best Value
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Pro 👑</h3>
+              <div className="text-3xl font-bold text-gray-900 dark:text-white mb-4">₹499<span className="text-sm text-gray-500">/month</span></div>
+              <ul className="text-left space-y-3 text-gray-600 dark:text-gray-300 mb-6">
+                <li className="flex items-center gap-2">✓ ∞ Unlimited AI requests</li>
+                <li className="flex items-center gap-2">✓ Advanced AI insights</li>
+                <li className="flex items-center gap-2">✓ Smart scheduling & automation</li>
+                <li className="flex items-center gap-2">✓ Team collaboration features</li>
+                <li className="flex items-center gap-2">✓ 24/7 priority support</li>
+                <li className="flex items-center gap-2">✓ Custom integrations</li>
+              </ul>
+              <Link href="/auth?mode=signup">
+                <Button className="w-full bg-amber-600 hover:bg-amber-700">👑 Choose Pro Plan</Button>
               </Link>
             </div>
           </div>
