@@ -5,13 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Mail, Lock, User, Brain, Target, Zap } from "lucide-react";
+import { Loader2, Mail, Lock, User, Brain, Target, Zap, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/hooks/use-auth-simple";
 
 export default function AuthSimplePage() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { signIn, signUp } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Login form state
@@ -37,49 +38,11 @@ export default function AuthSimplePage() {
     
     setIsSubmitting(true);
     try {
-      if (!supabase) {
-        throw new Error('Authentication service not configured');
-      }
-
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: loginEmail,
-        password: loginPassword,
-      });
-      
-      if (error) {
-        toast({
-          title: "Sign In Failed",
-          description: error.message.includes("Invalid login credentials") 
-            ? "Email or password is incorrect. Please check and try again."
-            : error.message,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (data.user) {
-        // Store auth token
-        if (data.session?.access_token) {
-          localStorage.setItem('auth_token', data.session.access_token);
-        }
-        
-        toast({
-          title: "Welcome back!",
-          description: "Redirecting to your dashboard...",
-        });
-        
-        // Redirect to dashboard
-        setTimeout(() => {
-          window.location.href = '/dashboard';
-        }, 1000);
-      }
+      await signIn(loginEmail, loginPassword);
+      // Redirect happens automatically in auth state change
     } catch (error: any) {
       console.error('Login error:', error);
-      toast({
-        title: "Sign In Failed",
-        description: error.message || "An unexpected error occurred.",
-        variant: "destructive",
-      });
+      // Error toast is handled in signIn function
     } finally {
       setIsSubmitting(false);
     }
@@ -107,63 +70,12 @@ export default function AuthSimplePage() {
     
     setIsSubmitting(true);
     try {
-      if (!supabase) {
-        throw new Error('Authentication service not configured');
-      }
-
-      const { data, error } = await supabase.auth.signUp({
-        email: signupEmail,
-        password: signupPassword,
-        options: {
-          data: {
-            first_name: signupFirstName,
-            last_name: signupLastName,
-          },
-        },
-      });
-      
-      if (error) {
-        let errorMessage = error.message;
-        if (error.message.includes("weak_password")) {
-          errorMessage = "Password is too weak. Please use a stronger password with at least 8 characters, including letters and numbers.";
-        } else if (error.message.includes("already_registered")) {
-          errorMessage = "This email is already registered. Please try signing in instead.";
-        }
-        
-        toast({
-          title: "Sign Up Failed",
-          description: errorMessage,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (data.user) {
-        if (data.user.email_confirmed_at) {
-          // Email already confirmed, redirect to dashboard
-          toast({
-            title: "Welcome to Planify!",
-            description: "Your account has been created successfully.",
-          });
-          setTimeout(() => {
-            window.location.href = '/dashboard';
-          }, 1000);
-        } else {
-          // Need email verification
-          toast({
-            title: "Account Created!",
-            description: "Please check your email to verify your account before signing in.",
-          });
-          navigate('/verify-email');
-        }
-      }
+      await signUp(signupEmail, signupPassword, signupFirstName, signupLastName);
+      // Navigate to verification page
+      navigate('/verify-email');
     } catch (error: any) {
       console.error('Signup error:', error);
-      toast({
-        title: "Sign Up Failed",
-        description: error.message || "An unexpected error occurred.",
-        variant: "destructive",
-      });
+      // Error toast is handled in signUp function
     } finally {
       setIsSubmitting(false);
     }
@@ -188,6 +100,17 @@ export default function AuthSimplePage() {
             <TabsContent value="login">
               <Card>
                 <CardHeader>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigate('/')}
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      <ArrowLeft className="w-4 h-4 mr-1" />
+                      Back to Home
+                    </Button>
+                  </div>
                   <CardTitle>Sign In</CardTitle>
                   <CardDescription>
                     Welcome back! Sign in to your account.
@@ -247,6 +170,17 @@ export default function AuthSimplePage() {
             <TabsContent value="signup">
               <Card>
                 <CardHeader>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigate('/')}
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      <ArrowLeft className="w-4 h-4 mr-1" />
+                      Back to Home
+                    </Button>
+                  </div>
                   <CardTitle>Create Account</CardTitle>
                   <CardDescription>
                     Get started with your AI-powered productivity journey.

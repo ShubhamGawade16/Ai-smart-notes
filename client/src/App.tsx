@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 
-import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { AuthProvider, useAuth } from "@/hooks/use-auth-simple";
 import MobileDashboard from "@/pages/mobile-dashboard";
 import LandingPage from "@/pages/landing-page";
 import AuthSimplePage from "@/pages/auth-simple";

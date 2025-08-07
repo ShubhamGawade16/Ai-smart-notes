@@ -2,52 +2,39 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Mail, Clock, RefreshCw, CheckCircle, AlertCircle } from "lucide-react";
+import { Mail, Clock, RefreshCw, CheckCircle, AlertCircle, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/lib/supabase";
+import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/use-auth-simple";
 
 export default function VerifyEmailPage() {
   const { toast } = useToast();
+  const [, navigate] = useLocation();
+  const { user, resendConfirmation } = useAuth();
   const [countdown, setCountdown] = useState(45);
   const [showResend, setShowResend] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [checkingVerification, setCheckingVerification] = useState(false);
-  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   useEffect(() => {
-    // Get current user email
-    const checkUser = async () => {
-      if (supabase) {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user?.email) {
-          setUserEmail(session.user.email);
-          
-          // If email is already confirmed, redirect
-          if (session.user.email_confirmed_at) {
-            window.location.href = '/dashboard';
-            return;
-          }
-        }
-      }
-    };
-    
-    checkUser();
+    // Redirect if user is already verified
+    if (user?.email_confirmed_at) {
+      window.location.href = '/dashboard';
+      return;
+    }
 
-    // Auto-check verification status every 5 seconds
-    const checkInterval = setInterval(async () => {
-      if (supabase) {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user?.email_confirmed_at) {
-          clearInterval(checkInterval);
-          window.location.href = '/dashboard';
-          return;
-        }
+    // Auto-check verification status every 3 seconds
+    const checkInterval = setInterval(() => {
+      if (user?.email_confirmed_at) {
+        clearInterval(checkInterval);
+        window.location.href = '/dashboard';
+        return;
       }
       
       setCheckingVerification(true);
       // Add a small delay to show checking state
-      setTimeout(() => setCheckingVerification(false), 1000);
-    }, 5000);
+      setTimeout(() => setCheckingVerification(false), 500);
+    }, 3000);
 
     // Countdown timer
     const countdownInterval = setInterval(() => {
@@ -65,26 +52,14 @@ export default function VerifyEmailPage() {
       clearInterval(checkInterval);
       clearInterval(countdownInterval);
     };
-  }, []);
+  }, [user]);
 
   const handleResendEmail = async () => {
-    if (!userEmail || !supabase) return;
+    if (!user?.email) return;
     
     setIsResending(true);
     try {
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: userEmail
-      });
-      
-      if (error) {
-        throw error;
-      }
-      
-      toast({
-        title: "Verification Email Sent",
-        description: "Please check your inbox and spam folder.",
-      });
+      await resendConfirmation(user.email);
       
       // Reset countdown
       setCountdown(45);
@@ -123,6 +98,19 @@ export default function VerifyEmailPage() {
     <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
       <Card className="w-full max-w-lg shadow-2xl border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg">
         <CardHeader className="text-center space-y-4 pb-6">
+          {/* Back Button */}
+          <div className="flex justify-start mb-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/auth')}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <ArrowLeft className="w-4 h-4 mr-1" />
+              Back to Sign In
+            </Button>
+          </div>
+          
           <div className="w-20 h-20 bg-gradient-to-br from-teal-500 to-blue-600 rounded-full flex items-center justify-center mx-auto">
             <Mail className="w-10 h-10 text-white" />
           </div>
@@ -137,7 +125,7 @@ export default function VerifyEmailPage() {
           </div>
 
           <Badge variant="outline" className="text-sm px-4 py-2">
-            {userEmail}
+            {user?.email}
           </Badge>
         </CardHeader>
 
