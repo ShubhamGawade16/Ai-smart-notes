@@ -30,11 +30,14 @@ export default function SupabaseSetupGuide() {
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-            Supabase Configuration Required
+            Fix Email Verification Issue
           </h1>
-          <p className="text-gray-600 dark:text-gray-300">
-            To fix email verification, update your Supabase project settings
+          <p className="text-gray-600 dark:text-gray-300 mb-2">
+            Email links redirect to localhost:3000 instead of your app
           </p>
+          <Badge variant="outline" className="text-sm">
+            Project ID: qtdjrdxwfvhcwowebxnm
+          </Badge>
         </div>
 
         <Alert className="mb-6 border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950">
@@ -56,16 +59,26 @@ export default function SupabaseSetupGuide() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
-                Go to your Supabase project dashboard
-              </p>
-              <Button
-                onClick={() => window.open('https://supabase.com/dashboard/project/humafgsbdqaiidnprkzx/auth/url-configuration', '_blank')}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Open Supabase Auth Settings
-              </Button>
+              <div className="space-y-4">
+                <p className="text-gray-600 dark:text-gray-300">
+                  First, open your Supabase project dashboard:
+                </p>
+                <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Path to follow:</h4>
+                  <ol className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                    <li>1. Open Supabase dashboard</li>
+                    <li>2. Click <strong>"Authentication"</strong> in left sidebar</li>
+                    <li>3. Click <strong>"URL Configuration"</strong> submenu</li>
+                  </ol>
+                </div>
+                <Button
+                  onClick={() => window.open('https://supabase.com/dashboard/project/qtdjrdxwfvhcwowebxnm/auth/url-configuration', '_blank')}
+                  className="bg-green-600 hover:bg-green-700 w-full"
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Open Supabase Auth Settings
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
@@ -135,23 +148,30 @@ export default function SupabaseSetupGuide() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
-                Set the "Site URL" to your app's domain:
-              </p>
-              <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-mono break-all">{currentUrl}</span>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => copyToClipboard(currentUrl, "Site URL")}
-                  >
-                    {copiedItems.includes("Site URL") ? (
-                      <CheckCircle className="w-4 h-4 text-green-600" />
-                    ) : (
-                      <Copy className="w-4 h-4" />
-                    )}
-                  </Button>
+              <div className="space-y-4">
+                <p className="text-gray-600 dark:text-gray-300">
+                  In the URL Configuration page, find the <strong>"Site URL"</strong> field and enter:
+                </p>
+                <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-mono break-all">{currentUrl}</span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => copyToClipboard(currentUrl, "Site URL")}
+                    >
+                      {copiedItems.includes("Site URL") ? (
+                        <CheckCircle className="w-4 h-4 text-green-600" />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+                <div className="p-3 bg-yellow-50 dark:bg-yellow-950 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                  <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                    <strong>Important:</strong> Clear any existing URL in the Site URL field first, then paste this URL.
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -181,13 +201,25 @@ export default function SupabaseSetupGuide() {
           </Card>
         </div>
 
-        <Alert className="mt-6 border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
-          <CheckCircle className="h-4 w-4 text-blue-600" />
-          <AlertDescription className="text-blue-800 dark:text-blue-200">
-            <strong>Important:</strong> Make sure to click "Save" in the Supabase dashboard after adding the URLs. 
-            Changes may take a few minutes to take effect.
-          </AlertDescription>
-        </Alert>
+        <div className="mt-6 space-y-4">
+          <Alert className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
+            <CheckCircle className="h-4 w-4 text-blue-600" />
+            <AlertDescription className="text-blue-800 dark:text-blue-200">
+              <strong>Important:</strong> Make sure to click "Save" in the Supabase dashboard after adding the URLs. 
+              Changes may take 2-3 minutes to take effect.
+            </AlertDescription>
+          </Alert>
+
+          <Alert className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950">
+            <CheckCircle className="h-4 w-4 text-green-600" />
+            <AlertDescription className="text-green-800 dark:text-green-200">
+              <strong>Need help?</strong> If you can't find specific fields, look for:
+              <br />• "Authentication" in the left sidebar (has a key 🔑 icon)
+              <br />• "URL Configuration" as a submenu under Authentication
+              <br />• Fields labeled "Site URL" and "Redirect URLs"
+            </AlertDescription>
+          </Alert>
+        </div>
       </div>
     </div>
   );
