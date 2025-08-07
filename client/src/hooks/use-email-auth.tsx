@@ -139,29 +139,65 @@ export function EmailAuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string, firstName: string, lastName: string) => {
     if (!supabase) throw new Error('Supabase not configured');
 
+    // Log current environment for debugging
+    console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
+    console.log('Supabase Key exists:', !!import.meta.env.VITE_SUPABASE_ANON_KEY);
+
     // Get current host for proper redirect URL - always use the actual app URL
     const currentHost = window.location.origin;
     const redirectUrl = `${currentHost}/auth/callback`;
     console.log('Signup redirect URL:', redirectUrl);
     
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          first_name: firstName,
-          last_name: lastName,
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+          },
+          emailRedirectTo: redirectUrl,
         },
-        emailRedirectTo: redirectUrl,
-      },
-    });
+      });
 
-    if (error) {
-      let errorMessage = error.message;
-      if (error.message.includes("weak_password")) {
-        errorMessage = "Password is too weak. Please use a stronger password with at least 8 characters, including letters and numbers.";
-      } else if (error.message.includes("already_registered")) {
-        errorMessage = "This email is already registered. Please try signing in instead.";
+      console.log('Signup response:', { data, error });
+
+      if (error) {
+        console.error('Signup error details:', error);
+        
+        let errorMessage = error.message;
+        
+        // Handle specific error types
+        if (error.name === 'AuthRetryableFetchError') {
+          errorMessage = "Connection failed. Please check your internet connection and try again.";
+        } else if (error.message.includes("weak_password")) {
+          errorMessage = "Password is too weak. Please use a stronger password with at least 8 characters, including letters and numbers.";
+        } else if (error.message.includes("already_registered")) {
+          errorMessage = "This email is already registered. Please try signing in instead.";
+        } else if (error.message.includes("Invalid API key")) {
+          errorMessage = "Authentication service misconfigured. Please contact support.";
+        }
+        
+        toast({
+          title: "Sign Up Failed",
+          description: errorMessage,
+          variant: "destructive",
+        });
+        throw error;
+      }
+
+      if (data.user && !data.user.email_confirmed_at) {
+        return { needsVerification: true };
+      }
+
+      return { needsVerification: false };
+    } catch (err: any) {
+      console.error('Signup error:', err);
+      
+      let errorMessage = "An unexpected error occurred. Please try again.";
+      if (err.name === 'AuthRetryableFetchError' || err.status === 0) {
+        errorMessage = "Network connection failed. Please check your internet connection and try again.";
       }
       
       toast({
@@ -169,14 +205,8 @@ export function EmailAuthProvider({ children }: { children: ReactNode }) {
         description: errorMessage,
         variant: "destructive",
       });
-      throw error;
+      throw err;
     }
-
-    if (data.user && !data.user.email_confirmed_at) {
-      return { needsVerification: true };
-    }
-
-    return { needsVerification: false };
   };
 
   const signOut = async () => {
