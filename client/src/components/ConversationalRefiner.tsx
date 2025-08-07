@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useMutation } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 // import { useUpgrade } from '@/hooks/useUpgrade';
 
 interface TaskRefinement {
@@ -104,12 +104,37 @@ export const ConversationalRefiner: React.FC<ConversationalRefinerProps> = ({
     }
   };
 
-  const handleUseRefinedTasks = (tasks: TaskRefinement['refinedTasks']) => {
-    onTasksRefined?.(tasks);
-    toast({
-      title: "Tasks Applied",
-      description: `${tasks.length} refined task(s) ready to be created.`,
-    });
+  const handleUseRefinedTasks = async (tasks: TaskRefinement['refinedTasks']) => {
+    try {
+      // Create all refined tasks
+      for (const task of tasks) {
+        await apiRequest("POST", "/api/tasks", {
+          title: task.title,
+          description: task.description,
+          priority: task.priority,
+          category: task.category,
+          tags: task.tags,
+          estimatedTime: task.estimatedTime
+        });
+      }
+      
+      // Refresh task lists
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks/today'] });
+      
+      toast({
+        title: "Tasks created successfully!",
+        description: `${tasks.length} refined task(s) have been added to your list.`,
+      });
+      
+      onTasksRefined?.(tasks);
+    } catch (error) {
+      toast({
+        title: "Error creating tasks",
+        description: "Failed to create refined tasks. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const canRefine = canUseFeature('basic_tasks');

@@ -21,6 +21,7 @@ import DevModeModal from "@/components/dev-mode-modal";
 import ConfettiBurst from "@/components/confetti-burst";
 import { Plus, MessageCircle, Crown, User, Settings, LogOut, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function MobileDashboard() {
   const { user, logout } = useAuth();
@@ -106,7 +107,7 @@ export default function MobileDashboard() {
                   Planify
                 </h1>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Good {getGreeting()}, {user?.displayName || user?.email?.split('@')[0] || 'there'}!
+                  Good {getGreeting()}, {user?.firstName || user?.email?.split('@')[0] || 'there'}!
                 </p>
               </div>
             </div>
@@ -229,9 +230,37 @@ export default function MobileDashboard() {
               </div>
               <ModernAIRefiner 
                 onClose={() => setShowAIRefiner(false)}
-                onTasksRefined={(tasks) => {
-                  console.log('Refined tasks:', tasks);
-                  setShowAIRefiner(false);
+                onTasksRefined={async (tasks) => {
+                  try {
+                    // Create all refined tasks
+                    for (const task of tasks) {
+                      await apiRequest("POST", "/api/tasks", {
+                        title: task.title,
+                        description: task.description,
+                        priority: task.priority,
+                        category: task.category,
+                        tags: task.tags,
+                        estimatedTime: task.estimatedTime
+                      });
+                    }
+                    
+                    // Refresh task lists
+                    queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
+                    queryClient.invalidateQueries({ queryKey: ['/api/tasks/today'] });
+                    
+                    toast({
+                      title: "Tasks created successfully!",
+                      description: `${tasks.length} refined task(s) have been added to your list.`,
+                    });
+                    
+                    setShowAIRefiner(false);
+                  } catch (error) {
+                    toast({
+                      title: "Error creating tasks",
+                      description: "Failed to create refined tasks. Please try again.",
+                      variant: "destructive"
+                    });
+                  }
                 }}
                 onUpgradeRequired={() => setShowUpgradeProModal(true)}
                 onAiUsageIncrement={handleAiFeatureRequest}
