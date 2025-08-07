@@ -120,7 +120,7 @@ export default function DevModeModal({ isOpen, onClose }: DevModeModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto bg-white dark:bg-gray-900">
+      <DialogContent className="modal-enter max-w-2xl max-h-[85vh] overflow-y-auto bg-white dark:bg-gray-900">
         <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-lg flex items-center justify-center">

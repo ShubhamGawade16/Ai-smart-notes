@@ -48,7 +48,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background page-enter">
       <Header />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -69,16 +69,16 @@ export default function Dashboard() {
             {/* Right Sidebar - AI Features */}
             <div className="space-y-4">
               {/* AI Features Quick Access */}
-              <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-950/20 dark:to-blue-950/20 rounded-xl p-4 border border-purple-100 dark:border-purple-900">
+              <div className="card-animate bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-950/20 dark:to-blue-950/20 rounded-xl p-4 border border-purple-100 dark:border-purple-900 group overflow-hidden">
                 <div className="flex items-center gap-2 mb-3">
-                  <Brain className="w-5 h-5 text-purple-600" />
+                  <Brain className="w-5 h-5 text-purple-600 animate-pulse" />
                   <h3 className="font-semibold text-gray-900 dark:text-gray-100">AI Features</h3>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                   Enhance your productivity with AI-powered tools
                 </p>
                 <Link href="/advanced-features">
-                  <Button className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
+                  <Button className="btn-hover w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-md hover:shadow-lg transition-all duration-300">
                     Explore AI Tools
                   </Button>
                 </Link>
@@ -96,7 +96,7 @@ export default function Dashboard() {
       {isMobile && (
         <Button
           size="lg"
-          className="fixed bottom-20 right-6 h-14 w-14 rounded-full shadow-lg hover:scale-105 transition-transform z-40"
+          className="btn-hover fixed bottom-20 right-6 h-14 w-14 rounded-full shadow-lg hover:scale-110 bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-600 hover:to-blue-700 transition-all duration-300 z-40 animate-pulse"
           onClick={() => {
             // Focus on the quick add input
             const quickAddInput = document.querySelector('input[placeholder*="What would you like to add"]') as HTMLInputElement;

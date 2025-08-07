@@ -64,14 +64,14 @@ export default function AIFeaturesModal({ isOpen, onClose, onFeatureSelect, onUp
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto bg-white dark:bg-gray-900">
+      <DialogContent className="modal-enter max-w-2xl max-h-[85vh] overflow-y-auto bg-white dark:bg-gray-900">
         <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center animate-pulse">
               <Sparkles className="w-5 h-5 text-white" />
             </div>
             <div>
-              <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white">AI Features</DialogTitle>
+              <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white gradient-text">AI Features</DialogTitle>
               <p className="text-sm text-gray-600 dark:text-gray-400">Choose an AI feature to boost your productivity</p>
             </div>
           </div>
@@ -79,7 +79,7 @@ export default function AIFeaturesModal({ isOpen, onClose, onFeatureSelect, onUp
             variant="outline" 
             size="sm" 
             onClick={onClose}
-            className="h-8 w-8 p-0"
+            className="btn-hover h-8 w-8 p-0 transition-all duration-300"
           >
             <X className="w-4 h-4" />
           </Button>
@@ -107,32 +107,35 @@ export default function AIFeaturesModal({ isOpen, onClose, onFeatureSelect, onUp
 
           {/* AI Features Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {aiFeatures.map((feature) => (
+            {aiFeatures.map((feature, index) => (
               <Card 
                 key={feature.id}
-                className={`cursor-pointer transition-all hover:shadow-lg border ${
+                className={`stagger-item card-animate cursor-pointer transition-all duration-300 hover:shadow-lg border group ${
                   subscriptionStatus.canUseAi 
-                    ? 'hover:border-purple-300 dark:hover:border-purple-600' 
+                    ? 'hover:border-purple-300 dark:hover:border-purple-600 hover:-translate-y-1' 
                     : 'opacity-75'
                 }`}
                 onClick={() => handleFeatureClick(feature.id)}
+                style={{ animationDelay: `${index * 100}ms` }}
               >
                 <CardHeader className="pb-3">
                   <div className="flex items-center gap-3">
-                    {feature.icon}
-                    <CardTitle className="text-lg text-gray-900 dark:text-white">
+                    <div className="transition-transform duration-300 group-hover:scale-110">
+                      {feature.icon}
+                    </div>
+                    <CardTitle className="text-lg text-gray-900 dark:text-white transition-colors duration-300 group-hover:text-purple-600 dark:group-hover:text-purple-400">
                       {feature.title}
                     </CardTitle>
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 transition-colors duration-300 group-hover:text-gray-700 dark:group-hover:text-gray-300">
                     {feature.description}
                   </p>
                   <div className="mt-3">
                     <Button 
                       size="sm" 
-                      className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0"
+                      className="btn-hover w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 shadow-md hover:shadow-lg transition-all duration-300"
                       disabled={!subscriptionStatus.canUseAi}
                     >
                       {subscriptionStatus.canUseAi ? 'Use Feature' : 'Upgrade Required'}

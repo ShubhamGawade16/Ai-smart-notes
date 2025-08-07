@@ -167,24 +167,25 @@ export default function DailyMotivationQuote() {
   };
 
   return (
-    <Card className="border-0 shadow-sm bg-white dark:bg-gray-900">
+    <Card className="border-0 shadow-sm bg-white dark:bg-gray-900 card-animate overflow-hidden">
       <CardHeader className="pb-4 pt-6 px-6">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
-            💡 Daily Motivation
+          <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <span className="animate-pulse">💡</span>
+            <span className="gradient-text">Daily Motivation</span>
           </CardTitle>
           <Button
             variant="ghost"
             size="sm"
             onClick={refreshQuote}
-            className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="btn-hover h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-300"
           >
-            <RefreshCw className={`w-4 h-4 ${isAnimating ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 transition-transform duration-500 ${isAnimating ? 'animate-spin' : 'hover:rotate-180'}`} />
           </Button>
         </div>
       </CardHeader>
       <CardContent className="px-6 pb-6">
-        <div className={`transition-all duration-300 ${isAnimating ? 'opacity-0 transform scale-95' : 'opacity-100 transform scale-100'}`}>
+        <div className={`transition-all duration-500 ease-in-out ${isAnimating ? 'opacity-0 transform scale-95 translate-y-2' : 'opacity-100 transform scale-100 translate-y-0'}`}>
           <blockquote className="text-sm font-medium text-gray-800 dark:text-gray-200 leading-relaxed">
             "{currentQuote.quote}"
           </blockquote>

@@ -111,10 +111,10 @@ export function SimpleTaskInput({ onTaskCreated, onUpgradeRequired, onAiUsageInc
           variant={isSmartMode ? "default" : "outline"}
           size="sm"
           onClick={() => setIsSmartMode(!isSmartMode)}
-          className={isSmartMode 
-            ? "bg-gradient-to-r from-purple-500 to-indigo-600 text-white border-0" 
-            : "border-purple-200 text-purple-700 hover:bg-purple-50"
-          }
+          className={`btn-hover transition-all duration-300 ${isSmartMode 
+            ? "bg-gradient-to-r from-purple-500 to-indigo-600 text-white border-0 shadow-lg" 
+            : "border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300"
+          }`}
         >
           <Sparkles className="w-4 h-4 mr-2" />
           {isSmartMode ? "Smart Mode" : "Basic Mode"}
@@ -133,7 +133,7 @@ export function SimpleTaskInput({ onTaskCreated, onUpgradeRequired, onAiUsageInc
           <Button
             type="submit"
             disabled={!taskInput.trim() || createTaskMutation.isPending}
-            className="bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-600 hover:to-blue-700 text-white border-0 px-6 h-12 rounded-xl"
+            className="btn-hover bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-600 hover:to-blue-700 text-white border-0 px-6 h-12 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
           >
             {createTaskMutation.isPending ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -143,14 +143,16 @@ export function SimpleTaskInput({ onTaskCreated, onUpgradeRequired, onAiUsageInc
           </Button>
         </div>
 
-        {isSmartMode && (
-          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 p-4 rounded-xl border border-purple-200 dark:border-purple-700">
+        <div className={`transition-all duration-500 ease-in-out overflow-hidden ${
+          isSmartMode ? 'max-h-20 opacity-100' : 'max-h-0 opacity-0'
+        }`}>
+          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 p-4 rounded-xl border border-purple-200 dark:border-purple-700 card-animate">
             <p className="text-sm text-purple-700 dark:text-purple-300 flex items-center">
-              <Sparkles className="w-4 h-4 mr-2" />
+              <Sparkles className="w-4 h-4 mr-2 animate-pulse" />
               Smart Mode: AI will automatically detect priority, category, tags, and time estimates
             </p>
           </div>
-        )}
+        </div>
       </form>
     </div>
   );

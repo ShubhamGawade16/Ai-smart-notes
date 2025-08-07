@@ -162,11 +162,14 @@ export function ModernTaskItem({ task, onUpdate, onDelete, onAdvancedView, onTas
   return (
     <div 
       className={cn(
-        "group flex items-center gap-3 p-4 rounded-xl transition-all duration-200",
+        "group stagger-item card-animate flex items-center gap-3 p-4 rounded-xl transition-all duration-300 border-l-4",
         "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700",
         "hover:bg-gray-50 dark:hover:bg-gray-750 hover:border-gray-300 dark:hover:border-gray-600",
-        "hover:shadow-sm",
-        task.completed && "opacity-70 bg-gray-50 dark:bg-gray-850"
+        "hover:shadow-lg hover:-translate-y-1",
+        task.completed && "opacity-70 bg-gray-50 dark:bg-gray-850",
+        task.priority === 'high' ? 'border-l-red-400' :
+        task.priority === 'medium' ? 'border-l-yellow-400' :
+        'border-l-green-400'
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
