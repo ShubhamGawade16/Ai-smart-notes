@@ -1,78 +1,80 @@
-import { useEffect } from 'react';
-import { useLocation } from 'wouter';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/lib/supabase';
-import { Loader2 } from 'lucide-react';
+import { useEffect } from "react";
+import { useLocation } from "wouter";
+import { Loader2 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 
-export default function AuthCallback() {
-  const [, setLocation] = useLocation();
+export default function AuthCallbackPage() {
+  const [, navigate] = useLocation();
   const { toast } = useToast();
 
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        console.log('Processing auth callback...');
-        
         if (!supabase) {
-          throw new Error('Supabase not configured');
-        }
-
-        // Get the session from the URL hash
-        const { data, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Auth callback error:', error);
-          toast({
-            title: "Authentication failed",
-            description: error.message,
-            variant: "destructive",
-          });
-          setLocation('/auth');
+          console.error('Supabase not configured');
+          navigate("/auth?error=config_error");
           return;
         }
 
-        if (data.session) {
-          console.log('Auth successful, session:', data.session);
-          
-          // Store the access token for API requests
+        // Handle the auth callback - this processes the email verification
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Auth callback error:", error);
+          toast({
+            title: "Verification Failed",
+            description: "There was an issue verifying your email. Please try again.",
+            variant: "destructive",
+          });
+          navigate("/auth");
+          return;
+        }
+
+        if (data.session?.user) {
+          // Store auth token
           if (data.session.access_token) {
             localStorage.setItem('auth_token', data.session.access_token);
           }
           
+          console.log('Email verified successfully, redirecting to dashboard...');
           toast({
-            title: "Welcome!",
-            description: "You have been successfully signed in.",
+            title: "Email Verified!",
+            description: "Welcome to Planify! Redirecting to your dashboard...",
           });
           
-          // Redirect to dashboard
-          setLocation('/dashboard');
+          // Redirect to dashboard after successful verification
+          setTimeout(() => {
+            window.location.href = '/dashboard';
+          }, 1000);
         } else {
-          console.log('No session found in callback');
-          setLocation('/auth');
+          // No session found, redirect to auth page
+          console.log('No session found, redirecting to auth');
+          navigate("/auth");
         }
       } catch (error) {
-        console.error('Auth callback processing error:', error);
+        console.error("Auth callback processing error:", error);
         toast({
-          title: "Authentication Error",
-          description: "Something went wrong during sign-in.",
+          title: "Verification Error",
+          description: "An unexpected error occurred during email verification.",
           variant: "destructive",
         });
-        setLocation('/auth');
+        navigate("/auth");
       }
     };
 
     handleAuthCallback();
-  }, [setLocation, toast]);
+  }, [navigate, toast]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="text-center">
-        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-teal-600" />
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-          Completing sign-in...
+        <Loader2 className="h-8 w-8 animate-spin text-teal-600 mx-auto mb-4" />
+        <h2 className="text-lg font-semibold text-gray-900 mb-2">
+          Verifying your email...
         </h2>
-        <p className="text-gray-600 dark:text-gray-400 mt-2">
-          Please wait while we process your authentication.
+        <p className="text-gray-600">
+          Please wait while we complete your email verification.
         </p>
       </div>
     </div>

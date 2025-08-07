@@ -10,6 +10,7 @@ import MobileDashboard from "@/pages/mobile-dashboard";
 import LandingPage from "@/pages/landing-page";
 import AuthSimplePage from "@/pages/auth-simple";
 import VerifyEmailPage from "@/pages/verify-email";
+import AuthCallbackPage from "@/pages/auth-callback";
 import AdvancedFeatures from "./pages/advanced-features";
 import UpgradePage from "@/pages/upgrade";
 import NotFound from "@/pages/not-found";
@@ -33,6 +34,7 @@ function Router() {
         {user ? <Redirect to="/dashboard" /> : <LandingPage />}
       </Route>
       <Route path="/auth" component={AuthSimplePage} />
+      <Route path="/auth/callback" component={AuthCallbackPage} />
       <Route path="/verify-email" component={VerifyEmailPage} />
       
       {/* Protected routes */}

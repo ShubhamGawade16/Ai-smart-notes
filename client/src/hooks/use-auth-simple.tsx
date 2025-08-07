@@ -47,7 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initAuth();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    const { data: { subscription } } = supabase?.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.email);
         
@@ -61,9 +61,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.log('Stored auth token for API requests');
           }
           
-          // Handle successful authentication events
-          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-            console.log('User signed in, redirecting to dashboard...');
+          // Handle successful authentication events - but only redirect from sign in, not callback
+          if (event === 'SIGNED_IN' && !window.location.pathname.includes('/auth/callback')) {
+            console.log('User signed in directly, redirecting to dashboard...');
             
             // Add a small delay to ensure state is updated
             setTimeout(() => {
@@ -111,6 +111,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string, firstName: string, lastName: string) => {
     if (!supabase) throw new Error('Supabase not configured');
 
+    // Get current host for proper redirect URL
+    const redirectUrl = `${window.location.origin}/auth/callback`;
+    
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -119,6 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           first_name: firstName,
           last_name: lastName,
         },
+        emailRedirectTo: redirectUrl,
       },
     });
 
@@ -168,9 +172,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const resendConfirmation = async (email: string) => {
     if (!supabase) throw new Error('Supabase not configured');
 
+    // Get current host for proper redirect URL
+    const redirectUrl = `${window.location.origin}/auth/callback`;
+
     const { error } = await supabase.auth.resend({
       type: 'signup',
       email: email,
+      options: {
+        emailRedirectTo: redirectUrl,
+      },
     });
 
     if (error) {

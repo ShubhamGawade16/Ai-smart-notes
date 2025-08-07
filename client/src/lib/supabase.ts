@@ -16,6 +16,7 @@ export const supabase = hasValidCredentials ? createClient(supabaseUrl, supabase
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
+    flowType: 'pkce',
   },
 }) : null
 
