@@ -24,6 +24,21 @@ import { parseNaturalLanguageTask, optimizeTaskOrder, generateProductivityInsigh
 import { notificationService } from "./services/notification-service";
 import OpenAI from 'openai';
 
+// Helper function to check AI usage limits
+function checkAiUsageLimit(user: any): { allowed: boolean; userLimit: number } {
+  const limits = {
+    free: 3,
+    basic: 30,
+    pro: -1, // unlimited
+    premium_pro: -1 // unlimited for legacy
+  };
+  
+  const userLimit = limits[user.tier as keyof typeof limits] || 3;
+  const allowed = userLimit === -1 || (user.dailyAiCalls || 0) < userLimit;
+  
+  return { allowed, userLimit };
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Health check
   app.get("/api/health", (req, res) => {
@@ -481,15 +496,11 @@ Respond with JSON in this format: {"quote": "your motivational quote", "author":
         return res.status(404).json({ error: "User not found" });
       }
 
-      // Check daily AI usage limits based on tier
-      const limits = {
-        free: 3,
-        basic: 30,
-        pro: -1 // unlimited
-      };
-
-      const userLimit = limits[user.tier] || 3;
-      if (userLimit !== -1 && (user.dailyAiCalls || 0) >= userLimit) {
+      // Check daily AI usage limits
+      const { allowed, userLimit } = checkAiUsageLimit(user);
+      console.log(`Smart timing - User ${req.userId} tier: ${user.tier}, limit: ${userLimit}, current usage: ${user.dailyAiCalls || 0}, allowed: ${allowed}`);
+      
+      if (!allowed) {
         return res.status(429).json({ error: "Daily AI usage limit exceeded" });
       }
 
@@ -605,14 +616,11 @@ Respond with JSON in this format:
         return res.status(404).json({ error: "User not found" });
       }
 
-      const limits = {
-        free: 3,
-        basic: 30,
-        pro: -1 // unlimited
-      };
-
-      const userLimit = limits[user.tier] || 3;
-      if (userLimit !== -1 && (user.dailyAiCalls || 0) >= userLimit) {
+      // Check daily AI usage limits  
+      const { allowed, userLimit } = checkAiUsageLimit(user);
+      console.log(`Smart categorizer - User ${req.userId} tier: ${user.tier}, limit: ${userLimit}, current usage: ${user.dailyAiCalls || 0}, allowed: ${allowed}`);
+      
+      if (!allowed) {
         return res.status(429).json({ error: "Daily AI usage limit exceeded" });
       }
 
@@ -673,14 +681,11 @@ Respond with JSON in this format:
         return res.status(404).json({ error: "User not found" });
       }
 
-      const limits = {
-        free: 3,
-        basic: 30,
-        pro: -1 // unlimited
-      };
-
-      const userLimit = limits[user.tier] || 3;
-      if (userLimit !== -1 && (user.dailyAiCalls || 0) >= userLimit) {
+      // Check daily AI usage limits  
+      const { allowed, userLimit } = checkAiUsageLimit(user);
+      console.log(`Productivity insights - User ${req.userId} tier: ${user.tier}, limit: ${userLimit}, current usage: ${user.dailyAiCalls || 0}, allowed: ${allowed}`);
+      
+      if (!allowed) {
         return res.status(429).json({ error: "Daily AI usage limit exceeded" });
       }
 
@@ -805,14 +810,11 @@ Respond with JSON in this format:
         return res.status(404).json({ error: "User not found" });
       }
 
-      const limits = {
-        free: 3,
-        basic: 30,
-        pro: -1 // unlimited
-      };
-
-      const userLimit = limits[user.tier] || 3;
-      if (userLimit !== -1 && (user.dailyAiCalls || 0) >= userLimit) {
+      // Check daily AI usage limits  
+      const { allowed, userLimit } = checkAiUsageLimit(user);
+      console.log(`Chat assistant - User ${req.userId} tier: ${user.tier}, limit: ${userLimit}, current usage: ${user.dailyAiCalls || 0}, allowed: ${allowed}`);
+      
+      if (!allowed) {
         return res.status(429).json({ error: "Daily AI usage limit exceeded" });
       }
 
