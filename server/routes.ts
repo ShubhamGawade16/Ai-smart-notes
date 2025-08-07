@@ -819,6 +819,88 @@ Be specific and accurate. Consider the task content and context.`;
     }
   });
 
+  // Custom AI Prompt endpoint
+  app.post("/api/ai/custom-prompt", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      if (!req.userId) {
+        return res.status(401).json({ error: "User ID not found in token" });
+      }
+
+      // Check and increment AI usage
+      const user = await storage.getUser(req.userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Check AI usage limits
+      const { allowed, userLimit, limitType } = checkAiUsageLimit(user);
+      const currentUsage = limitType === 'monthly' ? (user.monthlyAiCalls || 0) : (user.dailyAiCalls || 0);
+      console.log(`Custom prompt - User ${req.userId} (${user.email}) tier: ${user.tier}, limit: ${userLimit}, current usage: ${currentUsage}, limit type: ${limitType}, allowed: ${allowed}`);
+      
+      if (!allowed) {
+        return res.status(429).json({ error: `${limitType === 'monthly' ? 'Monthly' : 'Daily'} AI usage limit exceeded` });
+      }
+
+      const { prompt, context, responseFormat } = req.body;
+      
+      if (!prompt || typeof prompt !== 'string') {
+        return res.status(400).json({ error: "Prompt is required and must be a string" });
+      }
+
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(500).json({ error: "OpenAI API key not configured" });
+      }
+
+      const { default: OpenAI } = await import('openai');
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+      // Build the full prompt with context if provided
+      let fullPrompt = prompt;
+      if (context && typeof context === 'object') {
+        const contextString = Object.entries(context)
+          .map(([key, value]) => `${key}: ${value}`)
+          .join('\n');
+        fullPrompt = `${prompt}\n\nContext:\n${contextString}`;
+      }
+
+      // Add response format instruction if specified
+      if (responseFormat === 'json') {
+        fullPrompt += '\n\nRespond with valid JSON only.';
+      }
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+        messages: [{ role: "user", content: fullPrompt }],
+        ...(responseFormat === 'json' ? { response_format: { type: "json_object" } } : {})
+      });
+
+      // Increment usage only after successful API call
+      await storage.incrementDailyAiCalls(req.userId);
+      if (limitType === 'monthly') {
+        await storage.incrementMonthlyAiCalls(req.userId);
+      }
+
+      const content = response.choices[0].message.content || '';
+      
+      // Try to parse as JSON if requested
+      let result;
+      if (responseFormat === 'json') {
+        try {
+          result = JSON.parse(content);
+        } catch (e) {
+          result = { response: content };
+        }
+      } else {
+        result = { response: content };
+      }
+
+      res.json(result);
+    } catch (error) {
+      console.error('Custom AI prompt error:', error);
+      res.status(500).json({ error: "Failed to process custom prompt" });
+    }
+  });
+
   // Smart Timing Analysis endpoint
   app.get("/api/ai/smart-timing", requireAuth, async (req: AuthRequest, res) => {
     try {
