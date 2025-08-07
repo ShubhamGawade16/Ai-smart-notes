@@ -26,7 +26,8 @@ const queryClient = new QueryClient({
     queries: {
       queryFn: async ({ queryKey }) => {
         const token = localStorage.getItem('auth_token');
-        return apiRequest("GET", queryKey[0] as string, undefined, token ? { headers: { Authorization: `Bearer ${token}` } } : undefined);
+        const response = await apiRequest("GET", queryKey[0] as string, undefined, token ? { headers: { Authorization: `Bearer ${token}` } } : undefined);
+        return response.json();
       },
     },
   },

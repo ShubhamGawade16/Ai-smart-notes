@@ -5,7 +5,6 @@ import jwt from "jsonwebtoken";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { storage } from "./storage";
 import { 
-  authenticateToken, 
   optionalAuth,
   type AuthRequest 
 } from "./auth";
@@ -45,20 +44,46 @@ function checkAiUsageLimit(user: any): { allowed: boolean; userLimit: number } {
 // JWT secret for signing tokens
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
 
-// Simple auth middleware
-const authenticateToken = (req: any, res: any, next: any) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+// Unified auth middleware for both Supabase and fallback auth
+const requireAuth = async (req: any, res: any, next: any) => {
+  try {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
 
-  if (!token) {
-    return res.sendStatus(401);
+    if (!token) {
+      return res.status(401).json({ message: 'No token provided' });
+    }
+
+    // Check if it's a fallback token
+    if (token.startsWith('fallback_')) {
+      const userId = token.replace('fallback_', '');
+      const userData = await storage.getUser(userId);
+      if (userData) {
+        req.user = userData;
+        req.userId = userId;
+        return next();
+      }
+    }
+
+    // Try JWT verification for regular tokens
+    jwt.verify(token, JWT_SECRET, async (err: any, decoded: any) => {
+      if (err) {
+        return res.status(401).json({ message: 'Invalid token' });
+      }
+      
+      const userData = await storage.getUser(decoded.id);
+      if (userData) {
+        req.user = userData;
+        req.userId = decoded.id;
+        return next();
+      }
+      
+      return res.status(401).json({ message: 'User not found' });
+    });
+  } catch (error) {
+    console.error('Auth error:', error);
+    res.status(401).json({ message: 'Authentication failed' });
   }
-
-  jwt.verify(token, JWT_SECRET, (err: any, user: any) => {
-    if (err) return res.sendStatus(403);
-    req.user = user;
-    next();
-  });
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -172,7 +197,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/auth/me", authenticateToken, async (req, res) => {
+  app.get("/api/auth/me", requireAuth, async (req, res) => {
     try {
       const user = await storage.getUser(req.user.id);
       if (!user) {
@@ -217,7 +242,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================================================
 
   // Get subscription status
-  app.get("/api/subscription-status", authenticateToken, async (req: AuthRequest, res) => {
+  app.get("/api/subscription-status", requireAuth, async (req, res) => {
     try {
       if (!req.userId) {
         return res.status(401).json({ error: "User ID not found in token" });
@@ -274,7 +299,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Increment AI usage
-  app.post("/api/increment-ai-usage", authenticateToken, async (req: AuthRequest, res) => {
+  app.post("/api/increment-ai-usage", requireAuth, async (req, res) => {
     try {
       if (!req.userId) {
         return res.status(401).json({ error: "User ID not found in token" });
@@ -334,7 +359,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================================================
 
   // Create Razorpay order
-  app.post("/api/razorpay/create-order", authenticateToken, async (req: AuthRequest, res) => {
+  app.post("/api/razorpay/create-order", requireAuth, async (req: AuthRequest, res) => {
     try {
       if (!req.userId) {
         return res.status(401).json({ error: "User ID not found in token" });
@@ -376,7 +401,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Verify Razorpay payment
-  app.post("/api/razorpay/verify-payment", authenticateToken, async (req: AuthRequest, res) => {
+  app.post("/api/razorpay/verify-payment", requireAuth, async (req: AuthRequest, res) => {
     try {
       if (!req.userId) {
         return res.status(401).json({ error: "User ID not found in token" });
@@ -420,7 +445,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Upgrade subscription (legacy endpoint for compatibility)
-  app.post("/api/upgrade-subscription", authenticateToken, async (req: AuthRequest, res) => {
+  app.post("/api/upgrade-subscription", requireAuth, async (req: AuthRequest, res) => {
     try {
       if (!req.userId) {
         return res.status(401).json({ error: "User ID not found in token" });
@@ -449,7 +474,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Supabase user sync endpoint (kept for compatibility)
-  app.post("/api/auth/sync", authenticateToken, async (req: AuthRequest, res) => {
+  app.post("/api/auth/sync", requireAuth, async (req: AuthRequest, res) => {
     try {
       const { email, firstName, lastName, profileImageUrl } = req.body;
       
@@ -474,7 +499,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get current user
-  app.get("/api/auth/user", authenticateToken, async (req: AuthRequest, res) => {
+  app.get("/api/auth/user", requireAuth, async (req: AuthRequest, res) => {
     try {
       if (!req.userId) {
         return res.status(401).json({ error: "User ID not found in token" });
@@ -493,7 +518,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete account endpoint
-  app.delete("/api/auth/delete-account", authenticateToken, async (req: AuthRequest, res) => {
+  app.delete("/api/auth/delete-account", requireAuth, async (req: AuthRequest, res) => {
     try {
       if (!req.userId) {
         return res.status(401).json({ error: "User ID not found in token" });
@@ -514,7 +539,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Onboarding endpoint
-  app.post("/api/user/onboarding", authenticateToken, async (req: AuthRequest, res) => {
+  app.post("/api/user/onboarding", requireAuth, async (req: AuthRequest, res) => {
     try {
       if (!req.userId) {
         return res.status(401).json({ error: "User ID not found in token" });
@@ -640,7 +665,7 @@ Respond with JSON in this format: {"quote": "your motivational quote", "author":
   });
 
   // Smart Timing Analysis endpoint
-  app.get("/api/ai/smart-timing", authenticateToken, async (req: AuthRequest, res) => {
+  app.get("/api/ai/smart-timing", requireAuth, async (req: AuthRequest, res) => {
     try {
       if (!req.userId) {
         return res.status(401).json({ error: "User ID not found in token" });
@@ -756,7 +781,7 @@ Respond with JSON in this format:
   });
 
   // Smart Categorizer API
-  app.post("/api/ai/smart-categorizer", authenticateToken, async (req: AuthRequest, res) => {
+  app.post("/api/ai/smart-categorizer", requireAuth, async (req: AuthRequest, res) => {
     try {
       if (!req.userId) {
         return res.status(401).json({ error: "User ID not found in token" });
@@ -826,7 +851,7 @@ Respond with JSON in this format:
   });
 
   // Productivity Insights API
-  app.get("/api/ai/productivity-insights", authenticateToken, async (req: AuthRequest, res) => {
+  app.get("/api/ai/productivity-insights", requireAuth, async (req: AuthRequest, res) => {
     try {
       if (!req.userId) {
         return res.status(401).json({ error: "User ID not found in token" });
@@ -951,7 +976,7 @@ Respond with JSON in this format:
   });
 
   // AI Chat Assistant API
-  app.post("/api/ai/chat-assistant", authenticateToken, async (req: AuthRequest, res) => {
+  app.post("/api/ai/chat-assistant", requireAuth, async (req: AuthRequest, res) => {
     try {
       if (!req.userId) {
         return res.status(401).json({ error: "User ID not found in token" });
@@ -1059,7 +1084,7 @@ Guidelines:
   });
 
   // Update user timezone
-  app.patch("/api/user/timezone", authenticateToken, async (req: AuthRequest, res) => {
+  app.patch("/api/user/timezone", requireAuth, async (req: AuthRequest, res) => {
     try {
       if (!req.userId) {
         return res.status(401).json({ error: "User ID not found in token" });
@@ -1093,7 +1118,7 @@ Guidelines:
   });
 
   // Auto-detect and update user timezone
-  app.post("/api/user/auto-timezone", authenticateToken, async (req: AuthRequest, res) => {
+  app.post("/api/user/auto-timezone", requireAuth, async (req: AuthRequest, res) => {
     try {
       if (!req.userId) {
         return res.status(401).json({ error: "User ID not found in token" });
@@ -1148,13 +1173,13 @@ Guidelines:
   } = await import("./razorpay");
 
   // Create Razorpay order for one-time payments
-  app.post("/api/razorpay/order", authenticateToken, createRazorpayOrder);
+  app.post("/api/razorpay/order", requireAuth, createRazorpayOrder);
 
   // Create Razorpay subscription
-  app.post("/api/razorpay/subscription", authenticateToken, createRazorpaySubscription);
+  app.post("/api/razorpay/subscription", requireAuth, createRazorpaySubscription);
 
   // Verify Razorpay payment and upgrade user
-  app.post("/api/razorpay/verify", authenticateToken, async (req: AuthRequest, res) => {
+  app.post("/api/razorpay/verify", requireAuth, async (req: AuthRequest, res) => {
     try {
       // Verify the payment first
       const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
@@ -1208,13 +1233,13 @@ Guidelines:
   app.post("/api/razorpay/webhook", handleRazorpayWebhook);
 
   // Get subscription details
-  app.get("/api/razorpay/subscription/:subscriptionId", authenticateToken, getSubscriptionDetails);
+  app.get("/api/razorpay/subscription/:subscriptionId", requireAuth, getSubscriptionDetails);
 
   // Cancel subscription
-  app.post("/api/razorpay/subscription/:subscriptionId/cancel", authenticateToken, cancelRazorpaySubscription);
+  app.post("/api/razorpay/subscription/:subscriptionId/cancel", requireAuth, cancelRazorpaySubscription);
 
   // Generate smart timing analysis
-  app.post("/api/ai/smart-timing/generate", authenticateToken, async (req: AuthRequest, res) => {
+  app.post("/api/ai/smart-timing/generate", requireAuth, async (req: AuthRequest, res) => {
     try {
       const tasks = await storage.getTasks(req.userId!);
       const incompleteTasks = tasks.filter(task => !task.completed);
@@ -1243,7 +1268,7 @@ Guidelines:
   });
 
   // Apply timing recommendation endpoint
-  app.post("/api/ai/apply-timing-recommendation", authenticateToken, async (req: AuthRequest, res) => {
+  app.post("/api/ai/apply-timing-recommendation", requireAuth, async (req: AuthRequest, res) => {
     try {
       const { taskId, action } = req.body;
       
@@ -1276,7 +1301,7 @@ Guidelines:
   });
 
   // Toggle between free and premium user for testing
-  app.post("/api/dev/toggle-premium", authenticateToken, async (req: AuthRequest, res) => {
+  app.post("/api/dev/toggle-premium", requireAuth, async (req: AuthRequest, res) => {
     if (process.env.NODE_ENV !== 'development') {
       return res.status(403).json({ error: "Dev routes only available in development" });
     }
@@ -1322,7 +1347,7 @@ Guidelines:
 
 
   // Get user profile
-  app.get("/api/user/profile", authenticateToken, async (req: AuthRequest, res) => {
+  app.get("/api/user/profile", requireAuth, async (req: AuthRequest, res) => {
     try {
       if (!req.userId) {
         return res.status(401).json({ error: "User ID not found in token" });
@@ -1389,7 +1414,7 @@ Guidelines:
   // ============================================================================
 
   // Get all tasks (works with or without auth for testing)
-  app.get("/api/tasks", authenticateToken, async (req: AuthRequest, res) => {
+  app.get("/api/tasks", requireAuth, async (req: AuthRequest, res) => {
     try {
       if (!req.userId) {
         return res.status(401).json({ error: "User not authenticated" });
@@ -1406,7 +1431,7 @@ Guidelines:
   });
 
   // Get today's tasks
-  app.get("/api/tasks/today", authenticateToken, async (req: AuthRequest, res) => {
+  app.get("/api/tasks/today", requireAuth, async (req: AuthRequest, res) => {
     try {
       if (!req.userId) {
         return res.status(401).json({ error: "User not authenticated" });
@@ -1448,7 +1473,7 @@ Guidelines:
   });
 
   // Enhanced task creation with AI parsing (no auth required for testing)
-  app.post("/api/tasks", authenticateToken, async (req: AuthRequest, res) => {
+  app.post("/api/tasks", requireAuth, async (req: AuthRequest, res) => {
       try {
         if (!req.userId) {
           return res.status(401).json({ error: "User not authenticated" });
@@ -1500,7 +1525,7 @@ Guidelines:
   );
 
   // Update task (works with or without auth for testing)
-  app.patch("/api/tasks/:id", authenticateToken, async (req: AuthRequest, res) => {
+  app.patch("/api/tasks/:id", requireAuth, async (req: AuthRequest, res) => {
     try {
       if (!req.userId) {
         return res.status(401).json({ error: "User not authenticated" });
@@ -1542,7 +1567,7 @@ Guidelines:
   });
 
   // Delete task (works with or without auth for testing)
-  app.delete("/api/tasks/:id", authenticateToken, async (req: AuthRequest, res) => {
+  app.delete("/api/tasks/:id", requireAuth, async (req: AuthRequest, res) => {
     try {
       if (!req.userId) {
         return res.status(401).json({ error: "User not authenticated" });
@@ -1579,7 +1604,7 @@ Guidelines:
   // ============================================================================
 
   // Get all notes
-  app.get("/api/notes", authenticateToken, async (req: AuthRequest, res) => {
+  app.get("/api/notes", requireAuth, async (req: AuthRequest, res) => {
     try {
       if (!req.userId) {
         return res.status(401).json({ error: "User not authenticated" });
@@ -1594,7 +1619,7 @@ Guidelines:
   });
 
   // Create note
-  app.post("/api/notes", authenticateToken, async (req: AuthRequest, res) => {
+  app.post("/api/notes", requireAuth, async (req: AuthRequest, res) => {
     try {
       if (!req.userId) {
         return res.status(401).json({ error: "User ID not found in token" });
@@ -1621,7 +1646,7 @@ Guidelines:
   // ANALYTICS ROUTES
   // ============================================================================
 
-  app.get("/api/analytics/stats", authenticateToken, async (req: AuthRequest, res) => {
+  app.get("/api/analytics/stats", requireAuth, async (req: AuthRequest, res) => {
     try {
       if (!req.userId) {
         return res.status(401).json({ error: "User not authenticated" });
@@ -1713,7 +1738,7 @@ Guidelines:
   // ============================================================================
 
   // Dev mode endpoints
-  app.post('/api/dev/toggle-tier', authenticateToken, async (req: AuthRequest, res) => {
+  app.post('/api/dev/toggle-tier', requireAuth, async (req: AuthRequest, res) => {
     try {
       const userId = req.userId;
       if (!userId) {
@@ -1736,7 +1761,7 @@ Guidelines:
     }
   });
 
-  app.post('/api/dev/reset-data', authenticateToken, async (req: AuthRequest, res) => {
+  app.post('/api/dev/reset-data', requireAuth, async (req: AuthRequest, res) => {
     try {
       const userId = req.userId;
       if (!userId) {

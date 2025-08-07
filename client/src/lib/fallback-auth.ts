@@ -41,8 +41,11 @@ export class FallbackAuth {
     try {
       if (this.user) {
         localStorage.setItem('fallback_auth_user', JSON.stringify(this.user));
+        // Also save a simple auth token for API requests
+        localStorage.setItem('auth_token', `fallback_${this.user.id}`);
       } else {
         localStorage.removeItem('fallback_auth_user');
+        localStorage.removeItem('auth_token');
       }
     } catch (error) {
       console.error('Failed to save user to localStorage:', error);
