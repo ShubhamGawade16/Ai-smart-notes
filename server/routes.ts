@@ -278,9 +278,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // In development mode, respect the user tier but provide generous limits for testing
       const isDevelopment = process.env.NODE_ENV === 'development';
       
-      const isPremium = user.tier !== 'free';
+      const isPremium = user.tier !== 'free' && user.tier !== null;
       const dailyLimit = isPremium ? 999 : 3; // Premium gets unlimited, free gets 3
       const currentUsage = user.dailyAiCalls || 0;
+      
+      // Pro users always have access, free users check limit
       const canUseAi = isPremium || currentUsage < dailyLimit;
 
       res.json({
@@ -313,7 +315,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // In development mode, still track usage but be more generous for free users
       const isDevelopment = process.env.NODE_ENV === 'development';
 
-      const isPremium = user.tier !== 'free';
+      const isPremium = user.tier !== 'free' && user.tier !== null;
       if (isPremium) {
         // Premium users have unlimited usage
         res.json({
@@ -459,7 +461,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         tier: 'pro',
         subscriptionStatus: 'active',
         subscriptionCurrentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-        monthlySubscriptionAmount: '5.00'
+        dailyAiCalls: 0, // Reset AI usage for upgraded users
+        dailyAiCallsResetAt: new Date()
       });
 
       res.json({ 
@@ -677,9 +680,13 @@ Respond with JSON in this format: {"quote": "your motivational quote", "author":
         return res.status(404).json({ error: "User not found" });
       }
 
-      // Check daily AI usage limits
-      const { allowed, userLimit } = checkAiUsageLimit(user);
-      console.log(`Smart timing - User ${req.userId} (${user.email}) tier: ${user.tier}, limit: ${userLimit}, current usage: ${user.dailyAiCalls || 0}, allowed: ${allowed}`);
+      // Check daily AI usage limits - Pro users always have access
+      const isPremium = user.tier !== 'free' && user.tier !== null;
+      const currentUsage = user.dailyAiCalls || 0;
+      const dailyLimit = isPremium ? 999 : 3;
+      const allowed = isPremium || currentUsage < dailyLimit;
+      
+      console.log(`Smart timing - User ${req.userId} (${user.email}) tier: ${user.tier}, limit: ${dailyLimit}, current usage: ${currentUsage}, allowed: ${allowed}, isPremium: ${isPremium}`);
       
       if (!allowed) {
         return res.status(429).json({ error: "Daily AI usage limit exceeded" });

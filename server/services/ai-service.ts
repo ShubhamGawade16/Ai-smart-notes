@@ -339,6 +339,9 @@ Examples of refinement:
       throw new Error("No response from AI");
     }
 
+    // Remove markdown code blocks if present
+    content = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    
     const result = JSON.parse(content);
     
     return {
