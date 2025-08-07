@@ -139,8 +139,10 @@ export function EmailAuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string, firstName: string, lastName: string) => {
     if (!supabase) throw new Error('Supabase not configured');
 
-    // Get current host for proper redirect URL
-    const redirectUrl = `${window.location.origin}/auth/callback`;
+    // Get current host for proper redirect URL - always use the actual app URL
+    const currentHost = window.location.origin;
+    const redirectUrl = `${currentHost}/auth/callback`;
+    console.log('Signup redirect URL:', redirectUrl);
     
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -199,7 +201,9 @@ export function EmailAuthProvider({ children }: { children: ReactNode }) {
   const resendVerification = async (email: string) => {
     if (!supabase) throw new Error('Supabase not configured');
 
-    const redirectUrl = `${window.location.origin}/auth/callback`;
+    const currentHost = window.location.origin;
+    const redirectUrl = `${currentHost}/auth/callback`;
+    console.log('Resend redirect URL:', redirectUrl);
 
     const { error } = await supabase.auth.resend({
       type: 'signup',
