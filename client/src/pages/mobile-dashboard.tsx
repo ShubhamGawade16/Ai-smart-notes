@@ -21,7 +21,7 @@ import ConfettiBurst from "@/components/confetti-burst";
 import DailyMotivationQuote from "@/components/daily-motivation-quote";
 import TaskProgressRadar from "@/components/task-progress-radar";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Plus, MessageCircle, Crown, User, Settings, LogOut, Sparkles, Sun, Moon } from "lucide-react";
+import { Plus, MessageCircle, Crown, User, Settings, LogOut, Sparkles, Sun, Moon, Code } from "lucide-react";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -164,6 +164,18 @@ export default function MobileDashboard() {
               </Button>
             </Link>
 
+            {/* Dev Mode Button - Clean and simple */}
+            <Button
+              onClick={() => setShowDevMode(true)}
+              variant="outline"
+              size="sm"
+              className="border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+              title="Developer Tools"
+            >
+              <Code className="w-4 h-4 mr-2" />
+              Dev
+            </Button>
+
             {subscriptionStatus.tier === 'free' && (
               <Button
                 onClick={() => setShowUpgradeProModal(true)}
@@ -205,10 +217,6 @@ export default function MobileDashboard() {
                 <DropdownMenuItem onClick={() => setShowProfile(true)} className="cursor-pointer">
                   <Settings className="w-4 h-4 mr-2" />
                   Profile Settings
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setShowDevMode(true)} className="cursor-pointer">
-                  <MessageCircle className="w-4 h-4 mr-2" />
-                  Dev Mode
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
