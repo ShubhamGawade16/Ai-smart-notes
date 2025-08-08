@@ -20,45 +20,59 @@ export default function TaskProgressRadar() {
 
   const tasks: Task[] = (tasksResponse as any)?.tasks || [];
 
-  // Calculate progress by category - dynamically using actual user categories
+  // Calculate progress by core categories with smart mapping
   const calculateCategoryProgress = (): CategoryProgress[] => {
+    // Core predefined categories that ensure consistent chart display
+    const coreCategories = {
+      'work': ['work', 'business', 'project', 'meeting', 'career', 'professional'],
+      'personal': ['personal', 'family', 'home', 'lifestyle', 'social'],
+      'health': ['health', 'fitness', 'exercise', 'wellness', 'medical', 'workout'],
+      'learning': ['learning', 'education', 'study', 'course', 'skill', 'reading', 'research'],
+      'creative': ['creative', 'art', 'design', 'writing', 'music', 'hobby'],
+      'other': ['other', 'misc', 'miscellaneous']
+    };
+    
     const categoryMap = new Map<string, { completed: number; total: number }>();
     
-    // Extract actual categories from user tasks
+    // Initialize core categories
+    Object.keys(coreCategories).forEach(cat => {
+      categoryMap.set(cat, { completed: 0, total: 0 });
+    });
+
+    // Smart mapping function to assign tasks to core categories
+    const mapToCoreCategory = (taskCategory: string | null): string => {
+      if (!taskCategory) return 'other';
+      
+      const lowerCategory = taskCategory.toLowerCase();
+      
+      // Find matching core category
+      for (const [coreKey, keywords] of Object.entries(coreCategories)) {
+        if (keywords.some(keyword => lowerCategory.includes(keyword))) {
+          return coreKey;
+        }
+      }
+      
+      return 'other';
+    };
+
+    // Count tasks by mapped core categories
     tasks.forEach(task => {
-      const category = task.category || 'Uncategorized';
-      const current = categoryMap.get(category) || { completed: 0, total: 0 };
+      const coreCategory = mapToCoreCategory(task.category);
+      const current = categoryMap.get(coreCategory)!;
       
       current.total += 1;
       if (task.completed) {
         current.completed += 1;
       }
-      
-      categoryMap.set(category, current);
     });
 
-    // Convert to array and sort by total tasks (most used categories first)
-    const categoryData = Array.from(categoryMap.entries())
-      .map(([category, data]) => ({
-        category: category.charAt(0).toUpperCase() + category.slice(1),
-        completed: data.completed,
-        total: data.total,
-        percentage: data.total > 0 ? Math.round((data.completed / data.total) * 100) : 0
-      }))
-      .sort((a, b) => b.total - a.total); // Sort by total tasks descending
-
-    // If no tasks, show a placeholder
-    if (categoryData.length === 0) {
-      return [{
-        category: 'No Tasks Yet',
-        completed: 0,
-        total: 0,
-        percentage: 0
-      }];
-    }
-
-    // Limit to top 8 categories to avoid cluttering
-    return categoryData.slice(0, 8);
+    // Convert to array format for radar chart
+    return Array.from(categoryMap.entries()).map(([category, data]) => ({
+      category: category.charAt(0).toUpperCase() + category.slice(1),
+      completed: data.completed,
+      total: data.total,
+      percentage: data.total > 0 ? Math.round((data.completed / data.total) * 100) : 0
+    }));
   };
 
   const radarData = calculateCategoryProgress();
@@ -84,16 +98,9 @@ export default function TaskProgressRadar() {
   return (
     <Card className="border-0 shadow-sm bg-white dark:bg-gray-900">
       <CardHeader className="pb-4 pt-6 px-6">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            📊 Category Progress
-          </CardTitle>
-          {tasks.length > 0 && (
-            <div className="text-xs text-gray-500 dark:text-gray-400">
-              {tasks.filter(t => t.completed).length}/{tasks.length} completed
-            </div>
-          )}
-        </div>
+        <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+          📊 Task Progress
+        </CardTitle>
       </CardHeader>
       <CardContent className="px-6 pb-6">
         <ResponsiveContainer width="100%" height={220}>
@@ -129,51 +136,22 @@ export default function TaskProgressRadar() {
           </RadarChart>
         </ResponsiveContainer>
         
-        {/* Enhanced Legend with task counts */}
-        <div className="mt-4 space-y-3">
-          {radarData.length === 1 && radarData[0].category === 'No Tasks Yet' ? (
-            <div className="text-center py-4">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Add some tasks to see your progress by category!
-              </p>
+        {/* Clean Legend - Original design */}
+        <div className="mt-4 grid grid-cols-2 gap-y-3 gap-x-6">
+          {radarData.map((item) => (
+            <div 
+              key={item.category}
+              className="flex items-center gap-2"
+            >
+              <div className="w-2 h-2 rounded-full bg-teal-600" />
+              <span className="text-sm text-gray-700 dark:text-gray-300 flex-1">
+                {item.category}
+              </span>
+              <span className="text-sm font-medium text-teal-600 dark:text-teal-400">
+                {item.percentage}%
+              </span>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-y-3">
-              {radarData.map((item) => (
-                <div 
-                  key={item.category}
-                  className={`flex items-center gap-3 p-2 rounded-lg transition-colors ${
-                    hoveredCategory === item.category 
-                      ? 'bg-teal-50 dark:bg-teal-950/20' 
-                      : 'hover:bg-gray-50 dark:hover:bg-gray-800'
-                  }`}
-                >
-                  <div className="w-3 h-3 rounded-full bg-teal-600 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
-                        {item.category}
-                      </span>
-                      <span className="text-sm font-bold text-teal-600 dark:text-teal-400 ml-2">
-                        {item.percentage}%
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
-                        <div 
-                          className="bg-teal-600 h-1.5 rounded-full transition-all duration-300" 
-                          style={{ width: `${item.percentage}%` }}
-                        />
-                      </div>
-                      <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                        {item.completed}/{item.total}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          ))}
         </div>
       </CardContent>
     </Card>
