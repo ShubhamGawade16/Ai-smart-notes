@@ -26,11 +26,20 @@ import { parseNaturalLanguageTask, optimizeTaskOrder, generateProductivityInsigh
 import { notificationService } from "./services/notification-service";
 import OpenAI from 'openai';
 
-// Helper function to check AI usage limits with Basic tier monthly tracking
+// Helper function to check AI usage limits with correct Basic tier logic
 function checkAiUsageLimit(user: any): { allowed: boolean; userLimit: number; limitType: 'daily' | 'monthly' | 'unlimited' } {
-  // Pro tier - unlimited AI calls
+  // Pro tier - unlimited AI calls (only if subscription is active)
   if (user.tier === 'pro') {
-    return { allowed: true, userLimit: -1, limitType: 'unlimited' };
+    // Check if subscription is active for Pro tier
+    if (user.subscriptionStatus === 'active') {
+      return { allowed: true, userLimit: -1, limitType: 'unlimited' };
+    } else {
+      // Pro subscription expired, fall back to free tier
+      const currentUsage = user.dailyAiCalls || 0;
+      const dailyLimit = 3;
+      const allowed = currentUsage < dailyLimit;
+      return { allowed, userLimit: dailyLimit, limitType: 'daily' };
+    }
   }
   
   // Free tier - 3 AI calls per day (resets daily)
@@ -41,10 +50,20 @@ function checkAiUsageLimit(user: any): { allowed: boolean; userLimit: number; li
     return { allowed, userLimit: dailyLimit, limitType: 'daily' };
   }
   
-  // Basic tier - 30 AI calls per month (resets monthly on 1st)
+  // Basic tier - 3 daily + 100 monthly pool (only if subscription is active)
   if (user.tier === 'basic') {
-    const currentUsage = user.monthlyAiCalls || 0;
-    const monthlyLimit = 30;
+    // Check if subscription is active for Basic tier
+    if (user.subscriptionStatus !== 'active') {
+      // Basic subscription expired, fall back to free tier
+      const currentUsage = user.dailyAiCalls || 0;
+      const dailyLimit = 3;
+      const allowed = currentUsage < dailyLimit;
+      return { allowed, userLimit: dailyLimit, limitType: 'daily' };
+    }
+    
+    const dailyUsage = user.dailyAiCalls || 0;
+    const monthlyUsage = user.monthlyAiCalls || 0;
+    const monthlyLimit = 100;
     
     // Check if monthly reset is needed (1st of month)
     const now = new Date();
@@ -56,7 +75,8 @@ function checkAiUsageLimit(user: any): { allowed: boolean; userLimit: number; li
       return { allowed, userLimit: monthlyLimit, limitType: 'monthly' };
     }
     
-    const allowed = currentUsage < monthlyLimit;
+    // Basic tier logic: 3 daily + monthly pool
+    const allowed = monthlyUsage < monthlyLimit;
     return { allowed, userLimit: monthlyLimit, limitType: 'monthly' };
   }
   
@@ -327,13 +347,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let canUseAi = false;
 
       if (isPremium) {
-        dailyAiLimit = -1; // Unlimited
-        monthlyAiLimit = -1; // Unlimited
-        canUseAi = true;
+        // Pro tier - only if subscription is active
+        if (user.subscriptionStatus === 'active') {
+          dailyAiLimit = -1; // Unlimited
+          monthlyAiLimit = -1; // Unlimited
+          canUseAi = true;
+        } else {
+          // Pro subscription expired, fall back to free tier
+          canUseAi = dailyAiUsage < 3;
+        }
       } else if (isBasic) {
-        dailyAiLimit = -1; // No daily limit for basic
-        monthlyAiLimit = 120; // 120 per month
-        canUseAi = monthlyAiUsage < 120;
+        // Basic tier - only if subscription is active
+        if (user.subscriptionStatus === 'active') {
+          dailyAiLimit = 3; // 3 daily base
+          monthlyAiLimit = 100; // 100 per month
+          canUseAi = monthlyAiUsage < 100;
+        } else {
+          // Basic subscription expired, fall back to free tier
+          canUseAi = dailyAiUsage < 3;
+        }
       } else {
         // Free tier
         canUseAi = dailyAiUsage < 3;
@@ -377,49 +409,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const tier = user.tier || 'free';
       
       if (tier === 'pro') {
-        // Pro users have unlimited usage - still increment for tracking
-        const newCount = (user.dailyAiCalls || 0) + 1;
-        await storage.updateUser(req.userId, {
-          dailyAiCalls: newCount,
-          dailyAiCallsResetAt: new Date()
-        });
-        
-        res.json({
-          dailyAiUsage: newCount,
-          canUseAi: true
-        });
-        return;
+        // Pro users have unlimited usage only if subscription is active
+        if (user.subscriptionStatus === 'active') {
+          const newCount = (user.dailyAiCalls || 0) + 1;
+          await storage.updateUser(req.userId, {
+            dailyAiCalls: newCount,
+            dailyAiCallsResetAt: new Date()
+          });
+          
+          res.json({
+            dailyAiUsage: newCount,
+            canUseAi: true
+          });
+          return;
+        } else {
+          // Pro subscription expired, fall back to free tier logic
+          // Will be handled by free tier code below
+        }
       }
       
       if (tier === 'basic') {
-        // Basic users have monthly limits - only reset if subscription is active
-        const now = new Date();
-        const monthlyResetTime = user.monthlyAiCallsResetAt ? new Date(user.monthlyAiCallsResetAt) : new Date();
-        const shouldResetMonthly = now.getMonth() !== monthlyResetTime.getMonth() || now.getFullYear() !== monthlyResetTime.getFullYear();
-        
-        let newMonthlyCount = user.monthlyAiCalls || 0;
-        if (shouldResetMonthly && user.subscriptionStatus === 'active') {
-          newMonthlyCount = 0;
-        }
-        
-        const monthlyLimit = 120;
-        const canUseAi = newMonthlyCount < monthlyLimit;
-        
-        if (canUseAi) {
-          newMonthlyCount += 1;
-          await storage.updateUser(req.userId, {
-            monthlyAiCalls: newMonthlyCount,
-            monthlyAiCallsResetAt: shouldResetMonthly ? new Date(now.getFullYear(), now.getMonth(), 1) : user.monthlyAiCallsResetAt
+        // Basic users have 100 monthly AI calls only if subscription is active
+        if (user.subscriptionStatus === 'active') {
+          const now = new Date();
+          const monthlyResetTime = user.monthlyAiCallsResetAt ? new Date(user.monthlyAiCallsResetAt) : new Date();
+          const shouldResetMonthly = now.getMonth() !== monthlyResetTime.getMonth() || now.getFullYear() !== monthlyResetTime.getFullYear();
+          
+          let newMonthlyCount = user.monthlyAiCalls || 0;
+          if (shouldResetMonthly) {
+            newMonthlyCount = 0;
+          }
+          
+          const monthlyLimit = 100; // 100 AI calls per month for Basic tier
+          const canUseAi = newMonthlyCount < monthlyLimit;
+          
+          if (canUseAi) {
+            newMonthlyCount += 1;
+            await storage.updateUser(req.userId, {
+              monthlyAiCalls: newMonthlyCount,
+              monthlyAiCallsResetAt: shouldResetMonthly ? new Date(now.getFullYear(), now.getMonth(), 1) : user.monthlyAiCallsResetAt
+            });
+          }
+          
+          res.json({
+            dailyAiUsage: 0, // No daily tracking for basic with active subscription
+            monthlyAiUsage: newMonthlyCount,
+            canUseAi: newMonthlyCount < monthlyLimit,
+            monthlyAiLimit: monthlyLimit
           });
+          return;
+        } else {
+          // Basic subscription expired, fall back to free tier logic
+          // Will be handled by free tier code below
         }
-        
-        res.json({
-          dailyAiUsage: 0, // No daily limit for basic
-          monthlyAiUsage: newMonthlyCount,
-          canUseAi: newMonthlyCount < monthlyLimit,
-          monthlyAiLimit: monthlyLimit
-        });
-        return;
       }
 
       // Free tier - Check if daily limit needs reset
@@ -459,6 +501,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Failed to increment AI usage:", error);
       res.status(500).json({ error: "Failed to increment AI usage" });
+    }
+  });
+
+  // Development endpoint to reset AI usage
+  app.post("/api/dev/reset-ai-usage", requireAuth, async (req, res) => {
+    try {
+      if (!req.userId) {
+        return res.status(401).json({ error: "User ID not found in token" });
+      }
+
+      // Reset both daily and monthly AI usage for testing
+      await storage.updateUser(req.userId, {
+        dailyAiCalls: 0,
+        monthlyAiCalls: 0,
+        dailyAiCallsResetAt: new Date(),
+        monthlyAiCallsResetAt: new Date()
+      });
+
+      res.json({ 
+        message: "AI usage reset successfully",
+        dailyAiUsage: 0,
+        monthlyAiUsage: 0 
+      });
+    } catch (error) {
+      console.error("Failed to reset AI usage:", error);
+      res.status(500).json({ error: "Failed to reset AI usage" });
+    }
+  });
+
+  // Development endpoint to toggle user tier for testing
+  app.post("/api/dev/toggle-tier", requireAuth, async (req, res) => {
+    try {
+      if (!req.userId) {
+        return res.status(401).json({ error: "User ID not found in token" });
+      }
+
+      const user = await storage.getUser(req.userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Cycle through tiers: free -> basic -> pro -> free
+      let newTier = 'free';
+      let subscriptionStatus = null;
+      let subscriptionEnd = null;
+
+      switch (user.tier) {
+        case 'free':
+          newTier = 'basic';
+          subscriptionStatus = 'active';
+          subscriptionEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+          break;
+        case 'basic':
+          newTier = 'pro';
+          subscriptionStatus = 'active';
+          subscriptionEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+          break;
+        case 'pro':
+          newTier = 'free';
+          subscriptionStatus = null;
+          subscriptionEnd = null;
+          break;
+        default:
+          newTier = 'basic';
+          subscriptionStatus = 'active';
+          subscriptionEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      }
+
+      // Update user tier and reset AI usage
+      await storage.updateUser(req.userId, {
+        tier: newTier,
+        subscriptionStatus,
+        subscriptionCurrentPeriodEnd: subscriptionEnd,
+        dailyAiCalls: 0,
+        monthlyAiCalls: 0,
+        dailyAiCallsResetAt: new Date(),
+        monthlyAiCallsResetAt: new Date()
+      });
+
+      res.json({ 
+        message: "Tier toggled successfully",
+        newTier,
+        subscriptionStatus,
+        subscriptionEnd 
+      });
+    } catch (error) {
+      console.error("Failed to toggle tier:", error);
+      res.status(500).json({ error: "Failed to toggle tier" });
     }
   });
 

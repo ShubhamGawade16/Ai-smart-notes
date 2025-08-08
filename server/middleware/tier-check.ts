@@ -36,8 +36,8 @@ export const TIER_LIMITS = {
     monthly_tasks: 20,
   },
   basic: {
-    daily_ai_calls: -1, // No daily limit for basic
-    monthly_ai_calls: 30, // 30 AI requests per month
+    daily_ai_calls: 3, // 3 daily base + monthly pool
+    monthly_ai_calls: 100, // 100 AI requests per month
     monthly_tasks: -1, // Unlimited tasks
   },
   pro: {

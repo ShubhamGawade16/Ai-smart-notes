@@ -33,7 +33,7 @@ export function useSubscription() {
   // Get tier-based limits
   const getTierLimits = (tier: string) => {
     switch (tier) {
-      case 'basic': return 120; // 120 AI requests per month
+      case 'basic': return 100; // 100 AI requests per month + 3 daily
       case 'pro': return -1; // unlimited
       default: return 3; // free
     }
@@ -94,19 +94,20 @@ export function useSubscription() {
   };
 
   const checkAiUsageLimit = () => {
-    // For premium_pro users, always allow AI usage
+    // For premium_pro users, always allow AI usage (only if subscription is active)
     if (subscriptionStatus.isPremium) {
-      return true;
+      return subscriptionStatus.canUseAi;
     }
     
     const userTier = subscriptionStatus.tier || 'free';
     
     // Check tier-specific limits
     if (userTier === 'pro') {
-      return true; // Unlimited
+      // Pro tier: Unlimited but only if subscription is active
+      return subscriptionStatus.canUseAi;
     } else if (userTier === 'basic') {
-      // Basic tier: 120 monthly
-      return subscriptionStatus.canUseAi && (subscriptionStatus.monthlyAiUsage || 0) < 120;
+      // Basic tier: 100 monthly (3 daily + monthly pool) but only if subscription is active
+      return subscriptionStatus.canUseAi && (subscriptionStatus.monthlyAiUsage || 0) < 100;
     } else {
       // Free tier: 3 daily
       return subscriptionStatus.canUseAi && (subscriptionStatus.dailyAiUsage || 0) < 3;
