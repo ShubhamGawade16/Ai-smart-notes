@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   ArrowLeft,
   Bot,
@@ -11,7 +12,9 @@ import {
   TrendingUp,
   MessageCircle,
   Sparkles,
-  Clock
+  Clock,
+  ChevronRight,
+  Play
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { ProductivityInsights } from "@/components/productivity-insights";
@@ -20,193 +23,27 @@ import TaskRefiner from "@/components/task-refiner";
 import SmartCategorizerModal from "@/components/smart-categorizer-modal";
 import AIChatAssistantModal from "@/components/ai-chat-assistant-modal";
 
-interface FeatureCard {
+interface AIFeature {
   id: string;
   title: string;
+  shortTitle: string;
   description: string;
   icon: any;
   color: string;
-  badge?: string;
-  premium?: boolean;
+  gradient: string;
+  category: 'creation' | 'analysis' | 'interaction';
 }
 
-const aiFeatures: FeatureCard[] = [
-  {
-    id: "smart-categorizer",
-    title: "AI Task Categorizer",
-    description: "AI-powered task creation with automatic categorization, priority detection, and smart suggestions.",
-    icon: Brain,
-    color: "text-purple-600",
-    badge: "AI Enhanced"
-  },
-  {
-    id: "ai-timing",
-    title: "AI Timing",
-    description: "Smart timing analysis with circadian rhythm optimization and personalized task readiness scoring.",
-    icon: Clock,
-    color: "text-blue-600",
-    badge: "Smart Analysis"
-  },
-  {
-    id: "chat-assistant",
-    title: "AI Chat Assistant",
-    description: "Chat with AI to plan tasks, organize workflow, and get personalized productivity advice.",
-    icon: MessageCircle,
-    color: "text-teal-600",
-    badge: "Conversational AI"
-  },
-  {
-    id: "productivity-insights",
-    title: "Productivity Insights",
-    description: "AI-driven analysis of your productivity patterns with actionable optimization suggestions.",
-    icon: TrendingUp,
-    color: "text-orange-600",
-    badge: "Analytics"
-  },
-  {
-    id: "task-refiner",
-    title: "AI Task Refiner",
-    description: "Break down complex tasks into actionable steps with conversational AI guidance.",
-    icon: Target,
-    color: "text-green-600",
-    badge: "Smart Refinement"
-  }
-];
-
 export default function AdvancedFeatures() {
-  const [activeFeature, setActiveFeature] = useState<string | null>(null);
   const [showCategorizer, setShowCategorizer] = useState(false);
   const [showChatAssistant, setShowChatAssistant] = useState(false);
   const [, setLocation] = useLocation();
 
-  const renderFeature = () => {
-    switch (activeFeature) {
-      case 'smart-categorizer':
-        return (
-          <div className="space-y-6">
-            <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold">AI Task Categorizer</h2>
-              <p className="text-gray-600 dark:text-gray-400">
-                Create enhanced tasks with AI-powered analysis and suggestions
-              </p>
-            </div>
-            <div className="flex justify-center">
-              <Button
-                onClick={() => setShowCategorizer(true)}
-                className="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600"
-                size="lg"
-              >
-                <Brain className="w-5 h-5 mr-2" />
-                Open Smart Categorizer
-              </Button>
-            </div>
-          </div>
-        );
-      case 'ai-timing':
-        return (
-          <div className="space-y-6">
-            <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold">AI Timing</h2>
-              <p className="text-gray-600 dark:text-gray-400">
-                Smart timing analysis with circadian rhythm optimization
-              </p>
-            </div>
-            <SmartTiming />
-          </div>
-        );
-      case 'chat-assistant':
-        return (
-          <div className="space-y-6">
-            <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold">AI Chat Assistant</h2>
-              <p className="text-gray-600 dark:text-gray-400">
-                Chat with AI to plan and organize your tasks
-              </p>
-            </div>
-            <div className="flex justify-center">
-              <Button
-                onClick={() => setShowChatAssistant(true)}
-                className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600"
-                size="lg"
-              >
-                <MessageCircle className="w-5 h-5 mr-2" />
-                Start AI Chat
-              </Button>
-            </div>
-          </div>
-        );
-      case 'productivity-insights':
-        return (
-          <div className="space-y-6">
-            <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold">Productivity Insights</h2>
-              <p className="text-gray-600 dark:text-gray-400">
-                AI-powered analysis of your productivity patterns
-              </p>
-            </div>
-            <div className="max-w-2xl mx-auto">
-              <ProductivityInsights />
-            </div>
-          </div>
-        );
-      case 'task-refiner':
-        return (
-          <div className="space-y-6">
-            <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold">AI Task Refiner</h2>
-              <p className="text-gray-600 dark:text-gray-400">
-                Transform any task into actionable steps with AI guidance
-              </p>
-            </div>
-            <div className="max-w-2xl mx-auto">
-              <TaskRefiner 
-                onTaskRefined={(refinedTask, decomposition) => {
-                  console.log('Refined task:', refinedTask, decomposition);
-                }}
-              />
-            </div>
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
-
-  if (activeFeature) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-        <div className="container mx-auto px-4 py-8">
-          <div className="mb-6">
-            <Button
-              variant="ghost"
-              onClick={() => setActiveFeature(null)}
-              className="flex items-center gap-2 hover:bg-white dark:hover:bg-gray-800"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to Features
-            </Button>
-          </div>
-          {renderFeature()}
-        </div>
-        
-        {/* Modals */}
-        <SmartCategorizerModal 
-          isOpen={showCategorizer} 
-          onClose={() => setShowCategorizer(false)} 
-        />
-        <AIChatAssistantModal 
-          isOpen={showChatAssistant} 
-          onClose={() => setShowChatAssistant(false)} 
-        />
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header with Back Button */}
-        <div className="flex items-center justify-between mb-8">
+      <div className="container mx-auto px-4 py-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
           <Button
             variant="outline"
             onClick={() => setLocation('/')}
@@ -217,109 +54,191 @@ export default function AdvancedFeatures() {
           </Button>
         </div>
         
-        <div className="text-center space-y-4 mb-12">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center">
-              <Sparkles className="w-6 h-6 text-white" />
+        <div className="text-center space-y-3 mb-8">
+          <div className="flex items-center justify-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center">
+              <Sparkles className="w-5 h-5 text-white" />
             </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-              AI-Powered Features
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+              AI Features Hub
             </h1>
           </div>
-          <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Transform your productivity with advanced AI capabilities designed to enhance every aspect of your task management.
+          <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+            Access powerful AI tools designed to boost your productivity and streamline your workflow.
           </p>
         </div>
 
-        {/* Feature Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-          {aiFeatures.map((feature) => {
-            const Icon = feature.icon;
-            return (
-              <Card 
-                key={feature.id}
-                className="group cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-[1.02] border-0 bg-white dark:bg-gray-800 overflow-hidden"
-                onClick={() => setActiveFeature(feature.id)}
-              >
-                <CardHeader className="pb-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className={`p-3 rounded-xl bg-gradient-to-r ${
-                        feature.id === 'smart-categorizer' ? 'from-purple-100 to-purple-200 dark:from-purple-900 dark:to-purple-800' :
-                        feature.id === 'ai-timing' ? 'from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800' :
-                        feature.id === 'chat-assistant' ? 'from-teal-100 to-teal-200 dark:from-teal-900 dark:to-teal-800' :
-                        feature.id === 'productivity-insights' ? 'from-orange-100 to-orange-200 dark:from-orange-900 dark:to-orange-800' :
-                        'from-green-100 to-green-200 dark:from-green-900 dark:to-green-800'
-                      }`}>
-                        <Icon className={`w-6 h-6 ${feature.color}`} />
-                      </div>
-                      <div>
-                        <CardTitle className="text-xl font-semibold group-hover:text-purple-600 transition-colors">
-                          {feature.title}
-                        </CardTitle>
-                        {feature.badge && (
-                          <Badge 
-                            variant="secondary" 
-                            className="mt-1 text-xs bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300"
-                          >
-                            {feature.badge}
-                          </Badge>
-                        )}
-                      </div>
+        {/* Main Content with Tabs */}
+        <Tabs defaultValue="create" className="w-full max-w-6xl mx-auto">
+          <TabsList className="grid w-full grid-cols-3 mb-8">
+            <TabsTrigger value="create" className="flex items-center gap-2">
+              <Brain className="w-4 h-4" />
+              Create & Plan
+            </TabsTrigger>
+            <TabsTrigger value="analyze" className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4" />
+              Analyze & Optimize
+            </TabsTrigger>
+            <TabsTrigger value="interact" className="flex items-center gap-2">
+              <MessageCircle className="w-4 h-4" />
+              Chat & Refine
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Create & Plan Tab */}
+          <TabsContent value="create" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* AI Task Categorizer */}
+              <Card className="border-purple-200 dark:border-purple-800 bg-gradient-to-br from-purple-50 to-white dark:from-purple-950 dark:to-gray-800">
+                <CardHeader>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900">
+                      <Brain className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                     </div>
-                    {feature.premium && (
-                      <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white">
-                        Pro
-                      </Badge>
-                    )}
+                    <CardTitle className="text-purple-900 dark:text-purple-100">AI Task Categorizer</CardTitle>
                   </div>
-                </CardHeader>
-                
-                <CardContent>
-                  <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                    {feature.description}
+                  <p className="text-sm text-purple-700 dark:text-purple-300">
+                    Create smart tasks with automatic categorization and priority detection
                   </p>
-                  
-                  <div className="mt-4 flex items-center text-sm text-purple-600 dark:text-purple-400 font-medium group-hover:gap-2 transition-all">
-                    Try it now
-                    <Zap className="w-4 h-4 ml-1 group-hover:ml-0 transition-all" />
+                </CardHeader>
+                <CardContent>
+                  <Button
+                    onClick={() => setShowCategorizer(true)}
+                    className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700"
+                  >
+                    <Play className="w-4 h-4 mr-2" />
+                    Start Creating Tasks
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* AI Timing */}
+              <Card className="border-blue-200 dark:border-blue-800 bg-gradient-to-br from-blue-50 to-white dark:from-blue-950 dark:to-gray-800">
+                <CardHeader>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900">
+                      <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <CardTitle className="text-blue-900 dark:text-blue-100">Smart Timing Analysis</CardTitle>
+                  </div>
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    Optimize your schedule with circadian rhythm insights
+                  </p>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="bg-white dark:bg-gray-900 rounded-lg m-4 p-4 border">
+                    <SmartTiming />
                   </div>
                 </CardContent>
-                
-                {/* Hover Effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-600/5 to-blue-600/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
               </Card>
-            );
-          })}
-        </div>
+            </div>
+          </TabsContent>
 
-        {/* Bottom CTA */}
-        <div className="text-center mt-16">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg border border-gray-200 dark:border-gray-700 max-w-2xl mx-auto">
-            <Bot className="w-12 h-12 mx-auto mb-4 text-purple-600" />
-            <h3 className="text-2xl font-bold mb-2">Experience AI-Powered Productivity</h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Each feature is designed to learn from your habits and provide personalized recommendations to maximize your productivity.
+          {/* Analyze & Optimize Tab */}
+          <TabsContent value="analyze" className="space-y-6">
+            <Card className="border-orange-200 dark:border-orange-800 bg-gradient-to-br from-orange-50 to-white dark:from-orange-950 dark:to-gray-800">
+              <CardHeader>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-900">
+                    <TrendingUp className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                  </div>
+                  <CardTitle className="text-orange-900 dark:text-orange-100">Productivity Insights</CardTitle>
+                </div>
+                <p className="text-sm text-orange-700 dark:text-orange-300">
+                  Get AI-powered analysis of your productivity patterns and optimization suggestions
+                </p>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="bg-white dark:bg-gray-900 rounded-lg m-4 p-4 border">
+                  <ProductivityInsights />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Chat & Refine Tab */}
+          <TabsContent value="interact" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* AI Chat Assistant */}
+              <Card className="border-teal-200 dark:border-teal-800 bg-gradient-to-br from-teal-50 to-white dark:from-teal-950 dark:to-gray-800">
+                <CardHeader>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 rounded-lg bg-teal-100 dark:bg-teal-900">
+                      <MessageCircle className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                    </div>
+                    <CardTitle className="text-teal-900 dark:text-teal-100">AI Chat Assistant</CardTitle>
+                  </div>
+                  <p className="text-sm text-teal-700 dark:text-teal-300">
+                    Get personalized productivity advice and task planning help
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <Button
+                    onClick={() => setShowChatAssistant(true)}
+                    className="w-full bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700"
+                  >
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    Start AI Conversation
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* AI Task Refiner */}
+              <Card className="border-green-200 dark:border-green-800 bg-gradient-to-br from-green-50 to-white dark:from-green-950 dark:to-gray-800">
+                <CardHeader>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900">
+                      <Target className="w-5 h-5 text-green-600 dark:text-green-400" />
+                    </div>
+                    <CardTitle className="text-green-900 dark:text-green-100">AI Task Refiner</CardTitle>
+                  </div>
+                  <p className="text-sm text-green-700 dark:text-green-300">
+                    Break down complex tasks into manageable, actionable steps
+                  </p>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="bg-white dark:bg-gray-900 rounded-lg m-4 p-4 border">
+                    <TaskRefiner 
+                      onTaskRefined={(refinedTask, decomposition) => {
+                        console.log('Refined task:', refinedTask, decomposition);
+                      }}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        {/* Quick Access Footer */}
+        <div className="mt-12 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700 max-w-4xl mx-auto">
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <Bot className="w-6 h-6 text-purple-600" />
+              <h3 className="text-lg font-semibold">AI-Powered Productivity</h3>
+            </div>
+            <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
+              Each AI feature learns from your behavior to provide increasingly personalized recommendations.
             </p>
-            <div className="flex flex-wrap justify-center gap-3">
-              <Badge variant="outline" className="px-3 py-1">
-                <Target className="w-3 h-3 mr-1" />
-                Smart Analysis
+            <div className="flex flex-wrap justify-center gap-2">
+              <Badge variant="outline" className="text-xs">
+                <Sparkles className="w-3 h-3 mr-1" />
+                Intelligent Analysis
               </Badge>
-              <Badge variant="outline" className="px-3 py-1">
+              <Badge variant="outline" className="text-xs">
                 <Brain className="w-3 h-3 mr-1" />
-                AI Learning
+                Adaptive Learning
               </Badge>
-              <Badge variant="outline" className="px-3 py-1">
-                <TrendingUp className="w-3 h-3 mr-1" />
-                Continuous Improvement
+              <Badge variant="outline" className="text-xs">
+                <Target className="w-3 h-3 mr-1" />
+                Goal Optimization
               </Badge>
             </div>
           </div>
         </div>
       </div>
       
-      {/* Modals that can be opened from the main view */}
+      {/* Modals */}
       <SmartCategorizerModal 
         isOpen={showCategorizer} 
         onClose={() => setShowCategorizer(false)} 
