@@ -18,44 +18,14 @@ const productivityQuotes = [
     category: "focus"
   },
   {
-    quote: "You don't have to be great to start, but you have to start to be great.",
-    author: "Zig Ziglar",
-    category: "start"
-  },
-  {
-    quote: "The way to get started is to quit talking and begin doing.",
-    author: "Walt Disney",
-    category: "action"
-  },
-  {
     quote: "Success is the sum of small efforts repeated day in and day out.",
     author: "Robert Collier",
     category: "consistency"
   },
   {
-    quote: "Your limitation—it's only your imagination.",
-    author: "Unknown",
-    category: "mindset"
-  },
-  {
     quote: "Great things never come from comfort zones.",
     author: "Unknown",
     category: "growth"
-  },
-  {
-    quote: "Dream it. Wish it. Do it.",
-    author: "Unknown",
-    category: "action"
-  },
-  {
-    quote: "Don't wait for opportunity. Create it.",
-    author: "Unknown",
-    category: "proactive"
-  },
-  {
-    quote: "The harder you work for something, the greater you'll feel when you achieve it.",
-    author: "Unknown",
-    category: "effort"
   }
 ];
 
@@ -74,17 +44,28 @@ export default function DailyMotivationQuote() {
   const completedTasks = tasks.filter((task: any) => task.completed);
   const incompleteTasks = tasks.filter((task: any) => !task.completed);
 
-  // Get AI-generated personalized quote (NO AI USAGE TRACKING - Exception as requested)
+  // Get AI-generated personalized quote
   const getAiPersonalizedQuote = async () => {
     try {
-      // Note: AI usage NOT tracked for daily quotes as per user request (exception)
+      console.log('Generating AI quote...');
       const response = await apiRequest('POST', '/api/ai/motivation-quote', {
         completedTasks: completedTasks.length,
         incompleteTasks: incompleteTasks.length,
         recentTasks: tasks.slice(0, 5).map((t: any) => ({ title: t.title, completed: t.completed }))
       });
       const data = await response.json();
-      return { quote: data.quote, author: data.author || 'AI Assistant', category: 'ai' };
+      
+      if (data.quote && data.quote.trim()) {
+        console.log('AI quote generated successfully:', data.quote);
+        return { 
+          quote: data.quote, 
+          author: data.author || 'Planify AI', 
+          category: 'ai-personalized' 
+        };
+      } else {
+        console.log('AI quote was empty, falling back to predefined');
+        return getPersonalizedQuote();
+      }
     } catch (error) {
       console.error('Failed to get AI quote:', error);
       return getPersonalizedQuote();
@@ -129,41 +110,31 @@ export default function DailyMotivationQuote() {
 
   const refreshQuote = async () => {
     setIsAnimating(true);
+    setIsAiQuote(false);
+    
     try {
       // Always try to get AI quote first
-      const response = await fetch('/api/ai/motivation-quote', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          completedTasks: completedTasks.length,
-          incompleteTasks: incompleteTasks.length,
-          recentTasks: tasks.slice(0, 3).map((t: any) => ({ title: t.title, completed: t.completed }))
-        })
-      });
+      console.log('Refresh clicked - attempting to generate AI quote');
+      const aiQuote = await getAiPersonalizedQuote();
       
-      if (response.ok) {
-        const data = await response.json();
-        if (data.quote) {
-          setCurrentQuote({
-            quote: data.quote,
-            author: data.author || 'Planify AI',
-            category: 'ai-personalized'
-          });
-          setIsAiQuote(true);
-        } else {
-          setCurrentQuote(getPersonalizedQuote());
-          setIsAiQuote(false);
-        }
+      if (aiQuote.category === 'ai-personalized') {
+        setCurrentQuote(aiQuote);
+        setIsAiQuote(true);
+        console.log('AI quote set successfully');
       } else {
-        setCurrentQuote(getPersonalizedQuote());
+        setCurrentQuote(aiQuote); // This will be a fallback predefined quote
         setIsAiQuote(false);
+        console.log('Using fallback predefined quote');
       }
     } catch (error) {
-      console.error('Failed to get AI quote:', error);
+      console.error('Error in refreshQuote:', error);
       setCurrentQuote(getPersonalizedQuote());
       setIsAiQuote(false);
     }
-    setIsAnimating(false);
+    
+    setTimeout(() => {
+      setIsAnimating(false);
+    }, 300);
   };
 
   return (
@@ -179,6 +150,8 @@ export default function DailyMotivationQuote() {
             size="sm"
             onClick={refreshQuote}
             className="btn-hover h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-300"
+            title="Generate AI quote"
+            disabled={isAnimating}
           >
             <RefreshCw className={`w-4 h-4 transition-transform duration-500 ${isAnimating ? 'animate-spin' : 'hover:rotate-180'}`} />
           </Button>
