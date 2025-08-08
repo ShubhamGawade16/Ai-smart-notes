@@ -119,25 +119,17 @@ export default function MobileDashboard() {
               {subscriptionStatus.tier === 'pro' ? (
                 <Badge className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-3 py-1 text-sm font-medium">
                   <Crown className="w-4 h-4 mr-1" />
-                  Pro
+                  Pro • Unlimited AI
                 </Badge>
               ) : subscriptionStatus.tier === 'basic' ? (
                 <Badge className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-1 text-sm font-medium">
                   <Crown className="w-4 h-4 mr-1" />
-                  Basic
+                  Basic • {subscriptionStatus.dailyAiUsage || 0}/3 Daily + {subscriptionStatus.monthlyAiUsage || 0}/100 Monthly
                 </Badge>
               ) : (
-                <div className="text-right">
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                    Free • {subscriptionStatus.tier === 'free' && subscriptionStatus.monthlyAiLimit > 0 ? 'Monthly' : 'Daily'} AI
-                  </div>
-                  <Badge variant="outline" className="text-sm font-medium">
-                    {subscriptionStatus.tier === 'basic' ? 
-                      `${subscriptionStatus.monthlyAiUsage}/${subscriptionStatus.monthlyAiLimit}` :
-                      `${subscriptionStatus.dailyAiUsage}/${subscriptionStatus.dailyAiLimit}`
-                    }
-                  </Badge>
-                </div>
+                <Badge className="bg-gradient-to-r from-gray-400 to-gray-500 text-white px-3 py-1 text-sm font-medium">
+                  Free • Daily AI {subscriptionStatus.dailyAiUsage || 0}/3
+                </Badge>
               )}
             </div>
           </div>
