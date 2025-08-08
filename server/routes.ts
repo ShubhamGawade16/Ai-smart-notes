@@ -1676,7 +1676,9 @@ Guidelines:
         tier: newTier,
         // Reset AI usage when switching tiers
         dailyAiCalls: 0,
-        dailyAiCallsResetAt: new Date()
+        monthlyAiCalls: 0,
+        dailyAiCallsResetAt: new Date(),
+        monthlyAiCallsResetAt: new Date()
       });
 
       console.log(`Dev toggle: User ${user.id} (${user.email}) switched to ${newTier} tier`);
