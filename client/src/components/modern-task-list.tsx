@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -38,6 +38,9 @@ export function ModernTaskList({ onAdvancedView, onTaskCompleted, onAiView }: Mo
   const [showSmartInput, setShowSmartInput] = useState(false);
   const [sortBy, setSortBy] = useState<string>("newest");
   const [filterBy, setFilterBy] = useState<string>("all");
+  const [lastRefresh, setLastRefresh] = useState(new Date());
+  
+  const queryClient = useQueryClient();
 
   const { data: tasksResponse } = useQuery({
     queryKey: ['/api/tasks'],
@@ -45,10 +48,55 @@ export function ModernTaskList({ onAdvancedView, onTaskCompleted, onAiView }: Mo
 
   const { data: todayResponse } = useQuery({
     queryKey: ['/api/tasks/today'],
+    refetchInterval: 60000, // Refresh every minute
+    refetchIntervalInBackground: true,
   });
 
   const allTasks: Task[] = (tasksResponse as any)?.tasks || [];
   const todayTasks: Task[] = Array.isArray(todayResponse) ? todayResponse : [];
+  
+  // Auto-refresh system for day transitions and regular updates
+  useEffect(() => {
+    const now = new Date();
+    
+    // Calculate milliseconds until next midnight
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    const msUntilMidnight = tomorrow.getTime() - now.getTime();
+    
+    // Set up midnight refresh
+    const midnightTimeout = setTimeout(() => {
+      console.log('Day changed - refreshing today\'s tasks');
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks/today'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
+      setLastRefresh(new Date());
+      
+      // Continue refreshing every 24 hours
+      const dailyInterval = setInterval(() => {
+        console.log('Daily refresh - updating today\'s tasks');
+        queryClient.invalidateQueries({ queryKey: ['/api/tasks/today'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
+        setLastRefresh(new Date());
+      }, 24 * 60 * 60 * 1000); // 24 hours
+      
+      return () => clearInterval(dailyInterval);
+    }, msUntilMidnight);
+    
+    // Regular refresh every 5 minutes when today tab is active
+    const regularInterval = setInterval(() => {
+      if (activeTab === 'today') {
+        console.log('Regular refresh - updating today\'s tasks');
+        queryClient.invalidateQueries({ queryKey: ['/api/tasks/today'] });
+        setLastRefresh(new Date());
+      }
+    }, 5 * 60 * 1000); // 5 minutes
+    
+    return () => {
+      clearTimeout(midnightTimeout);
+      clearInterval(regularInterval);
+    };
+  }, [activeTab, queryClient]);
 
   const incompleteTasks = allTasks.filter((task: Task) => !task.completed);
   const completedTasks = allTasks.filter((task: Task) => task.completed);
@@ -152,7 +200,7 @@ export function ModernTaskList({ onAdvancedView, onTaskCompleted, onAiView }: Mo
       case "today":
         return {
           title: "No tasks for today",
-          description: "Add your first task to get started with today's plan."
+          description: "Great! You're all caught up for today. Add new tasks or check back tomorrow."
         };
       case "all":
         return {
@@ -178,7 +226,17 @@ export function ModernTaskList({ onAdvancedView, onTaskCompleted, onAiView }: Mo
     <Card className="border-0 shadow-sm bg-gray-50 dark:bg-gray-900 flex-1">
       <CardHeader className="pb-3 pt-4 px-6">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">Tasks</CardTitle>
+          <div className="flex items-center gap-3">
+            <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">Tasks</CardTitle>
+            {activeTab === 'today' && (
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" title="Auto-refreshing" />
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  Last updated: {lastRefresh.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
+            )}
+          </div>
           <div className="flex items-center gap-2">
             {/* AI View Icon Button */}
             <Button

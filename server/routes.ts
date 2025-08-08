@@ -1673,25 +1673,43 @@ Guidelines:
       tomorrow.setDate(tomorrow.getDate() + 1);
 
       const todayTasks = allTasks.filter(task => {
-        // Show incomplete tasks that are either:
-        // 1. Due today
-        // 2. Created today and have no due date (new tasks)
+        // Show incomplete tasks that are relevant for today:
+        // 1. Tasks due today or overdue
+        // 2. Tasks without due dates (can be worked on anytime)
+        // 3. High priority tasks (urgent/high priority)
         if (task.completed) return false;
         
         if (task.dueDate) {
           const dueDate = new Date(task.dueDate);
           dueDate.setHours(0, 0, 0, 0);
-          return dueDate >= today && dueDate < tomorrow;
+          // Include overdue tasks and tasks due today
+          return dueDate <= today;
         }
         
-        // If no due date, check if created today
-        if (task.createdAt) {
-          const createdDate = new Date(task.createdAt);
-          createdDate.setHours(0, 0, 0, 0);
-          return createdDate >= today && createdDate < tomorrow;
+        // Include tasks without due dates (flexible tasks)
+        if (!task.dueDate) {
+          return true;
         }
         
         return false;
+      });
+      
+      // Sort tasks: overdue first, then high priority, then by creation date
+      todayTasks.sort((a, b) => {
+        // 1. Overdue tasks first
+        const aOverdue = a.dueDate && new Date(a.dueDate) < today;
+        const bOverdue = b.dueDate && new Date(b.dueDate) < today;
+        if (aOverdue && !bOverdue) return -1;
+        if (!aOverdue && bOverdue) return 1;
+        
+        // 2. Then by priority
+        const priorityOrder = { 'urgent': 0, 'high': 1, 'medium': 2, 'low': 3 };
+        const aPriority = priorityOrder[a.priority as keyof typeof priorityOrder] ?? 4;
+        const bPriority = priorityOrder[b.priority as keyof typeof priorityOrder] ?? 4;
+        if (aPriority !== bPriority) return aPriority - bPriority;
+        
+        // 3. Finally by creation date (newest first)
+        return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
       });
 
       res.json(todayTasks);
