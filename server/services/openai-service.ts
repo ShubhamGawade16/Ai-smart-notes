@@ -46,8 +46,7 @@ export async function parseTaskWithAI(taskInput: string) {
     const result = JSON.parse(response.choices[0].message.content || "{}");
     return result;
   } catch (error) {
-    console.error("Error parsing task with AI:", error);
-    // Return basic fallback
+    // Return basic fallback on error
     return {
       title: taskInput,
       priority: "medium",
@@ -89,7 +88,6 @@ export async function refineTask(originalTask: string, userQuestion: string) {
     const result = JSON.parse(response.choices[0].message.content || "{}");
     return result;
   } catch (error) {
-    console.error("Error refining task with AI:", error);
     return {
       refined_tasks: [originalTask],
       insights: "Unable to analyze task at the moment.",
@@ -127,7 +125,6 @@ Please analyze the task relationships and provide strategic advice for efficient
 
     return response.choices[0].message.content || "I'm unable to analyze your tasks at the moment. Please try again.";
   } catch (error) {
-    console.error("Error analyzing mind map with AI:", error);
     return "I'm currently unable to analyze your task mind map. Please check your connection and try again.";
   }
 }

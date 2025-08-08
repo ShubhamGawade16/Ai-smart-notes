@@ -40,18 +40,16 @@ export function useSubscription() {
   };
 
   const fetchSubscriptionStatus = async () => {
-    if (!user) {
-      setIsLoading(false);
+    if (!user || isLoading) {
+      if (!user) setIsLoading(false);
       return;
     }
 
     try {
-      // Use apiRequest with cache-busting timestamp
-      const timestamp = Date.now();
-      const response = await apiRequest("GET", `/api/subscription-status?t=${timestamp}`);
+      // Simple API call without cache-busting to prevent excessive requests
+      const response = await apiRequest("GET", "/api/subscription-status");
       if (response.ok) {
         const data = await response.json();
-        console.log('Fresh subscription data:', data);
         setSubscriptionStatus(data);
       } else {
         console.error("Failed to fetch subscription status:", response.status, response.statusText);
@@ -70,7 +68,6 @@ export function useSubscription() {
       const response = await apiRequest("POST", "/api/increment-ai-usage");
       if (response.ok) {
         const data = await response.json();
-        console.log('AI usage incremented:', data);
         
         // Update subscription status with the response data
         setSubscriptionStatus(prev => ({
@@ -80,8 +77,7 @@ export function useSubscription() {
           canUseAi: data.canUseAi
         }));
         
-        // Force refresh subscription status to get latest data
-        setTimeout(() => fetchSubscriptionStatus(), 100);
+        // Remove forced refresh to prevent excessive API calls
         
         return data.canUseAi;
       } else {
@@ -115,16 +111,20 @@ export function useSubscription() {
   };
 
   useEffect(() => {
-    fetchSubscriptionStatus();
-  }, [user]);
+    let mounted = true;
+    if (user && mounted && !isLoading) {
+      fetchSubscriptionStatus();
+    }
+    return () => { mounted = false; };
+  }, [user?.id]); // Only depend on user ID to avoid excessive re-renders
 
   const resetAiUsage = async () => {
     setSubscriptionStatus(prev => ({
       ...prev,
       dailyAiUsage: 0,
+      monthlyAiUsage: 0,
       canUseAi: true
     }));
-    await fetchSubscriptionStatus();
   };
 
   return {

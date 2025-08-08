@@ -42,7 +42,6 @@ class NotificationService {
     };
 
     this.notifications.push(scheduledNotification);
-    console.log(`Scheduled notification: ${notification.type} for user ${userId}`);
     
     return notificationId;
   }
@@ -71,6 +70,7 @@ class NotificationService {
           const daysOverdue = Math.floor((now.getTime() - new Date(task.dueDate).getTime()) / (1000 * 60 * 60 * 24));
           
           await this.scheduleNotification(userId, {
+            userId,
             taskId: task.id,
             type: 'overdue',
             scheduledFor: now,
@@ -99,6 +99,7 @@ class NotificationService {
             
             if (now >= shouldStartTime) {
               await this.scheduleNotification(userId, {
+                userId,
                 taskId: task.id,
                 type: 'urgent_deadline',
                 scheduledFor: now,
@@ -130,6 +131,7 @@ class NotificationService {
         
         if (highPriorityTasks.length > 0) {
           await this.scheduleNotification(userId, {
+            userId,
             taskId: highPriorityTasks[0].id,
             type: 'focus_reminder',
             scheduledFor: now,

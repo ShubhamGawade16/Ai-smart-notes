@@ -41,405 +41,171 @@ export interface IStorage {
   updateNote(id: string, userId: string, updates: Partial<UpdateNote>): Promise<Note | undefined>;
   deleteNote(id: string, userId: string): Promise<boolean>;
 
-  // Tier management methods
+  // Tier management methods (cleaned up)
   resetDailyLimits(userId: string): Promise<void>;
   resetMonthlyLimits(userId: string): Promise<void>;
   incrementDailyAiCalls(userId: string): Promise<void>;
-  incrementMonthlyAiCalls(userId: string): Promise<void>;
-  incrementMonthlyTaskCount(userId: string): Promise<void>;
-  resetDailyAiUsage(userId: string): Promise<void>;
-  resetMonthlyAiUsage(userId: string): Promise<void>;
 }
 
-// In-memory storage implementation
-export class MemStorage implements IStorage {
-  private users: User[] = [];
-  private tasks: Task[] = [];
-  private notes: Note[] = [];
-
-  // User methods
+// Database storage implementation
+export class DatabaseStorage implements IStorage {
+  // User operations
   async getUser(id: string): Promise<User | undefined> {
-    return this.users.find(user => user.id === id);
-  }
-
-  async getUserByEmail(email: string): Promise<User | undefined> {
-    return this.users.find(user => user.email === email);
-  }
-
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const user: User = {
-      id: crypto.randomUUID(),
-      email: insertUser.email,
-      passwordHash: insertUser.passwordHash || null,
-      firstName: insertUser.firstName || null,
-      lastName: insertUser.lastName || null,
-      profileImageUrl: insertUser.profileImageUrl || null,
-      tier: insertUser.tier || 'free',
-      subscriptionId: insertUser.subscriptionId || null,
-      subscriptionStatus: insertUser.subscriptionStatus || null,
-      subscriptionCurrentPeriodEnd: insertUser.subscriptionCurrentPeriodEnd || null,
-      trialEndsAt: insertUser.trialEndsAt || null,
-      isTrialUsed: insertUser.isTrialUsed || false,
-      dailyAiCalls: 0,
-      dailyAiCallsResetAt: new Date(),
-      monthlySubscriptionAmount: null,
-      monthlyTaskCount: 0,
-      monthlyTaskCountResetAt: new Date(),
-      totalXp: 0,
-      currentStreak: 0,
-      longestStreak: 0,
-      lastActivityAt: null,
-      primaryGoal: insertUser.primaryGoal || null,
-      customGoals: insertUser.customGoals || null,
-      onboardingCompleted: insertUser.onboardingCompleted || false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    this.users.push(user);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
   }
 
-  async upsertUser(upsertData: UpsertUser): Promise<User> {
-    const existingUser = await this.getUser(upsertData.id);
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
+  async createUser(userData: InsertUser): Promise<User> {
+    const [user] = await db.insert(users).values(userData).returning();
+    return user;
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const insertData = {
+      id: userData.id,
+      email: userData.email || 'unknown@example.com',
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      profileImageUrl: userData.profileImageUrl,
+    };
     
-    if (existingUser) {
-      // Update existing user
-      const updatedUser: User = {
-        ...existingUser,
-        email: upsertData.email || existingUser.email,
-        firstName: upsertData.firstName || existingUser.firstName,
-        lastName: upsertData.lastName || existingUser.lastName,
-        profileImageUrl: upsertData.profileImageUrl || existingUser.profileImageUrl,
-        updatedAt: new Date(),
-      };
-      
-      const userIndex = this.users.findIndex(u => u.id === upsertData.id);
-      this.users[userIndex] = updatedUser;
-      return updatedUser;
-    } else {
-      // Create new user
-      const newUser: User = {
-        id: upsertData.id,
-        email: upsertData.email || 'unknown@example.com',
-        passwordHash: null,
-        firstName: upsertData.firstName || null,
-        lastName: upsertData.lastName || null,
-        profileImageUrl: upsertData.profileImageUrl || null,
-        tier: 'free',
-        subscriptionId: null,
-        subscriptionStatus: null,
-        subscriptionCurrentPeriodEnd: null,
-        trialEndsAt: null,
-        isTrialUsed: false,
-        dailyAiCalls: 0,
-        dailyAiCallsResetAt: new Date(),
-        monthlySubscriptionAmount: null,
-        monthlyAiCalls: 0,
-        monthlyAiCallsResetAt: new Date(),
-        monthlyTaskCount: 0,
-        monthlyTaskCountResetAt: new Date(),
-        totalXp: 0,
-        currentStreak: 0,
-        longestStreak: 0,
-        lastActivityAt: null,
-        primaryGoal: null,
-        customGoals: null,
-        onboardingCompleted: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      this.users.push(newUser);
-      return newUser;
-    }
+    const [user] = await db
+      .insert(users)
+      .values(insertData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...insertData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
   }
 
   async updateUser(id: string, updates: Partial<User>): Promise<User> {
-    const userIndex = this.users.findIndex(user => user.id === id);
-    if (userIndex === -1) {
-      throw new Error("User not found");
-    }
-    
-    this.users[userIndex] = {
-      ...this.users[userIndex],
-      ...updates,
-      updatedAt: new Date(),
-    };
-    
-    return this.users[userIndex];
+    const [user] = await db
+      .update(users)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return user;
   }
 
   async deleteUser(id: string): Promise<boolean> {
-    const index = this.users.findIndex(user => user.id === id);
-    if (index === -1) {
-      return false;
-    }
-    
-    this.users.splice(index, 1);
-    return true;
+    const result = await db.delete(users).where(eq(users.id, id));
+    return (result.rowCount ?? 0) > 0;
   }
 
   async deleteAllUserTasks(userId: string): Promise<boolean> {
-    this.tasks = this.tasks.filter(task => task.userId !== userId);
-    return true;
+    const result = await db.delete(tasks).where(eq(tasks.userId, userId));
+    return (result.rowCount ?? 0) >= 0;
   }
 
   async deleteAllUserNotes(userId: string): Promise<boolean> {
-    this.notes = this.notes.filter(note => note.userId !== userId);
-    return true;
+    const result = await db.delete(notes).where(eq(notes.userId, userId));
+    return (result.rowCount ?? 0) >= 0;
   }
 
-  // Task methods
+  // Task operations
   async getTasks(userId: string): Promise<Task[]> {
-    return this.tasks.filter(task => task.userId === userId);
+    return await db.select().from(tasks).where(eq(tasks.userId, userId)).orderBy(desc(tasks.createdAt));
   }
 
   async getTask(id: string, userId: string): Promise<Task | undefined> {
-    return this.tasks.find(task => task.id === id && task.userId === userId);
+    const [task] = await db.select().from(tasks).where(and(eq(tasks.id, id), eq(tasks.userId, userId)));
+    return task;
   }
 
-  async createTask(userId: string, insertTask: InsertTask): Promise<Task> {
-    const task: Task = {
-      id: crypto.randomUUID(),
-      userId,
-      title: insertTask.title,
-      description: insertTask.description || null,
-      completed: insertTask.completed || false,
-      priority: insertTask.priority || 'medium',
-      category: insertTask.category || null,
-      tags: insertTask.tags || [],
-      estimatedTime: insertTask.estimatedTime || null,
-      actualTime: null,
-      dueDate: insertTask.dueDate || null,
-      scheduledAt: insertTask.scheduledAt || null,
-      completedAt: null,
-      aiSuggestions: null,
-      parentTaskId: insertTask.parentTaskId || null,
-      contextSwitchCost: (insertTask as any).contextSwitchCost || null,
-      xpReward: (insertTask as any).xpReward || 10,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    this.tasks.push(task);
+  async createTask(userId: string, taskData: InsertTask): Promise<Task> {
+    const [task] = await db.insert(tasks).values({ ...taskData, userId }).returning();
     return task;
   }
 
   async updateTask(id: string, userId: string, updates: Partial<UpdateTask>): Promise<Task | undefined> {
-    const taskIndex = this.tasks.findIndex(task => task.id === id && task.userId === userId);
-    if (taskIndex === -1) {
-      return undefined;
-    }
-    
-    this.tasks[taskIndex] = {
-      ...this.tasks[taskIndex],
-      ...updates,
-      updatedAt: new Date(),
-    };
-    
-    return this.tasks[taskIndex];
+    const [task] = await db
+      .update(tasks)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(and(eq(tasks.id, id), eq(tasks.userId, userId)))
+      .returning();
+    return task;
   }
 
   async deleteTask(id: string, userId: string): Promise<boolean> {
-    const taskIndex = this.tasks.findIndex(task => task.id === id && task.userId === userId);
-    if (taskIndex === -1) {
-      return false;
-    }
-    
-    this.tasks.splice(taskIndex, 1);
-    return true;
+    const result = await db.delete(tasks).where(and(eq(tasks.id, id), eq(tasks.userId, userId)));
+    return (result.rowCount ?? 0) > 0;
   }
 
-  // Note methods
+  // Note operations
   async getNotes(userId: string): Promise<Note[]> {
-    return this.notes.filter(note => note.userId === userId);
+    return await db.select().from(notes).where(eq(notes.userId, userId)).orderBy(desc(notes.createdAt));
   }
 
   async getNote(id: string, userId: string): Promise<Note | undefined> {
-    return this.notes.find(note => note.id === id && note.userId === userId);
+    const [note] = await db.select().from(notes).where(and(eq(notes.id, id), eq(notes.userId, userId)));
+    return note;
   }
 
-  async createNote(userId: string, insertNote: InsertNote): Promise<Note> {
-    const note: Note = {
-      id: crypto.randomUUID(),
-      userId,
-      title: insertNote.title,
-      content: insertNote.content,
-      category: insertNote.category || null,
-      tags: insertNote.tags || [],
-      aiSummary: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    this.notes.push(note);
+  async createNote(userId: string, noteData: InsertNote): Promise<Note> {
+    const [note] = await db.insert(notes).values({ ...noteData, userId }).returning();
     return note;
   }
 
   async updateNote(id: string, userId: string, updates: Partial<UpdateNote>): Promise<Note | undefined> {
-    const noteIndex = this.notes.findIndex(note => note.id === id && note.userId === userId);
-    if (noteIndex === -1) {
-      return undefined;
-    }
-    
-    this.notes[noteIndex] = {
-      ...this.notes[noteIndex],
-      ...updates,
-      updatedAt: new Date(),
-    };
-    
-    return this.notes[noteIndex];
+    const [note] = await db
+      .update(notes)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(and(eq(notes.id, id), eq(notes.userId, userId)))
+      .returning();
+    return note;
   }
 
   async deleteNote(id: string, userId: string): Promise<boolean> {
-    const noteIndex = this.notes.findIndex(note => note.id === id && note.userId === userId);
-    if (noteIndex === -1) {
-      return false;
-    }
-    
-    this.notes.splice(noteIndex, 1);
-    return true;
+    const result = await db.delete(notes).where(and(eq(notes.id, id), eq(notes.userId, userId)));
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Tier management methods
   async resetDailyLimits(userId: string): Promise<void> {
-    const userIndex = this.users.findIndex(user => user.id === userId);
-    if (userIndex !== -1) {
-      this.users[userIndex] = {
-        ...this.users[userIndex],
-        dailyAiCalls: 0,
-        dailyAiCallsResetAt: new Date()
-      };
-    }
-  }
-
-  async resetMonthlyLimits(userId: string): Promise<void> {
-    const userIndex = this.users.findIndex(user => user.id === userId);
-    if (userIndex !== -1) {
-      this.users[userIndex] = {
-        ...this.users[userIndex],
-        monthlyTaskCount: 0,
-        monthlyTaskCountResetAt: new Date()
-      };
-    }
-  }
-
-  async incrementDailyAiCalls(userId: string): Promise<void> {
-    const userIndex = this.users.findIndex(user => user.id === userId);
-    if (userIndex !== -1) {
-      this.users[userIndex] = {
-        ...this.users[userIndex],
-        dailyAiCalls: (this.users[userIndex].dailyAiCalls || 0) + 1,
-        updatedAt: new Date()
-      };
-    }
-  }
-
-  async incrementMonthlyAiCalls(userId: string): Promise<void> {
-    const userIndex = this.users.findIndex(user => user.id === userId);
-    if (userIndex !== -1) {
-      const user = this.users[userIndex];
-      const now = new Date();
-      const resetDate = new Date(user.monthlyAiCallsResetAt);
-      
-      // Check if we need to reset monthly calls (new month)
-      if (now.getMonth() !== resetDate.getMonth() || now.getFullYear() !== resetDate.getFullYear()) {
-        // Reset monthly calls for new month
-        this.users[userIndex] = {
-          ...user,
-          monthlyAiCalls: 1, // First call of new month
-          monthlyAiCallsResetAt: new Date(now.getFullYear(), now.getMonth(), 1), // 1st of current month
-          updatedAt: new Date()
-        };
-      } else {
-        // Increment monthly calls
-        this.users[userIndex] = {
-          ...user,
-          monthlyAiCalls: (user.monthlyAiCalls || 0) + 1,
-          updatedAt: new Date()
-        };
-      }
-    }
-  }
-
-  async incrementMonthlyTaskCount(userId: string): Promise<void> {
-    const userIndex = this.users.findIndex(user => user.id === userId);
-    if (userIndex !== -1) {
-      this.users[userIndex] = {
-        ...this.users[userIndex],
-        monthlyTaskCount: (this.users[userIndex].monthlyTaskCount || 0) + 1,
-        updatedAt: new Date()
-      };
-    }
-  }
-
-  async resetDailyAiUsage(userId: string): Promise<void> {
-    const userIndex = this.users.findIndex(user => user.id === userId);
-    if (userIndex !== -1) {
-      this.users[userIndex] = {
-        ...this.users[userIndex],
+    await db
+      .update(users)
+      .set({
         dailyAiCalls: 0,
         dailyAiCallsResetAt: new Date(),
         updatedAt: new Date()
-      };
-    }
+      })
+      .where(eq(users.id, userId));
   }
 
-  async resetMonthlyAiUsage(userId: string): Promise<void> {
-    const userIndex = this.users.findIndex(user => user.id === userId);
-    if (userIndex !== -1) {
-      const now = new Date();
-      this.users[userIndex] = {
-        ...this.users[userIndex],
+  async resetMonthlyLimits(userId: string): Promise<void> {
+    await db
+      .update(users)
+      .set({
         monthlyAiCalls: 0,
-        monthlyAiCallsResetAt: new Date(now.getFullYear(), now.getMonth(), 1), // 1st of current month
+        monthlyAiCallsResetAt: new Date(),
         updatedAt: new Date()
-      };
+      })
+      .where(eq(users.id, userId));
+  }
+
+  async incrementDailyAiCalls(userId: string): Promise<void> {
+    const user = await this.getUser(userId);
+    if (user) {
+      await db
+        .update(users)
+        .set({
+          dailyAiCalls: (user.dailyAiCalls || 0) + 1,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId));
     }
   }
 }
 
-// Safely initialize storage with fallback to MemStorage
-async function initializeStorage(): Promise<IStorage> {
-  try {
-    // Check if database URL is available
-    if (!process.env.DATABASE_URL) {
-      console.warn("⚠️  DATABASE_URL not found, using MemStorage");
-      return new MemStorage();
-    }
-
-    // Try to import and test database connection
-    const { DatabaseStorage } = await import("./database-storage");
-    const { db } = await import("./db");
-    
-    // Test the database connection with a simple query
-    await db.execute('SELECT 1');
-    
-    console.log("✅ Using DatabaseStorage - all user data will be persisted");
-    return new DatabaseStorage();
-  } catch (error) {
-    console.warn("⚠️  Database connection failed, falling back to MemStorage:", (error as Error)?.message || error);
-    return new MemStorage();
-  }
-}
-
-// Create a promise for storage initialization
-let storagePromise: Promise<IStorage> | null = null;
-
-function getStorage(): Promise<IStorage> {
-  if (!storagePromise) {
-    storagePromise = initializeStorage();
-  }
-  return storagePromise;
-}
-
-// Create a proxy that waits for storage initialization
-export const storage: IStorage = new Proxy({} as IStorage, {
-  get(target, prop) {
-    return async (...args: any[]) => {
-      const actualStorage = await getStorage();
-      const method = (actualStorage as any)[prop];
-      if (typeof method === 'function') {
-        return method.apply(actualStorage, args);
-      }
-      return method;
-    };
-  }
-});
+// Create storage instance
+export const storage = new DatabaseStorage();

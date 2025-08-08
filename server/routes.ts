@@ -10,8 +10,7 @@ import {
 } from "./auth";
 import authRoutes from "./routes/auth";
 import aiRoutes from "./routes/ai";
-import gamificationRoutes from "./routes/gamification";
-import integrationRoutes from "./routes/integrations";
+// Removed unused route imports
 import socialRoutes from "./routes/social";
 import { 
   insertTaskSchema, 
@@ -660,15 +659,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Payment verified, upgrade user
       const tierMap = {
         'basic': 'basic',
-        'pro': 'premium_pro'
+        'pro': 'pro'
       };
 
       const updatedUser = await storage.updateUser(req.userId, {
         tier: tierMap[plan] || 'basic',
         subscriptionStatus: 'active',
         subscriptionCurrentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-        paymentId: paymentId,
-        razorpayOrderId: orderId
       });
 
       res.json({ 
@@ -697,8 +694,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         tier: 'pro',
         subscriptionStatus: 'active',
         subscriptionCurrentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-        dailyAiCalls: 0, // Reset AI usage for upgraded users
-        dailyAiCallsResetAt: new Date()
       });
 
       res.json({ 
@@ -732,7 +727,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({ user });
     } catch (error) {
-      console.error("User sync error:", error);
       res.status(500).json({ error: "Failed to sync user" });
     }
   });
@@ -751,7 +745,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({ user });
     } catch (error) {
-      console.error("Get user error:", error);
       res.status(500).json({ error: "Failed to get user" });
     }
   });
@@ -772,7 +765,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({ message: "Account deleted successfully" });
     } catch (error) {
-      console.error("Delete account error:", error);
       res.status(500).json({ error: "Failed to delete account" });
     }
   });
@@ -794,7 +786,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({ user });
     } catch (error) {
-      console.error("Onboarding error:", error);
       res.status(500).json({ error: "Failed to save onboarding data" });
     }
   });
@@ -814,7 +805,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const analysis = await parseNaturalLanguageTask(input);
         res.json({ analysis });
       } catch (error) {
-        console.error("Task parsing error:", error);
         res.status(500).json({ error: "Failed to parse task" });
       }
     }
