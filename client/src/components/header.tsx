@@ -26,7 +26,7 @@ export function Header() {
 
   const navigationItems = [
     { label: 'Dashboard', path: '/dashboard', icon: Home },
-    { label: 'AI Features', path: '/advanced', icon: Sparkles },
+    { label: 'AI Features', path: '/advanced-features', icon: Sparkles },
     { label: 'Task Refiner', path: '/task-refiner', icon: MessageCircle },
     { label: 'Settings', path: '/settings', icon: Settings },
   ];

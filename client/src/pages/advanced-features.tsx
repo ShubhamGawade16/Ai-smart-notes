@@ -19,6 +19,20 @@ import {
 } from 'lucide-react';
 import { Link } from 'wouter';
 
+interface SubscriptionStatus {
+  isPremium?: boolean;
+  isBasic?: boolean;
+  tier?: string;
+  dailyAiUsage?: number;
+  dailyAiLimit?: number;
+  monthlyAiUsage?: number;
+  monthlyAiLimit?: number;
+  canUseAi?: boolean;
+  subscriptionId?: string | null;
+  subscriptionStatus?: string | null;
+  expiresAt?: string | null;
+}
+
 export default function AdvancedFeatures() {
   const [taskInput, setTaskInput] = useState('');
   const [refineInput, setRefineInput] = useState('');
@@ -27,7 +41,7 @@ export default function AdvancedFeatures() {
   const queryClient = useQueryClient();
 
   // Check subscription status
-  const { data: subscriptionStatus } = useQuery({
+  const { data: subscriptionStatus } = useQuery<SubscriptionStatus>({
     queryKey: ['/api/subscription-status'],
   });
 
@@ -107,7 +121,7 @@ export default function AdvancedFeatures() {
     refineTaskMutation.mutate({ originalTask: refineInput, userQuery: refineQuery });
   };
 
-  const canUseAI = subscriptionStatus?.isPremium || (subscriptionStatus?.dailyAiUsage || 0) < (subscriptionStatus?.dailyAiLimit || 3);
+  const canUseAI = subscriptionStatus?.isPremium || ((subscriptionStatus?.dailyAiUsage || 0) < (subscriptionStatus?.dailyAiLimit || 3));
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
@@ -141,7 +155,7 @@ export default function AdvancedFeatures() {
           {!canUseAI && (
             <div className="mt-4 p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
               <p className="text-orange-800 dark:text-orange-200 text-sm">
-                You've reached your daily AI limit ({subscriptionStatus?.dailyAiUsage}/{subscriptionStatus?.dailyAiLimit}). 
+                You've reached your daily AI limit ({subscriptionStatus?.dailyAiUsage || 0}/{subscriptionStatus?.dailyAiLimit || 3}). 
                 Upgrade to Pro for unlimited access.
               </p>
             </div>
@@ -283,7 +297,7 @@ export default function AdvancedFeatures() {
                 <div className="space-y-4">
                   <h4 className="font-semibold text-gray-900 dark:text-white text-lg mb-4">Your Productivity Insights</h4>
                   <div className="space-y-4">
-                    {insightsData.insights?.map((insight: any, index: number) => (
+                    {(insightsData as any)?.insights?.map((insight: any, index: number) => (
                       <div key={index} className="group p-4 bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-xl border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all duration-200">
                         <div className="flex items-start justify-between mb-3">
                           <Badge 
