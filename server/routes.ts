@@ -428,9 +428,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       if (tier === 'basic') {
-        // Basic users have 100 monthly AI calls only if subscription is active
+        // Basic users have 3 daily + 100 monthly AI calls if subscription is active
         if (user.subscriptionStatus === 'active') {
           const now = new Date();
+          
+          // Handle daily limit reset
+          const dailyResetTime = user.dailyAiCallsResetAt ? new Date(user.dailyAiCallsResetAt) : new Date();
+          const shouldResetDaily = now.getTime() - dailyResetTime.getTime() > 24 * 60 * 60 * 1000;
+          
+          let newDailyCount = user.dailyAiCalls || 0;
+          if (shouldResetDaily) {
+            newDailyCount = 0;
+          }
+          
+          // Handle monthly limit reset
           const monthlyResetTime = user.monthlyAiCallsResetAt ? new Date(user.monthlyAiCallsResetAt) : new Date();
           const shouldResetMonthly = now.getMonth() !== monthlyResetTime.getMonth() || now.getFullYear() !== monthlyResetTime.getFullYear();
           
@@ -439,21 +450,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
             newMonthlyCount = 0;
           }
           
-          const monthlyLimit = 100; // 100 AI calls per month for Basic tier
-          const canUseAi = newMonthlyCount < monthlyLimit;
+          const dailyLimit = 3; // 3 daily AI calls for Basic tier
+          const monthlyLimit = 100; // 100 monthly AI calls for Basic tier
           
-          if (canUseAi) {
+          let canUseAi = false;
+          let updatedFields: any = {};
+          
+          // Priority 1: Use daily allowance first (if available)
+          if (newDailyCount < dailyLimit) {
+            newDailyCount += 1;
+            canUseAi = true;
+            updatedFields = {
+              dailyAiCalls: newDailyCount,
+              dailyAiCallsResetAt: shouldResetDaily ? now : user.dailyAiCallsResetAt
+            };
+          }
+          // Priority 2: If daily exhausted, use monthly allowance
+          else if (newMonthlyCount < monthlyLimit) {
             newMonthlyCount += 1;
-            await storage.updateUser(req.userId, {
+            canUseAi = true;
+            updatedFields = {
               monthlyAiCalls: newMonthlyCount,
               monthlyAiCallsResetAt: shouldResetMonthly ? new Date(now.getFullYear(), now.getMonth(), 1) : user.monthlyAiCallsResetAt
-            });
+            };
+          }
+          
+          if (canUseAi) {
+            await storage.updateUser(req.userId, updatedFields);
           }
           
           res.json({
-            dailyAiUsage: 0, // No daily tracking for basic with active subscription
+            dailyAiUsage: newDailyCount,
             monthlyAiUsage: newMonthlyCount,
-            canUseAi: newMonthlyCount < monthlyLimit,
+            canUseAi,
+            dailyAiLimit: dailyLimit,
             monthlyAiLimit: monthlyLimit
           });
           return;
