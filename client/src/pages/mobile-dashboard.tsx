@@ -11,7 +11,6 @@ import { ModernTaskList } from "@/components/modern-task-list";
 import { ModernAIRefiner } from "@/components/modern-ai-refiner";
 import UpgradeModal from "@/components/upgrade-modal-new";
 import AdvancedTaskPopup from "@/components/advanced-task-popup";
-import AIFeaturesModal from "@/components/ai-features-modal";
 import SmartCategorizerModal from "@/components/smart-categorizer-modal";
 import TimingOptimizerModal from "@/components/timing-optimizer-modal";
 import ProductivityInsightsModal from "@/components/productivity-insights-modal";
@@ -23,6 +22,7 @@ import DailyMotivationQuote from "@/components/daily-motivation-quote";
 import TaskProgressRadar from "@/components/task-progress-radar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Plus, MessageCircle, Crown, User, Settings, LogOut, Sparkles, Sun, Moon } from "lucide-react";
+import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
@@ -40,7 +40,6 @@ export default function MobileDashboard() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showDevMode, setShowDevMode] = useState(false);
-  const [showAIFeatures, setShowAIFeatures] = useState(false);
   const [showSmartCategorizer, setShowSmartCategorizer] = useState(false);
   const [showTimingOptimizer, setShowTimingOptimizer] = useState(false);
   const [showProductivityInsights, setShowProductivityInsights] = useState(false);
@@ -64,7 +63,6 @@ export default function MobileDashboard() {
   };
 
   const handleAIFeatureSelect = (feature: string) => {
-    setShowAIFeatures(false);
     
     switch (feature) {
       case 'task-refiner':
@@ -155,15 +153,16 @@ export default function MobileDashboard() {
               Add Task
             </Button>
             
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowAIFeatures(true)}
-              className="border-purple-200 dark:border-purple-700 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/20"
-            >
-              <Sparkles className="w-4 h-4 mr-2" />
-              AI Features
-            </Button>
+            <Link href="/advanced-features">
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-purple-200 dark:border-purple-700 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/20"
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                AI Features
+              </Button>
+            </Link>
 
             {subscriptionStatus.tier === 'free' && (
               <Button
@@ -302,7 +301,6 @@ export default function MobileDashboard() {
               onTaskCompleted={() => {
                 setShowConfetti(true);
               }}
-              onAiView={() => setShowAIFeatures(true)}
             />
           </div>
 
@@ -375,13 +373,6 @@ export default function MobileDashboard() {
         }}
       />
 
-      {/* AI Features Modal */}
-      <AIFeaturesModal
-        isOpen={showAIFeatures}
-        onClose={() => setShowAIFeatures(false)}
-        onFeatureSelect={handleAIFeatureSelect}
-        onUpgradeRequired={() => setShowUpgradeProModal(true)}
-      />
 
       {/* Smart Categorizer Modal */}
       <SmartCategorizerModal
