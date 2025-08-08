@@ -208,31 +208,39 @@ export default function FocusForecast() {
             Peak Focus Windows
           </h4>
           <div className="space-y-2">
-            {forecast.peakFocusWindows.map((window, index) => (
-              <div 
-                key={index}
-                className={`p-3 rounded-lg border ${
-                  isInFocusWindow(window.start, window.end) 
-                    ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800' 
-                    : 'bg-gray-50 dark:bg-gray-800/50'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-medium">
-                    {window.start} - {window.end}
-                    {isInFocusWindow(window.start, window.end) && (
-                      <Badge variant="default" className="ml-2">Active Now</Badge>
-                    )}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <Progress value={window.confidence * 100} className="w-16" />
-                    <span className="text-sm text-gray-500">
-                      {Math.round(window.confidence * 100)}%
+            {forecast.peakFocusWindows?.length > 0 ? (
+              forecast.peakFocusWindows.map((window, index) => (
+                <div 
+                  key={index}
+                  className={`p-3 rounded-lg border ${
+                    isInFocusWindow(window.start, window.end) 
+                      ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800' 
+                      : 'bg-gray-50 dark:bg-gray-800/50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">
+                      {window.start} - {window.end}
+                      {isInFocusWindow(window.start, window.end) && (
+                        <Badge variant="default" className="ml-2">Active Now</Badge>
+                      )}
                     </span>
+                    <div className="flex items-center gap-2">
+                      <Progress value={window.confidence * 100} className="w-16" />
+                      <span className="text-sm text-gray-500">
+                        {Math.round(window.confidence * 100)}%
+                      </span>
+                    </div>
                   </div>
                 </div>
+              ))
+            ) : (
+              <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
+                  Focus windows data not available
+                </p>
               </div>
-            ))}
+            )}
           </div>
         </div>
 
@@ -243,19 +251,27 @@ export default function FocusForecast() {
             Suggested Breaks
           </h4>
           <div className="space-y-2">
-            {forecast.suggestedBreaks.map((breakItem, index) => (
-              <div key={index} className="flex items-center justify-between p-2 rounded border">
-                <div>
-                  <span className="font-medium">{breakItem.time}</span>
-                  <span className="text-sm text-gray-500 ml-2">
-                    ({breakItem.duration} min)
+            {forecast.suggestedBreaks?.length > 0 ? (
+              forecast.suggestedBreaks.map((breakItem, index) => (
+                <div key={index} className="flex items-center justify-between p-2 rounded border">
+                  <div>
+                    <span className="font-medium">{breakItem.time}</span>
+                    <span className="text-sm text-gray-500 ml-2">
+                      ({breakItem.duration} min)
+                    </span>
+                  </div>
+                  <span className="text-xs text-gray-500 max-w-48 text-right">
+                    {breakItem.reason}
                   </span>
                 </div>
-                <span className="text-xs text-gray-500 max-w-48 text-right">
-                  {breakItem.reason}
-                </span>
+              ))
+            ) : (
+              <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
+                  Break suggestions not available
+                </p>
               </div>
-            ))}
+            )}
           </div>
         </div>
 
@@ -265,44 +281,52 @@ export default function FocusForecast() {
             <AlertTriangle className="h-4 w-4" />
             Burnout Risk Assessment
           </h4>
-          <div className={`p-4 rounded-lg ${getRiskColor(forecast.burnoutRisk.level)}`}>
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-medium capitalize">
-                {forecast.burnoutRisk.level} Risk
-              </span>
-              <Badge variant="outline">
-                {forecast.burnoutRisk.level.toUpperCase()}
-              </Badge>
+          {forecast.burnoutRisk ? (
+            <div className={`p-4 rounded-lg ${getRiskColor(forecast.burnoutRisk.level)}`}>
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-medium capitalize">
+                  {forecast.burnoutRisk.level} Risk
+                </span>
+                <Badge variant="outline">
+                  {forecast.burnoutRisk.level.toUpperCase()}
+                </Badge>
+              </div>
+              
+              {forecast.burnoutRisk.factors?.length > 0 && (
+                <div className="mb-3">
+                  <p className="text-sm font-medium mb-1">Risk Factors:</p>
+                  <ul className="text-sm space-y-1">
+                    {forecast.burnoutRisk.factors.map((factor, index) => (
+                      <li key={index} className="flex items-center gap-2">
+                        <div className="w-1 h-1 rounded-full bg-current"></div>
+                        {factor}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {forecast.burnoutRisk.recommendations?.length > 0 && (
+                <div>
+                  <p className="text-sm font-medium mb-1">Recommendations:</p>
+                  <ul className="text-sm space-y-1">
+                    {forecast.burnoutRisk.recommendations.map((rec, index) => (
+                      <li key={index} className="flex items-center gap-2">
+                        <div className="w-1 h-1 rounded-full bg-current"></div>
+                        {rec}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
-            
-            {forecast.burnoutRisk.factors.length > 0 && (
-              <div className="mb-3">
-                <p className="text-sm font-medium mb-1">Risk Factors:</p>
-                <ul className="text-sm space-y-1">
-                  {forecast.burnoutRisk.factors.map((factor, index) => (
-                    <li key={index} className="flex items-center gap-2">
-                      <div className="w-1 h-1 rounded-full bg-current"></div>
-                      {factor}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            
-            {forecast.burnoutRisk.recommendations.length > 0 && (
-              <div>
-                <p className="text-sm font-medium mb-1">Recommendations:</p>
-                <ul className="text-sm space-y-1">
-                  {forecast.burnoutRisk.recommendations.map((rec, index) => (
-                    <li key={index} className="flex items-center gap-2">
-                      <div className="w-1 h-1 rounded-full bg-current"></div>
-                      {rec}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
+          ) : (
+            <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+              <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
+                Burnout risk data not available
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="text-xs text-gray-500 text-center pt-2 border-t">
