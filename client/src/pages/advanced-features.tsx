@@ -19,6 +19,27 @@ import {
 } from 'lucide-react';
 import { Link } from 'wouter';
 
+// Force override any stuck modal overlays
+const forceOverrideModalCSS = `
+  .fixed.inset-0.z-50.bg-black\\/80 {
+    display: none !important;
+  }
+  [data-radix-portal] .fixed.inset-0.z-50.bg-black\\/80 {
+    display: none !important;
+  }
+`;
+
+// Add style override to head
+if (typeof document !== 'undefined') {
+  const existingStyle = document.getElementById('modal-override');
+  if (!existingStyle) {
+    const style = document.createElement('style');
+    style.id = 'modal-override';
+    style.textContent = forceOverrideModalCSS;
+    document.head.appendChild(style);
+  }
+}
+
 interface SubscriptionStatus {
   isPremium?: boolean;
   isBasic?: boolean;
@@ -124,8 +145,8 @@ export default function AdvancedFeatures() {
   const canUseAI = subscriptionStatus?.isPremium || ((subscriptionStatus?.dailyAiUsage || 0) < (subscriptionStatus?.dailyAiLimit || 3));
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 relative z-10" style={{ backgroundColor: 'var(--background)', minHeight: '100vh' }}>
+      <div className="max-w-6xl mx-auto relative z-20" style={{ position: 'relative', zIndex: 1000 }}>
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-4">
