@@ -28,19 +28,22 @@ export default function DevModeModal({ isOpen, onClose }: DevModeModalProps) {
       return response.json();
     },
     onSuccess: async (data) => {
-      // Immediately invalidate and refetch subscription data
+      // Force invalidate all subscription-related queries
       await queryClient.invalidateQueries({ queryKey: ['/api/subscription-status'] });
+      await queryClient.refetchQueries({ queryKey: ['/api/subscription-status'] });
+      
+      // Also invalidate tasks queries to refresh any tier-dependent UI
+      await queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
+      
+      // Force refetch subscription status
       await refetch();
       
       toast({
-        title: "Tier Updated",
-        description: `Successfully switched to ${data.newTier} tier`,
+        title: "Tier Updated", 
+        description: `Successfully switched to ${data.newTier} tier. Badge should update now.`,
       });
       
-      // Close modal after a short delay
-      setTimeout(() => {
-        onClose();
-      }, 1500);
+      // Don't close modal automatically, let user see the change
     },
     onError: () => {
       toast({
