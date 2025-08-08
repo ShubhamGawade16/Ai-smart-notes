@@ -120,7 +120,7 @@ export default function FocusForecast() {
                       Today's Peak Focus Windows
                     </h4>
                     <div className="space-y-3">
-                      {forecast.peakFocusWindows.map((window, index) => (
+                      {forecast.peakFocusWindows?.map((window, index) => (
                         <div key={index} className="p-4 rounded-lg border bg-card">
                           <div className="flex items-center justify-between mb-2">
                             <span className="font-medium">
@@ -145,7 +145,7 @@ export default function FocusForecast() {
                       Recommended Breaks
                     </h4>
                     <div className="space-y-3">
-                      {forecast.suggestedBreaks.map((breakItem, index) => (
+                      {forecast.suggestedBreaks?.map((breakItem, index) => (
                         <div key={index} className="p-4 rounded-lg border bg-card">
                           <div className="flex items-center justify-between mb-2">
                             <span className="font-medium">{breakItem.time}</span>
@@ -163,33 +163,41 @@ export default function FocusForecast() {
                       <AlertTriangle className="h-4 w-4" />
                       Burnout Risk Assessment
                     </h4>
-                    <div className="p-4 rounded-lg border bg-card">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Badge className={getRiskColor(forecast.burnoutRisk.level)}>
-                          {forecast.burnoutRisk.level.toUpperCase()} RISK
-                        </Badge>
-                      </div>
-                      
-                      <div className="space-y-3">
-                        <div>
-                          <p className="text-sm font-medium mb-2">Risk Factors:</p>
-                          <ul className="text-sm text-muted-foreground space-y-1">
-                            {forecast.burnoutRisk.factors.map((factor, index) => (
-                              <li key={index}>• {factor}</li>
-                            ))}
-                          </ul>
+                    {forecast.burnoutRisk ? (
+                      <div className="p-4 rounded-lg border bg-card">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Badge className={getRiskColor(forecast.burnoutRisk.level)}>
+                            {forecast.burnoutRisk.level.toUpperCase()} RISK
+                          </Badge>
                         </div>
                         
-                        <div>
-                          <p className="text-sm font-medium mb-2">Recommendations:</p>
-                          <ul className="text-sm text-muted-foreground space-y-1">
-                            {forecast.burnoutRisk.recommendations.map((rec, index) => (
-                              <li key={index}>• {rec}</li>
-                            ))}
-                          </ul>
+                        <div className="space-y-3">
+                          <div>
+                            <p className="text-sm font-medium mb-2">Risk Factors:</p>
+                            <ul className="text-sm text-muted-foreground space-y-1">
+                              {forecast.burnoutRisk.factors?.map((factor, index) => (
+                                <li key={index}>• {factor}</li>
+                              ))}
+                            </ul>
+                          </div>
+                          
+                          <div>
+                            <p className="text-sm font-medium mb-2">Recommendations:</p>
+                            <ul className="text-sm text-muted-foreground space-y-1">
+                              {forecast.burnoutRisk.recommendations?.map((rec, index) => (
+                                <li key={index}>• {rec}</li>
+                              ))}
+                            </ul>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="p-4 rounded-lg border bg-card">
+                        <p className="text-sm text-muted-foreground text-center">
+                          Burnout risk data not available
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </>
               )}
