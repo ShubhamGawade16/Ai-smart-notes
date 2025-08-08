@@ -162,7 +162,7 @@ export function ModernTaskItem({ task, onUpdate, onDelete, onAdvancedView, onTas
   return (
     <div 
       className={cn(
-        "group stagger-item card-animate flex items-center gap-3 p-4 rounded-xl transition-all duration-300 border-l-4",
+        "group stagger-item card-animate flex items-center gap-4 p-6 rounded-xl transition-all duration-300 border-l-4",
         "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700",
         "hover:bg-gray-50 dark:hover:bg-gray-750 hover:border-gray-300 dark:hover:border-gray-600",
         "hover:shadow-lg hover:-translate-y-1",
@@ -174,26 +174,18 @@ export function ModernTaskItem({ task, onUpdate, onDelete, onAdvancedView, onTas
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Grip handle for future drag functionality */}
-      <div className={cn(
-        "opacity-0 group-hover:opacity-50 transition-opacity cursor-grab",
-        isHovered && "opacity-50"
-      )}>
-        <Grip className="w-4 h-4 text-gray-400" />
-      </div>
-
       {/* Checkbox */}
       <Checkbox
         checked={task.completed || false}
         onCheckedChange={handleToggleComplete}
         disabled={updateTaskMutation.isPending}
-        className="w-5 h-5 rounded-full data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
+        className="w-6 h-6 rounded-full data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600 flex-shrink-0"
       />
 
       {/* Task Content */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 py-1">
         {isEditing ? (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <Input
               value={editTitle}
               onChange={(e) => setEditTitle(e.target.value)}
@@ -201,32 +193,33 @@ export function ModernTaskItem({ task, onUpdate, onDelete, onAdvancedView, onTas
                 if (e.key === 'Enter') handleEditSave();
                 if (e.key === 'Escape') handleEditCancel();
               }}
-              className="text-sm border-none shadow-none p-0 h-auto focus-visible:ring-0"
+              className="text-base border-none shadow-none p-0 h-auto focus-visible:ring-0 font-medium"
               autoFocus
             />
             <Button
               size="sm"
               variant="ghost"
               onClick={handleEditSave}
-              className="w-6 h-6 p-0"
+              className="w-8 h-8 p-0 hover:bg-green-100 hover:text-green-600"
             >
-              <Check className="w-3 h-3" />
+              <Check className="w-4 h-4" />
             </Button>
             <Button
               size="sm"
               variant="ghost"
               onClick={handleEditCancel}
-              className="w-6 h-6 p-0"
+              className="w-8 h-8 p-0 hover:bg-gray-100 hover:text-gray-600"
             >
-              <X className="w-3 h-3" />
+              <X className="w-4 h-4" />
             </Button>
           </div>
         ) : (
-          <div className="space-y-1">
+          <div className="space-y-3">
             <div 
               className={cn(
-                "text-sm font-medium cursor-pointer",
-                task.completed && "line-through text-gray-500"
+                "text-base font-medium cursor-pointer leading-relaxed",
+                task.completed && "line-through text-gray-500",
+                !task.completed && "text-gray-900 dark:text-gray-100"
               )}
               onClick={() => setIsEditing(true)}
             >
@@ -234,78 +227,56 @@ export function ModernTaskItem({ task, onUpdate, onDelete, onAdvancedView, onTas
             </div>
             
             {/* Task metadata */}
-            <div className="flex items-center gap-2 text-xs text-gray-500">
-              {task.priority && (
-                <Badge variant="outline" className={cn("text-xs px-2 py-0.5", getPriorityColor(task.priority))}>
-                  <Flag className="w-2.5 h-2.5 mr-1" />
-                  {task.priority}
-                </Badge>
-              )}
-              
-              {task.estimatedTime && (
-                <div className="flex items-center gap-1 text-gray-500">
-                  <Clock className="w-3 h-3" />
-                  {formatEstimatedTime(task.estimatedTime)}
-                </div>
-              )}
-              
-              {dueDateInfo && (
-                <div className={cn(
-                  "flex items-center gap-1",
-                  dueDateInfo.urgent ? "text-red-600" : "text-gray-500"
-                )}>
-                  <Calendar className="w-3 h-3" />
-                  {dueDateInfo.text}
-                </div>
-              )}
-              
-              {task.category && (
-                <Badge variant="outline" className="text-xs px-2 py-0.5 text-gray-600 bg-gray-50">
-                  {task.category}
-                </Badge>
-              )}
-            </div>
+            {(task.priority || task.estimatedTime || dueDateInfo || task.category) && (
+              <div className="flex items-center flex-wrap gap-3 text-xs">
+                {task.priority && (
+                  <Badge variant="outline" className={cn("text-xs px-3 py-1 font-medium", getPriorityColor(task.priority))}>
+                    <Flag className="w-3 h-3 mr-1.5" />
+                    {task.priority}
+                  </Badge>
+                )}
+                
+                {task.estimatedTime && (
+                  <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">
+                    <Clock className="w-3 h-3" />
+                    <span className="font-medium">{formatEstimatedTime(task.estimatedTime)}</span>
+                  </div>
+                )}
+                
+                {dueDateInfo && (
+                  <div className={cn(
+                    "flex items-center gap-1.5 px-2 py-1 rounded-md font-medium",
+                    dueDateInfo.urgent ? "text-red-600 bg-red-50 dark:bg-red-950 dark:text-red-400" : "text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800"
+                  )}>
+                    <Calendar className="w-3 h-3" />
+                    <span>{dueDateInfo.text}</span>
+                  </div>
+                )}
+                
+                {task.category && (
+                  <Badge variant="outline" className="text-xs px-3 py-1 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600 font-medium">
+                    {task.category}
+                  </Badge>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
 
       {/* Action buttons */}
       <div className={cn(
-        "flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity",
+        "flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0",
         isHovered && "opacity-100"
       )}>
-        {onAdvancedView && (
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={(e) => {
-              e.stopPropagation();
-              onAdvancedView(task);
-            }}
-            className="px-2 h-7 text-xs text-teal-600 hover:text-teal-700 hover:bg-teal-50 dark:hover:bg-teal-950"
-          >
-            <Eye className="w-3 h-3 mr-1" />
-            Advanced
-          </Button>
-        )}
-        
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={() => setLocation(`/task-refiner?task=${encodeURIComponent(task.title)}`)}
-          className="px-2 h-7 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:hover:bg-purple-950"
-        >
-          <Brain className="w-3 h-3 mr-1" />
-          AI View
-        </Button>
-        
         <Button
           size="sm"
           variant="ghost"
           onClick={() => setIsEditing(true)}
-          className="w-8 h-8 p-0 hover:bg-blue-100 hover:text-blue-600"
+          className="w-9 h-9 p-0 hover:bg-blue-100 hover:text-blue-600 dark:hover:bg-blue-950 dark:hover:text-blue-400 transition-colors"
+          title="Edit task"
         >
-          <Edit3 className="w-3.5 h-3.5" />
+          <Edit3 className="w-4 h-4" />
         </Button>
 
         <DropdownMenu>
@@ -313,15 +284,16 @@ export function ModernTaskItem({ task, onUpdate, onDelete, onAdvancedView, onTas
             <Button
               size="sm"
               variant="ghost"
-              className="w-8 h-8 p-0 hover:bg-gray-100"
+              className="w-9 h-9 p-0 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              title="More options"
             >
-              <MoreHorizontal className="w-3.5 h-3.5" />
+              <MoreHorizontal className="w-4 h-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem 
               onClick={handleDelete}
-              className="text-red-600 focus:text-red-600 focus:bg-red-50"
+              className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950"
             >
               <Trash2 className="w-4 h-4 mr-2" />
               Delete task
