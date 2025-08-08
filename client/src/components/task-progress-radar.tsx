@@ -20,19 +20,13 @@ export default function TaskProgressRadar() {
 
   const tasks: Task[] = (tasksResponse as any)?.tasks || [];
 
-  // Calculate progress by category
+  // Calculate progress by category - dynamically using actual user categories
   const calculateCategoryProgress = (): CategoryProgress[] => {
     const categoryMap = new Map<string, { completed: number; total: number }>();
     
-    // Default categories
-    const defaultCategories = ['work', 'personal', 'health', 'learning', 'creative', 'other'];
-    defaultCategories.forEach(cat => {
-      categoryMap.set(cat, { completed: 0, total: 0 });
-    });
-
-    // Count tasks by category
+    // Extract actual categories from user tasks
     tasks.forEach(task => {
-      const category = task.category || 'other';
+      const category = task.category || 'Uncategorized';
       const current = categoryMap.get(category) || { completed: 0, total: 0 };
       
       current.total += 1;
@@ -43,13 +37,28 @@ export default function TaskProgressRadar() {
       categoryMap.set(category, current);
     });
 
-    // Convert to array format for radar chart
-    return Array.from(categoryMap.entries()).map(([category, data]) => ({
-      category: category.charAt(0).toUpperCase() + category.slice(1),
-      completed: data.completed,
-      total: data.total,
-      percentage: data.total > 0 ? Math.round((data.completed / data.total) * 100) : 0
-    }));
+    // Convert to array and sort by total tasks (most used categories first)
+    const categoryData = Array.from(categoryMap.entries())
+      .map(([category, data]) => ({
+        category: category.charAt(0).toUpperCase() + category.slice(1),
+        completed: data.completed,
+        total: data.total,
+        percentage: data.total > 0 ? Math.round((data.completed / data.total) * 100) : 0
+      }))
+      .sort((a, b) => b.total - a.total); // Sort by total tasks descending
+
+    // If no tasks, show a placeholder
+    if (categoryData.length === 0) {
+      return [{
+        category: 'No Tasks Yet',
+        completed: 0,
+        total: 0,
+        percentage: 0
+      }];
+    }
+
+    // Limit to top 8 categories to avoid cluttering
+    return categoryData.slice(0, 8);
   };
 
   const radarData = calculateCategoryProgress();
@@ -75,9 +84,16 @@ export default function TaskProgressRadar() {
   return (
     <Card className="border-0 shadow-sm bg-white dark:bg-gray-900">
       <CardHeader className="pb-4 pt-6 px-6">
-        <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-          📊 Task Progress
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            📊 Category Progress
+          </CardTitle>
+          {tasks.length > 0 && (
+            <div className="text-xs text-gray-500 dark:text-gray-400">
+              {tasks.filter(t => t.completed).length}/{tasks.length} completed
+            </div>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="px-6 pb-6">
         <ResponsiveContainer width="100%" height={220}>
@@ -113,22 +129,51 @@ export default function TaskProgressRadar() {
           </RadarChart>
         </ResponsiveContainer>
         
-        {/* Clean Legend - Matching reference design */}
-        <div className="mt-4 grid grid-cols-2 gap-y-3 gap-x-6">
-          {radarData.map((item) => (
-            <div 
-              key={item.category}
-              className="flex items-center gap-2"
-            >
-              <div className="w-2 h-2 rounded-full bg-teal-600" />
-              <span className="text-sm text-gray-700 dark:text-gray-300 flex-1">
-                {item.category}
-              </span>
-              <span className="text-sm font-medium text-teal-600 dark:text-teal-400">
-                {item.percentage}%
-              </span>
+        {/* Enhanced Legend with task counts */}
+        <div className="mt-4 space-y-3">
+          {radarData.length === 1 && radarData[0].category === 'No Tasks Yet' ? (
+            <div className="text-center py-4">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Add some tasks to see your progress by category!
+              </p>
             </div>
-          ))}
+          ) : (
+            <div className="grid grid-cols-1 gap-y-3">
+              {radarData.map((item) => (
+                <div 
+                  key={item.category}
+                  className={`flex items-center gap-3 p-2 rounded-lg transition-colors ${
+                    hoveredCategory === item.category 
+                      ? 'bg-teal-50 dark:bg-teal-950/20' 
+                      : 'hover:bg-gray-50 dark:hover:bg-gray-800'
+                  }`}
+                >
+                  <div className="w-3 h-3 rounded-full bg-teal-600 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
+                        {item.category}
+                      </span>
+                      <span className="text-sm font-bold text-teal-600 dark:text-teal-400 ml-2">
+                        {item.percentage}%
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+                        <div 
+                          className="bg-teal-600 h-1.5 rounded-full transition-all duration-300" 
+                          style={{ width: `${item.percentage}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                        {item.completed}/{item.total}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
