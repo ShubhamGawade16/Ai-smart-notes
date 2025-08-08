@@ -35,11 +35,20 @@ export default function TaskRefiner({
 
   const refineTaskMutation = useMutation({
     mutationFn: async (data: { taskContent: string; refinementRequest: string }) => {
-      const response = await apiRequest("POST", "/api/ai/refine-task", data);
+      const response = await apiRequest("POST", "/api/ai/refine-task", {
+        originalTask: data.taskContent,
+        userQuery: data.refinementRequest
+      });
       return response.json();
     },
     onSuccess: (data) => {
-      setRefinement(data);
+      // Convert the API response to the expected format
+      const formattedRefinement = {
+        refinedTask: data.refinedTasks?.[0]?.title || data.explanation || taskContent,
+        suggestions: data.suggestions || [],
+        decomposition: data.refinedTasks?.[0]?.subtasks || []
+      };
+      setRefinement(formattedRefinement);
       toast({
         title: "Task refined successfully",
         description: "Your task has been improved with AI assistance.",
