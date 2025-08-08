@@ -205,6 +205,19 @@ export class DatabaseStorage implements IStorage {
         .where(eq(users.id, userId));
     }
   }
+
+  async incrementMonthlyAiCalls(userId: string): Promise<void> {
+    const user = await this.getUser(userId);
+    if (user) {
+      await db
+        .update(users)
+        .set({
+          monthlyAiCalls: (user.monthlyAiCalls || 0) + 1,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId));
+    }
+  }
 }
 
 // Create storage instance
