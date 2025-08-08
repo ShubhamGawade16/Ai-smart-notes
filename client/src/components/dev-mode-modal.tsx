@@ -118,17 +118,38 @@ export default function DevModeModal({ isOpen, onClose }: DevModeModalProps) {
     }
   ];
 
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="modal-enter max-w-lg max-h-[85vh] overflow-y-auto bg-white dark:bg-gray-900">
-        <DialogHeader className="pb-4">
-          <DialogTitle className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <Code className="w-5 h-5 text-teal-600" />
-            Developer Tools
-          </DialogTitle>
-        </DialogHeader>
+  if (!isOpen) return null;
 
-        <div className="space-y-4">
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div 
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm" 
+        onClick={onClose}
+      />
+      
+      {/* Modal Content */}
+      <div className="relative bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-lg w-full max-h-[85vh] overflow-y-auto m-4">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center gap-2">
+            <Code className="w-5 h-5 text-teal-600" />
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Developer Tools
+            </h2>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="h-6 w-6 p-0"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 space-y-4">
           {/* Simple Status Display */}
           <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
@@ -179,7 +200,7 @@ export default function DevModeModal({ isOpen, onClose }: DevModeModalProps) {
             ))}
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }
