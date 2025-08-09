@@ -149,9 +149,6 @@ export default function AIChatAssistantModal({ isOpen, onClose }: AIChatAssistan
             <Button variant="outline" size="sm" onClick={clearChat}>
               Clear
             </Button>
-            <Button variant="outline" size="sm" onClick={onClose} className="h-8 w-8 p-0">
-              <X className="w-4 h-4" />
-            </Button>
           </div>
         </DialogHeader>
 

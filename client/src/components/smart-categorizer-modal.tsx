@@ -114,7 +114,7 @@ export default function SmartCategorizerModal({ isOpen, onClose }: SmartCategori
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto" aria-describedby="categorizer-description">
-        <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+        <DialogHeader className="space-y-0 pb-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center">
               <Target className="w-5 h-5 text-white" />
@@ -124,9 +124,6 @@ export default function SmartCategorizerModal({ isOpen, onClose }: SmartCategori
               <p id="categorizer-description" className="text-sm text-gray-600 dark:text-gray-400">Automatically categorize and tag your tasks with AI</p>
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={onClose} className="h-8 w-8 p-0">
-            <X className="w-4 h-4" />
-          </Button>
         </DialogHeader>
 
         <div className="space-y-6">
