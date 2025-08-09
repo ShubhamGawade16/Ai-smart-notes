@@ -75,11 +75,11 @@ export default function RazorpayCheckout({ plan, onSuccess, onClose }: RazorpayC
         handler: async function (response: any) {
           try {
             // Verify payment on backend
-            const verifyResponse = await apiRequest("POST", "/api/razorpay/verify-payment", {
+            const verifyResponse = await apiRequest("POST", "/api/payments/verify", {
               orderId: orderId,
               paymentId: response.razorpay_payment_id,
               signature: response.razorpay_signature,
-              plan: plan
+              planType: plan
             });
 
             if (verifyResponse.ok) {
