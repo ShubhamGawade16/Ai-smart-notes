@@ -30,6 +30,16 @@ Planify aims to be a leading AI-powered productivity tool with a freemium model.
 - All AI features now properly consume exactly 1 credit per use as intended
 - Fixed components: AI Chat Assistant, Task Refiner, Smart Timing, Productivity Insights, Enhanced Smart Timing, Simple Task Input, and dashboard pages
 
+**Major UI Cleanup & Animation Improvements (August 2025):**
+- Removed star (AI view) and settings (advanced view) buttons for cleaner interface design
+- Streamlined button layout to only essential actions: Add Task, Filter, and Sort
+- Enhanced button design with gradients, better spacing, and modern rounded corners
+- Simplified tab navigation to 3-column grid (Today/All/Done) removing Smart Timing tab
+- Added smooth fade-in animations, stagger effects for task lists, and enhanced transitions
+- Improved mobile touch interactions with scale feedback and better touch targets
+- Enhanced empty states with better visual hierarchy and gradient backgrounds
+- Overall result: Much cleaner, more focused interface with smooth responsive animations
+
 **UI Responsiveness Improvements (August 2025):**
 - Added optimistic updates for instant AI usage count feedback
 - Reduced subscription status cache time from 30s to 5s for faster updates
