@@ -43,7 +43,7 @@ router.post('/parse-task', authenticateToken, async (req: AuthRequest, res) => {
   }
 });
 
-// Task Refinement - Conversational AI feature
+// Task Refinement - Conversational AI feature (PREMIUM - consumes 1 credit)
 router.post('/refine-task', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const { originalTask, userQuery, context } = req.body;
@@ -57,6 +57,26 @@ router.post('/refine-task', authenticateToken, async (req: AuthRequest, res) => 
     if (!originalTask || !userQuery) {
       return res.status(400).json({ error: 'Original task and user query are required' });
     }
+
+    // Check AI usage limits using the new endpoint
+    console.log(`🧠 Task refiner request - checking AI usage limits`);
+    const usageResponse = await fetch(`${req.protocol}://${req.get('host')}/api/increment-ai-usage`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': req.headers.authorization || ''
+      },
+      body: JSON.stringify({ feature: 'task_refiner' })
+    });
+    
+    const usageData = await usageResponse.json();
+    if (!usageData.canUseAi) {
+      return res.status(429).json({ 
+        error: usageData.message || 'AI usage limit reached. Upgrade to Basic (₹299/month) or Pro (₹599/month) for more usage.' 
+      });
+    }
+    
+    console.log(`✅ Task refiner AI usage approved`);
 
     const refinement = await aiService.refineTask(originalTask, userQuery, user.tier || 'free');
     

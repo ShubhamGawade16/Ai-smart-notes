@@ -1069,44 +1069,42 @@ Respond with JSON in this format: {"quote": "your motivational quote", "author":
     }
   });
 
-  // Smart Timing Analysis endpoint
+  // Smart Timing Analysis endpoint (PREMIUM - consumes 1 credit)
   app.get("/api/ai/smart-timing", requireAuth, async (req: AuthRequest, res) => {
     try {
       if (!req.userId) {
         return res.status(401).json({ error: "User ID not found in token" });
       }
 
-      // Check and increment AI usage
-      const user = await storage.getUser(req.userId);
-      if (!user) {
-        return res.status(404).json({ error: "User not found" });
-      }
-
-      // Check daily AI usage limits - Pro users always have access
-      const isPremium = user.tier !== 'free' && user.tier !== null;
-      const currentUsage = user.dailyAiCalls || 0;
-      const dailyLimit = isPremium ? 999 : 3;
-      const allowed = isPremium || currentUsage < dailyLimit;
+      // Check AI usage limits using the new endpoint
+      console.log(`🧠 Smart timing request - checking AI usage limits`);
+      const usageResponse = await fetch(`${req.protocol}://${req.get('host')}/api/increment-ai-usage`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': req.headers.authorization || ''
+        },
+        body: JSON.stringify({ feature: 'timing_optimizer' })
+      });
       
-      console.log(`Smart timing - User ${req.userId} (${user.email}) tier: ${user.tier}, limit: ${dailyLimit}, current usage: ${currentUsage}, allowed: ${allowed}, isPremium: ${isPremium}`);
-      
-      if (!allowed) {
-        return res.status(429).json({ error: "Daily AI usage limit exceeded" });
+      const usageData = await usageResponse.json();
+      if (!usageData.canUseAi) {
+        return res.status(429).json({ 
+          error: usageData.message || 'AI usage limit reached. Upgrade to Basic (₹299/month) or Pro (₹599/month) for more usage.' 
+        });
       }
+      
+      console.log(`✅ Smart timing AI usage approved`);
 
-      // Get user's incomplete tasks BEFORE incrementing usage  
+      // Get user's incomplete tasks
       const tasks = await storage.getTasks(req.userId);
       const incompleteTasks = tasks.filter(task => !task.completed);
 
       console.log(`Smart timing: Found ${tasks.length} total tasks, ${incompleteTasks.length} incomplete for user ${req.userId}`);
-      console.log(`Smart timing: Sample tasks:`, tasks.slice(0, 3).map(t => ({ id: t.id, title: t.title, userId: t.userId })));
 
       if (incompleteTasks.length === 0) {
         return res.json({ analyses: [] });
       }
-
-      // Only increment AI usage if we have tasks to analyze
-      await storage.incrementDailyAiCalls(req.userId);
 
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -1272,34 +1270,39 @@ Respond with JSON in this format:
     }
   });
 
-  // Productivity Insights API
+  // Productivity Insights API (PREMIUM - consumes 1 credit)
   app.get("/api/ai/productivity-insights", requireAuth, async (req: AuthRequest, res) => {
     try {
       if (!req.userId) {
         return res.status(401).json({ error: "User ID not found in token" });
       }
 
-      // Check and increment AI usage
-      const user = await storage.getUser(req.userId);
-      if (!user) {
-        return res.status(404).json({ error: "User not found" });
-      }
-
-      // Check daily AI usage limits  
-      const { allowed, userLimit } = checkAiUsageLimit(user);
-      console.log(`Productivity insights - User ${req.userId} (${user.email}) tier: ${user.tier}, limit: ${userLimit}, current usage: ${user.dailyAiCalls || 0}, allowed: ${allowed}`);
+      // Check AI usage limits using the new endpoint
+      console.log(`🧠 Productivity insights request - checking AI usage limits`);
+      const usageResponse = await fetch(`${req.protocol}://${req.get('host')}/api/increment-ai-usage`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': req.headers.authorization || ''
+        },
+        body: JSON.stringify({ feature: 'productivity_insights' })
+      });
       
-      if (!allowed) {
-        return res.status(429).json({ error: "Daily AI usage limit exceeded" });
+      const usageData = await usageResponse.json();
+      if (!usageData.canUseAi) {
+        return res.status(429).json({ 
+          error: usageData.message || 'AI usage limit reached. Upgrade to Basic (₹299/month) or Pro (₹599/month) for more usage.' 
+        });
       }
+      
+      console.log(`✅ Productivity insights AI usage approved`);
 
-      // Get user's tasks for analysis first
+      // Get user's tasks for analysis
       const tasks = await storage.getTasks(req.userId);
       const completedTasks = tasks.filter(t => t.completed);
       const incompleteTasks = tasks.filter(t => !t.completed);
 
       console.log(`Productivity insights: Found ${tasks.length} total tasks, ${completedTasks.length} completed for user ${req.userId}`);
-      console.log(`Productivity insights: Sample tasks:`, tasks.slice(0, 3).map(t => ({ id: t.id, title: t.title, userId: t.userId, completed: t.completed })));
 
       if (tasks.length === 0) {
         return res.json({
@@ -1312,8 +1315,6 @@ Respond with JSON in this format:
           recommendations: ["Start by adding tasks to track your productivity patterns."]
         });
       }
-
-      await storage.incrementDailyAiCalls(req.userId);
 
       // Calculate basic metrics
       const totalTasks = tasks.length;
@@ -1397,7 +1398,7 @@ Respond with JSON in this format:
     }
   });
 
-  // AI Chat Assistant API
+  // AI Chat Assistant API (PREMIUM - consumes 1 credit)
   app.post("/api/ai/chat-assistant", requireAuth, async (req: AuthRequest, res) => {
     try {
       if (!req.userId) {
@@ -1409,37 +1410,33 @@ Respond with JSON in this format:
         return res.status(400).json({ error: "Message is required" });
       }
 
-      // Check and increment AI usage
-      const user = await storage.getUser(req.userId);
-      if (!user) {
-        return res.status(404).json({ error: "User not found" });
-      }
-
-      // Check AI usage limits (daily for free, monthly for basic, unlimited for pro)
-      const { allowed, userLimit, limitType } = checkAiUsageLimit(user);
-      const currentUsage = limitType === 'monthly' ? (user.monthlyAiCalls || 0) : (user.dailyAiCalls || 0);
-      console.log(`Chat assistant - User ${req.userId} (${user.email}) tier: ${user.tier}, limit: ${userLimit}, current usage: ${currentUsage}, limit type: ${limitType}, allowed: ${allowed}`);
+      // Check AI usage limits using the new endpoint
+      console.log(`🧠 AI chat assistant request - checking AI usage limits`);
+      const usageResponse = await fetch(`${req.protocol}://${req.get('host')}/api/increment-ai-usage`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': req.headers.authorization || ''
+        },
+        body: JSON.stringify({ feature: 'ai_assistant' })
+      });
       
-      if (!allowed) {
-        const limitMessage = limitType === 'monthly' 
-          ? "Monthly AI usage limit exceeded. Upgrade to Pro for unlimited access or wait until next month."
-          : "Daily AI usage limit exceeded. Upgrade to Basic or Pro for more access.";
-        return res.status(429).json({ error: limitMessage });
+      const usageData = await usageResponse.json();
+      if (!usageData.canUseAi) {
+        return res.status(429).json({ 
+          error: usageData.message || 'AI usage limit reached. Upgrade to Basic (₹299/month) or Pro (₹599/month) for more usage.' 
+        });
       }
+      
+      console.log(`✅ AI chat assistant usage approved`);
 
-      // Get user's tasks for context first
+      // Get user's tasks for context
       const tasks = await storage.getTasks(req.userId);
       const recentTasks = tasks.slice(-5).map(t => `${t.title} (${t.completed ? 'completed' : 'pending'})`);
 
       console.log(`Chat assistant: Found ${tasks.length} total tasks for user ${req.userId}`);
-      console.log(`Chat assistant: Sample tasks:`, tasks.slice(0, 3).map(t => ({ id: t.id, title: t.title, userId: t.userId })));
 
-      // Increment appropriate counter based on tier
-      if (user.tier === 'basic') {
-        await storage.incrementMonthlyAiCalls(req.userId);
-      } else {
-        await storage.incrementDailyAiCalls(req.userId);
-      }
+      // Usage already incremented by the increment-ai-usage endpoint
 
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
