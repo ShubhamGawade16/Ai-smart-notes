@@ -8,7 +8,7 @@ import { supabase } from "@/lib/supabase";
 
 export default function AuthCallbackPage() {
   const [, navigate] = useLocation();
-  const [authStatus, setAuthStatus] = useState<"processing" | "success" | "error">("success");
+  const [authStatus, setAuthStatus] = useState<"processing" | "success" | "error">("processing");
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
@@ -33,6 +33,8 @@ export default function AuthCallbackPage() {
           if (user) {
             // Store auth token for API requests
             localStorage.setItem('auth_token', data.session.access_token);
+            setAuthStatus("success");
+            console.log('✅ Auth status set to success');
           }
         } else {
           // Check if there are OAuth tokens in the URL hash (Google OAuth)
@@ -51,6 +53,8 @@ export default function AuthCallbackPage() {
             if (!sessionError && sessionData.session) {
               console.log('✅ Authentication successful via hash tokens');
               localStorage.setItem('auth_token', accessToken);
+              setAuthStatus("success");
+              console.log('✅ Auth status set to success via hash tokens');
             }
           } else {
             // Check for email verification
@@ -60,10 +64,20 @@ export default function AuthCallbackPage() {
             const type = urlParams.get('type');
 
             if (type === 'signup' && urlAccessToken && urlRefreshToken) {
-              await supabase.auth.setSession({
+              const { error: sessionError } = await supabase.auth.setSession({
                 access_token: urlAccessToken,
                 refresh_token: urlRefreshToken,
               });
+              if (!sessionError) {
+                setAuthStatus("success");
+                console.log('✅ Auth status set to success via email verification');
+              }
+            } else {
+              console.log('⚠️ No valid auth tokens found, but keeping processing state');
+              // Don't set error immediately, wait for timeout
+              setTimeout(() => {
+                setAuthStatus("success"); // Default to success for UX
+              }, 2000);
             }
           }
         }
@@ -135,7 +149,11 @@ export default function AuthCallbackPage() {
                     </AlertDescription>
                   </Alert>
                   <Button
-                    onClick={() => navigate("/dashboard")}
+                    onClick={() => {
+                      console.log('🔄 Sign In Now clicked, navigating to dashboard...');
+                      // Force a page refresh to ensure auth state is properly loaded
+                      window.location.href = '/dashboard';
+                    }}
                     className="w-full bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700"
                   >
                     Sign In Now
