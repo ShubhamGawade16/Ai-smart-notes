@@ -45,7 +45,7 @@ export const signInWithGoogle = async () => {
   }
   
   console.log('Initiating Google OAuth...')
-  console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL)
+  console.log('Supabase URL:', supabaseUrl)
   
   // Get the current host for proper redirect URL
   const redirectUrl = `${window.location.origin}/auth/callback`
@@ -100,7 +100,7 @@ export const signInWithEmail = async (email: string, password: string) => {
     throw new Error('Supabase not configured. Please check your environment variables.')
   }
   
-  console.log('Attempting email sign in with:', { email, supabaseUrl: import.meta.env.VITE_SUPABASE_URL })
+  console.log('Attempting email sign in with:', { email, supabaseUrl })
   
   try {
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -151,8 +151,8 @@ export const signUpWithEmail = async (email: string, password: string, firstName
     email, 
     firstName, 
     lastName,
-    supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
-    hasAnonKey: !!import.meta.env.VITE_SUPABASE_ANON_KEY
+    supabaseUrl,
+    hasAnonKey: !!supabaseAnonKey
   })
   
   try {
