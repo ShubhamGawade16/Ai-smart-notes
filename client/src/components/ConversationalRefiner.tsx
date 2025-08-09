@@ -106,9 +106,12 @@ export const ConversationalRefiner: React.FC<ConversationalRefinerProps> = ({
 
   const handleUseRefinedTasks = async (tasks: TaskRefinement['refinedTasks']) => {
     try {
+      console.log("Creating refined tasks:", tasks);
+      
       // Create all refined tasks
       for (const task of tasks) {
-        await apiRequest("POST", "/api/tasks", {
+        console.log("Creating task:", task.title);
+        const response = await apiRequest("POST", "/api/tasks", {
           title: task.title,
           description: task.description,
           priority: task.priority,
@@ -116,6 +119,7 @@ export const ConversationalRefiner: React.FC<ConversationalRefinerProps> = ({
           tags: task.tags,
           estimatedTime: task.estimatedTime
         });
+        console.log("Task created successfully:", await response.json());
       }
       
       // Refresh task lists
@@ -129,6 +133,7 @@ export const ConversationalRefiner: React.FC<ConversationalRefinerProps> = ({
       
       onTasksRefined?.(tasks);
     } catch (error) {
+      console.error("Error creating refined tasks:", error);
       toast({
         title: "Error creating tasks",
         description: "Failed to create refined tasks. Please try again.",
@@ -270,9 +275,9 @@ export const ConversationalRefiner: React.FC<ConversationalRefinerProps> = ({
                     <Button
                       size="sm"
                       onClick={() => handleUseRefinedTasks(message.refinement!.refinedTasks)}
-                      className="w-full"
+                      className="w-full bg-purple-600 hover:bg-purple-700 text-white"
                     >
-                      Use These Refined Tasks
+                      ✓ Add These Tasks to My List
                     </Button>
                   </div>
                 )}
