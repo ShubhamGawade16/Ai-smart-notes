@@ -55,7 +55,7 @@ export default function AuthVerifiedPage() {
                 Your email has been successfully verified. Welcome to Planify!
               </p>
             </div>
-            <Link href="/welcome">
+            <Link href="/onboarding">
               <Button className="w-full bg-teal-600 hover:bg-teal-700">
                 Get Started <ArrowRight className="w-4 h-4 ml-2" />
               </Button>

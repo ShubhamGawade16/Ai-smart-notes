@@ -2496,10 +2496,6 @@ Guidelines:
     }
   });
 
-  // Register route modules
-  const usersRouter = await import('./routes/users');
-  app.use('/api/users', usersRouter.default);
-
   const httpServer = createServer(app);
   return httpServer;
 }

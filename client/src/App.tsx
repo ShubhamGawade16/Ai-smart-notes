@@ -19,7 +19,6 @@ import DebugAuthPage from "@/pages/debug-auth";
 import AdvancedFeatures from "./pages/advanced-features";
 import UpgradePage from "@/pages/upgrade";
 import OnboardingPage from "@/pages/onboarding";
-import WelcomeOnboarding from "@/pages/welcome-onboarding";
 import NotFound from "@/pages/not-found";
 import { Loader2 } from "lucide-react";
 
@@ -78,11 +77,6 @@ function Router() {
         {user ? (
           (() => {
             console.log('🎯 Rendering dashboard for authenticated user');
-            // Check if user has completed welcome onboarding
-            if (user.onboardingCompleted === false) {
-              console.log('🔄 User needs to complete welcome onboarding, redirecting...');
-              return <Redirect to="/welcome" />;
-            }
             return <MobileDashboard />;
           })()
         ) : (
@@ -100,10 +94,6 @@ function Router() {
       
       <Route path="/onboarding">
         {user ? <OnboardingPage /> : <Redirect to="/" />}
-      </Route>
-      
-      <Route path="/welcome">
-        {user ? <WelcomeOnboarding /> : <Redirect to="/" />}
       </Route>
       
       <Route component={NotFound} />
