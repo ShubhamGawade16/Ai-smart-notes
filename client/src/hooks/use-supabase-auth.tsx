@@ -171,10 +171,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSupabaseUser(session.user);
         console.log('🔄 Auth state change - about to sync user data...');
         
-        // Call syncUserData - it handles loading state internally
+        // Call syncUserData and ensure loading stops
         try {
           await syncUserData(session.user);
           console.log('✅ syncUserData completed successfully');
+          console.log('🔄 Explicitly setting loading to false after auth');
+          setIsLoading(false);
         } catch (error) {
           console.error('❌ syncUserData failed:', error);
           setIsLoading(false);
