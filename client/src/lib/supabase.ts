@@ -1,13 +1,13 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Force using the new Supabase credentials directly (temporary fix for cache issue)
-const supabaseUrl = 'https://qtdjrdxwfvhcwowebxnm.supabase.co'
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0ZGpyZHh3ZnZoY3dvd2VieG5tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ1OTE2NDgsImV4cCI6MjA3MDE2NzY0OH0.084iehz8I9T71uaN-xbdUgc8_GXJvP-KWBKUOrP4CRg'
+// Use environment variables for credentials (security best practice)
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 console.log('🔄 Creating Supabase client with URL:', supabaseUrl)
 console.log('🔑 Has anon key:', !!supabaseAnonKey)
 console.log('📅 Config loaded at:', new Date().toISOString())
-console.log('🎯 Using HARDCODED credentials to bypass cache')
+console.log('🎯 Using environment variables for credentials')
 
 // Force clear any old cached auth data
 if (typeof window !== 'undefined') {
