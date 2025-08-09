@@ -147,7 +147,13 @@ const requireAuth = async (req: any, res: any, next: any) => {
               createdAt: new Date(),
               updatedAt: new Date(),
             };
-            userData = await storage.createUser(insertUserData);
+            userData = await storage.upsertUser({
+              id: user.id,
+              email: user.email || '',
+              firstName: user.user_metadata?.first_name || '',
+              lastName: user.user_metadata?.last_name || '',
+              profileImageUrl: user.user_metadata?.avatar_url || null,
+            });
           }
           req.user = userData;
           req.userId = user.id;

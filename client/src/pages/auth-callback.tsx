@@ -40,9 +40,8 @@ export default function AuthCallbackPage() {
             // Store auth token for API requests
             localStorage.setItem('auth_token', data.session.access_token);
             
-            // For Google OAuth, redirect directly to dashboard
-            // The auth context will handle user sync automatically
-            navigate("/dashboard");
+            // Show success message instead of auto-redirect
+            // User can click the sign in button when ready
           }
         } else {
           // No session found, might be an email verification link
@@ -58,7 +57,6 @@ export default function AuthCallbackPage() {
               refresh_token: refreshToken,
             });
             setAuthStatus("success");
-            navigate("/dashboard");
           } else {
             setAuthStatus("error");
             setErrorMessage("No valid authentication session found.");
@@ -113,24 +111,32 @@ export default function AuthCallbackPage() {
                 {authStatus === "error" && <AlertCircle className="w-5 h-5 text-red-600" />}
                 <span>
                   {authStatus === "processing" && "Processing Authentication..."}
-                  {authStatus === "success" && "Welcome to Planify!"}
+                  {authStatus === "success" && "Authentication Successful!"}
                   {authStatus === "error" && "Authentication Failed"}
                 </span>
               </CardTitle>
               <CardDescription>
                 {authStatus === "processing" && "Please wait while we complete your authentication."}
-                {authStatus === "success" && "You've been successfully authenticated. Setting up your account..."}
+                {authStatus === "success" && "Sign in to your account to get started with Planify."}
                 {authStatus === "error" && "There was an issue with your authentication."}
               </CardDescription>
             </CardHeader>
             <CardContent>
               {authStatus === "success" && (
-                <Alert>
-                  <CheckCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    Authentication successful! Redirecting you to your dashboard...
-                  </AlertDescription>
-                </Alert>
+                <div className="space-y-4">
+                  <Alert>
+                    <CheckCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      Authentication successful! You can now access your account.
+                    </AlertDescription>
+                  </Alert>
+                  <Button
+                    onClick={() => navigate("/dashboard")}
+                    className="w-full bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700"
+                  >
+                    Sign In Now
+                  </Button>
+                </div>
               )}
               
               {authStatus === "error" && (
