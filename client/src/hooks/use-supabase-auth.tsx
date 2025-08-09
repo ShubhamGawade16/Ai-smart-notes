@@ -108,8 +108,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // For immediate testing, create a temporary demo user if no auth exists
-    if (!localStorage.getItem('auth_token') && !supabase) {
+    // Only create demo user if user hasn't explicitly logged out
+    const hasLoggedOut = localStorage.getItem('user_logged_out');
+    if (!localStorage.getItem('auth_token') && !supabase && !hasLoggedOut) {
       console.log('🔧 Creating temporary demo user for testing');
       const demoUser = {
         id: 'demo-user',
@@ -343,24 +344,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    if (!supabase) return;
-
     try {
-      await signOut();
+      // Clear all user state first
       setUser(null);
       setSupabaseUser(null);
+      
+      // Clear ALL auth-related localStorage items
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('onboardingCompleted');
+      localStorage.removeItem('userTier');
+      localStorage.removeItem('fallback_auth_user');
+      localStorage.removeItem('demo_user_created');
+      
+      // Mark that user has explicitly logged out
+      localStorage.setItem('user_logged_out', 'true');
+      
+      // Try to logout from Supabase if available
+      if (supabase) {
+        try {
+          await signOut();
+        } catch (error) {
+          console.error('Supabase logout error (non-critical):', error);
+        }
+      }
+      
+      // Clear fallback auth
+      const fallbackAuth = FallbackAuth.getInstance();
+      fallbackAuth.signOut();
       
       toast({
         title: "Logged out",
         description: "You have been successfully logged out.",
       });
       
-      // Redirect to landing page
+      // Force a complete page reload to ensure clean state
       setTimeout(() => {
         window.location.href = "/";
+        window.location.reload();
       }, 500);
     } catch (error) {
       console.error('Logout error:', error);
+      // Still try to redirect even if logout partially fails
+      setTimeout(() => {
+        window.location.href = "/";
+        window.location.reload();
+      }, 500);
     }
   };
 

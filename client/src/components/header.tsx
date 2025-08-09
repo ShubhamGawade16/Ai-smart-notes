@@ -12,17 +12,11 @@ import {
   MessageCircle
 } from 'lucide-react';
 import { Moon, Sun } from "lucide-react";
+import { useAuth } from '@/hooks/use-supabase-auth';
 
 export function Header() {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-
-  const handleLogout = () => {
-    // Clear any stored data
-    localStorage.removeItem('onboardingCompleted');
-    localStorage.removeItem('userTier');
-    // Redirect to landing
-    window.location.href = '/';
-  };
+  const { logout } = useAuth();
 
   const navigationItems = [
     { label: 'Dashboard', path: '/dashboard', icon: Home },
@@ -87,7 +81,7 @@ export function Header() {
             <Button
               variant="outline"
               size="sm"
-              onClick={handleLogout}
+              onClick={logout}
               className="hidden md:flex items-center space-x-1"
             >
               <LogOut className="h-4 w-4" />
@@ -129,7 +123,7 @@ export function Header() {
               <Button
                 variant="outline"
                 className="w-full justify-start space-x-2 mt-4"
-                onClick={handleLogout}
+                onClick={logout}
               >
                 <LogOut className="h-4 w-4" />
                 <span>Exit Demo</span>
