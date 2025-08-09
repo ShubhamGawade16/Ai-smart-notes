@@ -67,29 +67,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('auth_token', accessToken);
       console.log('✅ Updated auth token for API requests');
 
-      // For now, just create a user object from Supabase data to unblock the UI
+      // Create a user object from Supabase data to unblock the UI
       console.log('📡 Creating user from Supabase data...');
-      setUser({
+      const userData = {
         id: supabaseUser.id,
         email: supabaseUser.email || '',
         firstName: supabaseUser.user_metadata?.first_name || '',
         lastName: supabaseUser.user_metadata?.last_name || '',
         onboardingCompleted: false,
-      });
+      };
       
-      console.log('✅ User authenticated and ready');
+      setUser(userData);
+      console.log('✅ User authenticated and ready:', userData);
       
     } catch (error) {
       console.error('Error syncing user data:', error);
       // Still set a basic user to unblock the UI
-      setUser({
+      const fallbackUserData = {
         id: supabaseUser.id,
         email: supabaseUser.email || '',
         firstName: supabaseUser.user_metadata?.first_name || '',
         lastName: supabaseUser.user_metadata?.last_name || '',
         onboardingCompleted: false,
-      });
+      };
+      setUser(fallbackUserData);
+      console.log('✅ Using fallback user data:', fallbackUserData);
     } finally {
+      console.log('🔄 Setting loading to false');
       setIsLoading(false);
     }
   };
