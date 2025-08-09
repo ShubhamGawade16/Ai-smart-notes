@@ -107,14 +107,14 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 flex relative">
-      {/* Back to Home Button - Fixed Position */}
-      <div className="absolute top-6 left-6 z-10">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
+      {/* Navigation Header */}
+      <div className="p-6">
         <Link href="/">
           <Button 
             variant="ghost" 
             size="sm"
-            className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-all"
+            className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Home
@@ -122,8 +122,10 @@ export default function AuthPage() {
         </Link>
       </div>
 
-      {/* Left Column - Auth Forms */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
+      {/* Main Content */}
+      <div className="flex">
+        {/* Left Column - Auth Forms */}
+        <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
           
           <div className="text-center mb-8">
@@ -363,10 +365,9 @@ export default function AuthPage() {
             </TabsContent>
           </Tabs>
         </div>
-      </div>
 
-      {/* Right Column - Hero Section */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-teal-600 to-blue-700 items-center justify-center p-8">
+        {/* Right Column - Hero Section */}
+        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-teal-600 to-blue-700 items-center justify-center p-8">
         <div className="text-center text-white">
           <div className="mb-8">
             <Brain className="h-16 w-16 mx-auto mb-4 text-teal-200" />
@@ -390,6 +391,7 @@ export default function AuthPage() {
               <span className="text-left">Natural language task processing</span>
             </div>
           </div>
+        </div>
         </div>
       </div>
     </div>
