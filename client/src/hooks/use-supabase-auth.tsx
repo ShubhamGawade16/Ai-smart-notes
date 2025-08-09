@@ -31,14 +31,17 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null);
   const [supabaseUser, setSupabaseUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   // Sync user data from our backend when Supabase user changes
   const syncUserData = async (supabaseUser: User | null) => {
+    setIsLoading(true);
+    
     if (!supabaseUser) {
       setUser(null);
       localStorage.removeItem('auth_token');
+      setIsLoading(false);
       return;
     }
 
@@ -47,11 +50,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const session = (await supabase?.auth.getSession())?.data.session;
       const accessToken = session?.access_token;
       
-      if (accessToken) {
-        localStorage.setItem('auth_token', accessToken);
+      console.log('🔄 Syncing user data with token:', !!accessToken);
+      
+      if (!accessToken) {
+        console.error('No access token available');
+        setIsLoading(false);
+        return;
       }
+      
+      localStorage.setItem('auth_token', accessToken);
+      console.log('✅ Updated auth token for API requests');
 
       // Get user data from our backend API
+      console.log('📡 Fetching user data from backend...');
       const response = await fetch('/api/auth/me', {
         headers: {
           'Authorization': `Bearer ${accessToken}`
@@ -60,8 +71,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (response.ok) {
         const userData = await response.json();
-        setUser(userData);
+        console.log('✅ Got user data from backend:', userData);
+        setUser({
+          id: userData.id,
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          onboardingCompleted: userData.onboardingCompleted,
+          career: userData.career,
+          goals: userData.goals,
+          experienceLevel: userData.experienceLevel,
+          notificationPreferences: userData.notificationPreferences,
+        });
       } else {
+        console.log('❌ Backend user not found, creating user...');
         // User exists in Supabase but not in our backend - create them
         const createResponse = await fetch('/api/auth/sync-user', {
           method: 'POST',
@@ -79,11 +102,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (createResponse.ok) {
           const newUser = await createResponse.json();
-          setUser(newUser);
+          console.log('✅ Created new user in backend:', newUser);
+          setUser({
+            id: newUser.id,
+            email: newUser.email,
+            firstName: newUser.firstName,
+            lastName: newUser.lastName,
+            onboardingCompleted: newUser.onboardingCompleted,
+            career: newUser.career,
+            goals: newUser.goals,
+            experienceLevel: newUser.experienceLevel,
+            notificationPreferences: newUser.notificationPreferences,
+          });
+        } else {
+          console.error('Failed to create user in backend');
         }
       }
     } catch (error) {
       console.error('Error syncing user data:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
