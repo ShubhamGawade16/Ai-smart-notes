@@ -11,7 +11,7 @@ import { AuthProvider, useAuth } from "@/hooks/use-supabase-auth";
 import MobileDashboard from "@/pages/mobile-dashboard";
 import LandingPage from "@/pages/landing";
 import EmailAuthPage from "@/pages/email-auth";
-import VerifyEmailPage from "@/pages/verify-email";
+
 import AuthCallbackPage from "@/pages/auth-callback";
 import SupabaseSetupGuide from "@/pages/supabase-setup-guide";
 import DebugAuthPage from "@/pages/debug-auth";
@@ -66,8 +66,6 @@ function Router() {
       </Route>
       
       <Route path="/auth/callback" component={AuthCallbackPage} />
-      <Route path="/auth/verified" component={VerifyEmailPage} />
-      <Route path="/verify-email" component={VerifyEmailPage} />
       <Route path="/supabase-setup" component={SupabaseSetupGuide} />
       <Route path="/debug-auth" component={DebugAuthPage} />
       

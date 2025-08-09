@@ -218,13 +218,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (data) {
             toast({
               title: "Registration successful!",
-              description: "Please check your email to verify your account.",
+              description: "You can now sign in with your credentials.",
             });
 
-            // Redirect to verification page
-            setTimeout(() => {
-              window.location.href = `/verify-email?email=${encodeURIComponent(email)}`;
-            }, 1000);
+            // Stay on auth page so user can sign in immediately
             return;
           }
         } catch (supabaseError: any) {

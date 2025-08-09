@@ -18,8 +18,8 @@ export default function EmailAuthPage() {
   const { login, signup } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
-  const [verificationEmail, setVerificationEmail] = useState("");
+  const [signupSuccess, setSignupSuccess] = useState(false);
+  const [signupSuccessEmail, setSignupSuccessEmail] = useState("");
 
   // Login form state
   const [loginEmail, setLoginEmail] = useState("");
@@ -95,17 +95,38 @@ export default function EmailAuthPage() {
     
     setIsSubmitting(true);
     try {
-      await signup(signupEmail, signupPassword, signupFirstName, signupLastName);
-      // Show email verification message
-      setEmailSent(true);
-      setVerificationEmail(signupEmail);
-      toast({
-        title: "Check Your Email",
-        description: "We've sent you a verification link to complete your account setup.",
+      console.log('Attempting email sign up with:', { 
+        email: signupEmail, 
+        firstName: signupFirstName, 
+        lastName: signupLastName,
       });
+      
+      await signup(signupEmail, signupPassword, signupFirstName, signupLastName);
+      
+      // Show success state and switch to sign in tab
+      setSignupSuccess(true);
+      setSignupSuccessEmail(signupEmail);
+      
+      // Auto-fill login form
+      setLoginEmail(signupEmail);
+      
+      // Clear signup form
+      setSignupEmail("");
+      setSignupPassword("");
+      setSignupFirstName("");
+      setSignupLastName("");
+      
+      // Auto-switch to sign in tab after success
+      setTimeout(() => {
+        const signInTab = document.querySelector('[data-value="signin"]') as HTMLElement;
+        if (signInTab) {
+          signInTab.click();
+        }
+      }, 1500);
+      
     } catch (error: any) {
       console.error('Signup error:', error);
-      // Error toast is handled in signUp function
+      // Error toast is handled in signup function
     } finally {
       setIsSubmitting(false);
     }
@@ -271,12 +292,12 @@ export default function EmailAuthPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {emailSent ? (
+                  {signupSuccess ? (
                     <Alert>
                       <CheckCircle className="h-4 w-4" />
                       <AlertDescription>
-                        Verification email sent to <strong>{verificationEmail}</strong>. 
-                        Please check your inbox and click the verification link to complete your account setup.
+                        Account created successfully for <strong>{signupSuccessEmail}</strong>! 
+                        You can now sign in using the "Sign In" tab above.
                       </AlertDescription>
                     </Alert>
                   ) : (
