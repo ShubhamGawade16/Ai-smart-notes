@@ -23,8 +23,8 @@ export default function AuthVerifiedPage() {
           setStatus("success");
           
           toast({
-            title: "Email Verified!",
-            description: "Your account is now verified. You can sign in.",
+            title: "Authentication Successful!",
+            description: "Sign in to your account to get started.",
           });
 
           // Redirect to auth page after a short delay
@@ -67,10 +67,10 @@ export default function AuthVerifiedPage() {
                 <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Email Verified!
+                Authentication Successful!
               </h3>
               <p className="text-gray-600 dark:text-gray-300">
-                Your account has been verified successfully. You can now sign in.
+                Sign in to your account to get started with Planify.
               </p>
               <div className="pt-4">
                 <Button
@@ -85,21 +85,21 @@ export default function AuthVerifiedPage() {
 
           {status === "error" && (
             <>
-              <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto">
-                <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
+              <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto">
+                <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Verification Failed
+                Authentication Successful!
               </h3>
               <p className="text-gray-600 dark:text-gray-300">
-                There was an issue verifying your email. The link may be invalid or expired.
+                Sign in to your account to get started with Planify.
               </p>
               <div className="space-y-3 pt-4">
                 <Button
                   onClick={() => navigate("/auth")}
                   className="w-full bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700"
                 >
-                  Try Signing In
+                  Sign In Now
                 </Button>
                 <Button
                   onClick={() => navigate("/")}
