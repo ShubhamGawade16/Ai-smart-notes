@@ -85,34 +85,40 @@ export default function LandingPage() {
       {/* Header */}
       <header className="fixed top-0 w-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-14 sm:h-16">
             <div className="flex items-center gap-2">
               <img 
                 src="/attached_assets/Planify_imresizer_1754161747016.jpg"
                 alt="Planify"
-                className="w-8 h-8 rounded-lg"
+                className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                   const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
                   if (nextElement) nextElement.style.display = 'flex';
                 }}
               />
-              <div className="w-8 h-8 bg-gradient-to-br from-teal-400 to-teal-600 rounded-lg flex items-center justify-center shadow-sm" style={{display: 'none'}}>
-                <span className="text-white font-bold text-sm">P</span>
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-teal-400 to-teal-600 rounded-lg flex items-center justify-center shadow-sm" style={{display: 'none'}}>
+                <span className="text-white font-bold text-xs sm:text-sm">P</span>
               </div>
-              <span className="text-xl font-bold text-gray-900 dark:text-white">Planify</span>
+              <span className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">Planify</span>
             </div>
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2 sm:gap-6">
               <nav className="hidden md:flex items-center gap-6">
                 <a href="#features" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Features</a>
                 <a href="#pricing" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Pricing</a>
               </nav>
-              <div className="flex gap-4">
+              <div className="flex gap-2 sm:gap-4">
                 <Link href="/auth?mode=login">
-                  <Button variant="ghost">Sign In</Button>
+                  <Button variant="ghost" size="sm" className="px-3 sm:px-4">
+                    <span className="hidden sm:inline">Sign In</span>
+                    <span className="sm:hidden">Login</span>
+                  </Button>
                 </Link>
                 <Link href="/auth?mode=signup">
-                  <Button>Get Started Free</Button>
+                  <Button size="sm" className="px-3 sm:px-4">
+                    <span className="hidden sm:inline">Get Started Free</span>
+                    <span className="sm:hidden">Start Free</span>
+                  </Button>
                 </Link>
               </div>
             </div>
@@ -121,7 +127,7 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4">
+      <section className="pt-20 sm:pt-32 pb-12 sm:pb-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <div className="mb-8 flex justify-center">
             <img 
@@ -138,17 +144,22 @@ export default function LandingPage() {
               <span className="text-white font-bold text-3xl">P</span>
             </div>
           </div>
-          <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 dark:text-white mb-6">
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
             Your AI-Powered
             <span className="text-teal-600 block">Productivity Partner</span>
           </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
+          <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto px-4">
             Transform your daily chaos into organized success. Planify uses advanced AI to understand your work style and optimize your productivity like never before.
           </p>
-          <div className="flex justify-center mb-12">
+          <div className="flex flex-col sm:flex-row justify-center gap-4 mb-12 px-4">
             <Link href="/auth?mode=signup">
-              <Button size="lg" className="text-lg px-8">
-                Start Free
+              <Button size="lg" className="text-base sm:text-lg px-6 sm:px-8 w-full sm:w-auto">
+                Start Free Today
+              </Button>
+            </Link>
+            <Link href="#features">
+              <Button variant="outline" size="lg" className="text-base sm:text-lg px-6 sm:px-8 w-full sm:w-auto">
+                Learn More
               </Button>
             </Link>
           </div>

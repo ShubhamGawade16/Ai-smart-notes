@@ -121,20 +121,20 @@ export default function AdvancedFeatures() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-4xl mx-auto">
           {features.map((feature) => {
             const Icon = feature.icon;
             return (
               <Card 
                 key={feature.id}
-                className="cursor-pointer hover:shadow-lg transition-shadow"
+                className="cursor-pointer hover:shadow-lg transition-shadow min-h-[120px] touch-manipulation"
                 onClick={feature.action}
               >
-                <CardHeader className="text-center">
-                  <Icon className="w-8 h-8 mx-auto mb-2 text-blue-600" />
-                  <CardTitle className="text-lg">{feature.title}</CardTitle>
+                <CardHeader className="text-center pb-3 sm:pb-4">
+                  <Icon className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 text-blue-600" />
+                  <CardTitle className="text-base sm:text-lg">{feature.title}</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-0">
                   <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
                     {feature.description}
                   </p>

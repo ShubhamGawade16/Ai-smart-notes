@@ -35,24 +35,25 @@ export function Header() {
               <div className="h-8 w-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
                 <Brain className="h-5 w-5 text-white animate-pulse" />
               </div>
-              <span className="text-xl font-bold text-gray-900 dark:text-white gradient-text">
+              <span className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white gradient-text">
                 Smart To-Do AI
               </span>
             </div>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-6">
+          <nav className="hidden md:flex items-center space-x-2 lg:space-x-6">
             {navigationItems.map((item) => {
               const Icon = item.icon;
               return (
                 <Link key={item.path} href={item.path}>
                   <Button 
                     variant="ghost" 
-                    className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+                    size="sm"
+                    className="flex items-center space-x-1 lg:space-x-2 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white px-2 lg:px-3"
                   >
                     <Icon className="h-4 w-4" />
-                    <span>{item.label}</span>
+                    <span className="hidden lg:inline">{item.label}</span>
                   </Button>
                 </Link>
               );
@@ -60,10 +61,11 @@ export function Header() {
           </nav>
 
           {/* Right Side Actions */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 md:space-x-4">
             <Button
               variant="ghost"
               size="sm"
+              className="px-2"
               onClick={() => {
                 const theme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
                 if (theme === 'dark') {

@@ -227,10 +227,10 @@ export function ModernTaskList({ onAdvancedView, onTaskCompleted, onAiView }: Mo
 
   return (
     <Card className="border-0 shadow-sm bg-gray-50 dark:bg-gray-900 flex-1">
-      <CardHeader className="pb-3 pt-4 px-6">
-        <div className="flex items-center justify-between">
+      <CardHeader className="pb-3 pt-4 px-4 sm:px-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
           <div className="flex items-center gap-3">
-            <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">Tasks</CardTitle>
+            <CardTitle className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Tasks</CardTitle>
             {activeTab === 'today' && (
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" title="Auto-refreshing" />
@@ -240,24 +240,24 @@ export function ModernTaskList({ onAdvancedView, onTaskCompleted, onAiView }: Mo
               </div>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 sm:gap-2">
             {/* Create New Task Button */}
             <Button
               variant="default"
               size="sm"
-              className="h-8 bg-teal-600 hover:bg-teal-700 text-white"
+              className="h-9 sm:h-8 bg-teal-600 hover:bg-teal-700 text-white px-3 sm:px-4 min-h-[44px] sm:min-h-0"
               onClick={() => setIsAdvancedEditorOpen(true)}
               title="Create New Task"
             >
-              <Plus className="w-4 h-4 mr-1" />
-              New Task
+              <Plus className="w-4 h-4 mr-1 sm:mr-1" />
+              <span className="text-sm">New Task</span>
             </Button>
             
             {/* AI View Icon Button */}
             <Button
               variant="outline"
               size="sm"
-              className="h-8 w-8 p-0 border-gray-200 dark:border-gray-700"
+              className="h-9 w-9 sm:h-8 sm:w-8 p-0 border-gray-200 dark:border-gray-700 min-h-[44px] sm:min-h-0"
               onClick={onAiView}
               title="AI View"
             >
@@ -268,7 +268,7 @@ export function ModernTaskList({ onAdvancedView, onTaskCompleted, onAiView }: Mo
             <Button
               variant="outline"
               size="sm"
-              className="h-8 w-8 p-0 border-gray-200 dark:border-gray-700"
+              className="h-9 w-9 sm:h-8 sm:w-8 p-0 border-gray-200 dark:border-gray-700 min-h-[44px] sm:min-h-0"
               onClick={() => {
                 if (safeTaskList.length > 0) {
                   onAdvancedView?.(safeTaskList[0]);

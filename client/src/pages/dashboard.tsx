@@ -20,8 +20,7 @@ export default function Dashboard() {
       case 'today':
         return (
           <div className="space-y-6">
-            <QuickAdd />
-            <TodaysPlan />
+            <ModernTaskList />
           </div>
         );
       case 'tasks':
@@ -51,10 +50,10 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background page-enter">
       <Header />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
         {isMobile ? (
           <>
-            <div className="pb-20">
+            <div className="pb-20 px-2 sm:px-0">
               {renderMobileContent()}
             </div>
             <MobileNav activeTab={activeTab} onTabChange={setActiveTab} />
@@ -96,17 +95,16 @@ export default function Dashboard() {
       {isMobile && (
         <Button
           size="lg"
-          className="btn-hover fixed bottom-20 right-6 h-14 w-14 rounded-full shadow-lg hover:scale-110 bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-600 hover:to-blue-700 transition-all duration-300 z-40 animate-pulse"
+          className="btn-hover fixed bottom-24 right-4 h-14 w-14 rounded-full shadow-xl hover:scale-110 bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-600 hover:to-blue-700 transition-all duration-300 z-40 animate-pulse min-h-[56px] touch-manipulation"
           onClick={() => {
-            // Focus on the quick add input
-            const quickAddInput = document.querySelector('input[placeholder*="What would you like to add"]') as HTMLInputElement;
-            if (quickAddInput) {
-              quickAddInput.focus();
-              quickAddInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Find and click the "New Task" button instead
+            const newTaskButton = document.querySelector('button[title="Create New Task"]') as HTMLButtonElement;
+            if (newTaskButton) {
+              newTaskButton.click();
             }
           }}
         >
-          <Plus className="w-6 h-6" />
+          <Plus className="w-6 h-6 text-white" />
         </Button>
       )}
     </div>
