@@ -82,7 +82,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(fallbackUserData);
     } finally {
       console.log('🔄 Setting loading to false in syncUserData');
-      setIsLoading(false);
+      // Remove this setIsLoading call to avoid conflicts
+      // setIsLoading(false);
     }
   };
 
@@ -174,6 +175,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           await syncUserData(session.user);
           console.log('✅ syncUserData completed successfully');
+          // Explicitly stop loading after successful sync
+          setIsLoading(false);
         } catch (error) {
           console.error('❌ syncUserData failed:', error);
           // Ensure loading is stopped even if sync fails
