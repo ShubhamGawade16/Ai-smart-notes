@@ -51,13 +51,33 @@ function Router() {
     );
   }
 
+  console.log('🎯 About to render routes, user authenticated:', !!user);
+
   return (
     <Switch>
       {/* Public routes */}
       <Route path="/">
-        {user ? <Redirect to="/dashboard" /> : <LandingPage />}
+        {user ? (
+          (() => {
+            console.log('🔄 User is authenticated, redirecting to dashboard');
+            return <Redirect to="/dashboard" />;
+          })()
+        ) : (
+          <LandingPage />
+        )}
       </Route>
-      <Route path="/auth" component={EmailAuthPage} />
+      
+      <Route path="/auth">
+        {user ? (
+          (() => {
+            console.log('🔄 User is authenticated on auth page, redirecting to dashboard');
+            return <Redirect to="/dashboard" />;
+          })()
+        ) : (
+          <EmailAuthPage />
+        )}
+      </Route>
+      
       <Route path="/auth/callback" component={AuthCallbackPage} />
       <Route path="/auth/verified" component={VerifyEmailPage} />
       <Route path="/verify-email" component={VerifyEmailPage} />
@@ -66,7 +86,14 @@ function Router() {
       
       {/* Protected routes */}
       <Route path="/dashboard">
-        {user ? <MobileDashboard /> : <Redirect to="/" />}
+        {user ? (
+          (() => {
+            console.log('🎯 Rendering dashboard for authenticated user');
+            return <MobileDashboard />;
+          })()
+        ) : (
+          <Redirect to="/" />
+        )}
       </Route>
       
       <Route path="/advanced-features">
