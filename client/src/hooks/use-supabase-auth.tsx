@@ -66,7 +66,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log('✅ Stored auth token');
       }
       
-      console.log('✅ User sync complete - authentication stable');
+      console.log('✅ User sync complete - setting loading to false');
+      setIsLoading(false);
       
     } catch (error) {
       console.error('Error in syncUserData:', error);
@@ -80,10 +81,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
       console.log('✅ Using fallback user data:', fallbackUserData);
       setUser(fallbackUserData);
+      setIsLoading(false);
     } finally {
-      console.log('🔄 Setting loading to false in syncUserData');
-      // Remove this setIsLoading call to avoid conflicts
-      // setIsLoading(false);
+      console.log('🔄 syncUserData complete');
     }
   };
 
@@ -171,15 +171,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSupabaseUser(session.user);
         console.log('🔄 Auth state change - about to sync user data...');
         
-        // Call syncUserData and ensure it completes
+        // Call syncUserData - it handles loading state internally
         try {
           await syncUserData(session.user);
           console.log('✅ syncUserData completed successfully');
-          // Explicitly stop loading after successful sync
-          setIsLoading(false);
         } catch (error) {
           console.error('❌ syncUserData failed:', error);
-          // Ensure loading is stopped even if sync fails
           setIsLoading(false);
         }
         
