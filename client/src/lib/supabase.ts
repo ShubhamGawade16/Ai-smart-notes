@@ -1,8 +1,23 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Placeholder values for development - you'll need to add real Supabase credentials
+// Current Supabase credentials
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+console.log('🔄 Creating Supabase client with URL:', supabaseUrl)
+console.log('🔑 Has anon key:', !!supabaseAnonKey)
+console.log('📅 Config loaded at:', new Date().toISOString())
+
+// Force clear any old cached auth data
+if (typeof window !== 'undefined') {
+  // Clear all localStorage keys that might contain old Supabase data
+  Object.keys(localStorage).forEach(key => {
+    if (key.includes('supabase') || key.includes('humafgs')) {
+      localStorage.removeItem(key)
+    }
+  })
+  sessionStorage.clear()
+}
 
 // Check if we have valid Supabase credentials
 const hasValidCredentials = supabaseUrl && supabaseAnonKey && 
@@ -19,6 +34,8 @@ export const supabase = hasValidCredentials ? createClient(supabaseUrl, supabase
     flowType: 'pkce',
   },
 }) : null
+
+console.log('✅ Supabase client created:', !!supabase)
 
 // Auth helpers
 export const signInWithGoogle = async () => {
