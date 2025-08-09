@@ -2720,7 +2720,8 @@ Guidelines:
         return res.status(401).json({ error: 'Authentication required' });
       }
 
-      const user = await storage.getUser(userId);
+      // Get the actual database user (the auth middleware does this lookup)
+      const user = req.user;
       if (!user) {
         return res.status(404).json({ error: 'User not found' });
       }
@@ -2748,7 +2749,8 @@ Guidelines:
         return res.status(401).json({ error: 'Authentication required' });
       }
 
-      const user = await storage.getUser(userId);
+      // Get the actual database user (the auth middleware does this lookup)
+      const user = req.user;
       if (!user) {
         return res.status(404).json({ error: 'User not found' });
       }

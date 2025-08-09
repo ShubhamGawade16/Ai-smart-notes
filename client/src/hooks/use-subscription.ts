@@ -44,10 +44,16 @@ export function useSubscription() {
       }
       return response.json();
     },
-    onSuccess: () => {
-      // Invalidate queries to update UI
-      queryClient.invalidateQueries({ queryKey: ['/api/payments/subscription-status'] });
+    onSuccess: (data) => {
+      console.log('🔄 AI usage increment success, invalidating queries:', data);
+      
+      // Force fresh data fetch by invalidating all subscription-related queries
       queryClient.invalidateQueries({ queryKey: ['/api/payments/ai-limits'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/payments/subscription-status'] });
+      
+      // Force immediate refetch for real-time updates
+      queryClient.refetchQueries({ queryKey: ['/api/payments/ai-limits'] });
+      queryClient.refetchQueries({ queryKey: ['/api/payments/subscription-status'] });
     },
     onError: (error) => {
       console.error('Failed to increment AI usage:', error);

@@ -115,13 +115,63 @@ export const optionalAuth = async (
 
   if (token) {
     try {
-      const decoded = jwt.decode(token) as any;
-      if (decoded?.sub) {
-        req.userId = decoded.sub;
+      // First try to verify as Supabase token
+      if (supabase && token.startsWith('sb-')) {
+        const { data: { user }, error } = await supabase.auth.getUser(token);
+        
+        if (user && !error) {
+          // Get or create user in our database
+          let dbUser = await storage.getUserByEmail(user.email!);
+          
+          if (!dbUser) {
+            dbUser = await storage.createUser({
+              email: user.email!,
+              firstName: user.user_metadata?.first_name || '',
+              lastName: user.user_metadata?.last_name || '',
+              tier: 'free',
+              onboardingCompleted: false,
+            });
+          }
+          
+          req.userId = dbUser.id;
+          req.user = dbUser;
+        }
+      } else {
+        // Fallback: Try JWT token decode
+        const decoded = jwt.decode(token) as any;
+        if (decoded?.sub) {
+          req.userId = decoded.sub;
+          
+          // Try to get user from database
+          if (decoded.email) {
+            let dbUser = await storage.getUserByEmail(decoded.email);
+            if (!dbUser) {
+              try {
+                dbUser = await storage.createUser({
+                  email: decoded.email,
+                  firstName: decoded.user_metadata?.first_name || decoded.given_name || '',
+                  lastName: decoded.user_metadata?.last_name || decoded.family_name || '',
+                  tier: 'free',
+                  onboardingCompleted: true,
+                });
+              } catch (createError: any) {
+                if (createError.message?.includes('duplicate key') || createError.message?.includes('users_email_unique')) {
+                  dbUser = await storage.getUserByEmail(decoded.email);
+                }
+              }
+            }
+            if (dbUser) {
+              req.user = dbUser;
+              req.userId = dbUser.id;
+            }
+          }
+        }
       }
     } catch (error) {
       // Continue without user context
+      console.log('Optional auth failed, continuing without user context:', error);
     }
   }
+
   next();
 };
