@@ -82,7 +82,20 @@ export default function EmailAuthPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <div className="container mx-auto p-6">
+      {/* Navigation */}
+      <div className="p-6">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate('/')}
+          className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Home
+        </Button>
+      </div>
+      
+      <div className="container mx-auto px-6 pb-6">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center space-x-2 mb-4">
@@ -132,17 +145,6 @@ export default function EmailAuthPage() {
             <TabsContent value="login">
               <Card>
                 <CardHeader>
-                  <div className="flex items-center space-x-2 mb-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => navigate('/')}
-                      className="text-gray-500 hover:text-gray-700"
-                    >
-                      <ArrowLeft className="w-4 h-4 mr-1" />
-                      Back to Home
-                    </Button>
-                  </div>
                   <CardTitle>Sign In</CardTitle>
                   <CardDescription>
                     Welcome back! Sign in to your account.
@@ -202,17 +204,6 @@ export default function EmailAuthPage() {
             <TabsContent value="signup">
               <Card>
                 <CardHeader>
-                  <div className="flex items-center space-x-2 mb-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => navigate('/')}
-                      className="text-gray-500 hover:text-gray-700"
-                    >
-                      <ArrowLeft className="w-4 h-4 mr-1" />
-                      Back to Home
-                    </Button>
-                  </div>
                   <CardTitle>Create Account</CardTitle>
                   <CardDescription>
                     Get started with your AI-powered productivity journey.
