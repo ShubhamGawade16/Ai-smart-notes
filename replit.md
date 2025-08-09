@@ -14,6 +14,14 @@ Planify aims to be a leading AI-powered productivity tool with a freemium model.
 - Eliminated friction points and unnecessary waiting screens as requested by user
 - Authentication now provides immediate feedback and seamless user experience
 
+**Authentication Redirect Fix (August 2025):**
+- Fixed authentication redirect issue where users remained on auth/callback page in deployed environments
+- Implemented retry mechanism with exponential backoff for session detection
+- Added environment-aware redirect helper with appropriate delays for production vs development
+- Enhanced OAuth callback handling to process URL fragments and establish sessions properly
+- Updated auth state change listener to handle redirects from both /auth and /auth/callback pages
+- All authentication flows now use reliable window.location.href redirects for deployed environments
+
 **Critical AI Credit System Fix (August 2025):**
 - Fixed critical double-counting bug where AI features consumed 2-3 credits instead of 1
 - Root cause: Both frontend and backend were incrementing AI usage simultaneously

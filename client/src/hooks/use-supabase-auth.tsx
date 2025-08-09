@@ -2,6 +2,7 @@ import { createContext, ReactNode, useContext, useEffect, useState } from "react
 import { useToast } from "@/hooks/use-toast";
 import { supabase, signInWithEmail, signUpWithEmail, signOut, getSession, onAuthStateChange } from "@/lib/supabase";
 import { FallbackAuth, type AuthUser } from "@/lib/fallback-auth";
+import { safeRedirect, getRedirectDelay } from "@/lib/redirect-helper";
 import type { User } from "@supabase/supabase-js";
 
 type AppUser = {
@@ -171,10 +172,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         
         // Handle redirect after auth state change
-        if (event === 'SIGNED_IN' && window.location.pathname === '/auth') {
-          setTimeout(() => {
-            window.location.href = '/onboarding';
-          }, 500);
+        if (event === 'SIGNED_IN') {
+          const currentPath = window.location.pathname;
+          console.log('🔄 SIGNED_IN event on path:', currentPath);
+          
+          // Redirect from auth or callback pages to dashboard
+          if (currentPath === '/auth' || currentPath === '/auth/callback') {
+            console.log('✅ Redirecting to dashboard after sign in');
+            safeRedirect('/dashboard', getRedirectDelay());
+          }
         }
       } else if (event === 'SIGNED_OUT') {
         console.log('🚪 User signed out, clearing data');
@@ -258,9 +264,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       // Redirect to dashboard immediately
-      setTimeout(() => {
-        window.location.href = "/dashboard";
-      }, 100);
+      safeRedirect('/dashboard', getRedirectDelay());
 
     } catch (error: any) {
       console.error('All signup methods failed:', error);
@@ -288,9 +292,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             });
 
             // Force navigation after successful login
-            setTimeout(() => {
-              window.location.href = "/dashboard";
-            }, 500);
+            safeRedirect('/dashboard', getRedirectDelay());
             return;
           }
         } catch (supabaseError: any) {
