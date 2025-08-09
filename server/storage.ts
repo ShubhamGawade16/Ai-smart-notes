@@ -271,6 +271,19 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async incrementAiUsage(userId: string): Promise<void> {
+    const user = await this.getUser(userId);
+    if (!user) return;
+
+    // Increment daily AI calls
+    await this.incrementDailyAiCalls(userId);
+
+    // For Basic tier users, also increment monthly calls
+    if (user.tier === 'basic') {
+      await this.incrementMonthlyAiCalls(userId);
+    }
+  }
+
   async getAllUsers(): Promise<User[]> {
     return await db.select().from(users);
   }
