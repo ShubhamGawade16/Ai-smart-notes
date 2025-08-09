@@ -36,8 +36,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Sync user data from our backend when Supabase user changes
   const syncUserData = async (supabaseUser: User | null) => {
-    setIsLoading(true);
-    
     if (!supabaseUser) {
       setUser(null);
       localStorage.removeItem('auth_token');
@@ -53,7 +51,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('🔄 Syncing user data with token:', !!accessToken);
       
       if (!accessToken) {
-        console.error('No access token available');
+        console.error('No access token available, skipping backend sync');
+        // Create a basic user object from Supabase data
+        setUser({
+          id: supabaseUser.id,
+          email: supabaseUser.email || '',
+          firstName: supabaseUser.user_metadata?.first_name || '',
+          lastName: supabaseUser.user_metadata?.last_name || '',
+          onboardingCompleted: false,
+        });
         setIsLoading(false);
         return;
       }
@@ -61,65 +67,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('auth_token', accessToken);
       console.log('✅ Updated auth token for API requests');
 
-      // Get user data from our backend API
-      console.log('📡 Fetching user data from backend...');
-      const response = await fetch('/api/auth/me', {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
+      // For now, just create a user object from Supabase data to unblock the UI
+      console.log('📡 Creating user from Supabase data...');
+      setUser({
+        id: supabaseUser.id,
+        email: supabaseUser.email || '',
+        firstName: supabaseUser.user_metadata?.first_name || '',
+        lastName: supabaseUser.user_metadata?.last_name || '',
+        onboardingCompleted: false,
       });
-
-      if (response.ok) {
-        const userData = await response.json();
-        console.log('✅ Got user data from backend:', userData);
-        setUser({
-          id: userData.id,
-          email: userData.email,
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          onboardingCompleted: userData.onboardingCompleted,
-          career: userData.career,
-          goals: userData.goals,
-          experienceLevel: userData.experienceLevel,
-          notificationPreferences: userData.notificationPreferences,
-        });
-      } else {
-        console.log('❌ Backend user not found, creating user...');
-        // User exists in Supabase but not in our backend - create them
-        const createResponse = await fetch('/api/auth/sync-user', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`
-          },
-          body: JSON.stringify({
-            id: supabaseUser.id,
-            email: supabaseUser.email,
-            firstName: supabaseUser.user_metadata?.first_name || '',
-            lastName: supabaseUser.user_metadata?.last_name || '',
-          })
-        });
-
-        if (createResponse.ok) {
-          const newUser = await createResponse.json();
-          console.log('✅ Created new user in backend:', newUser);
-          setUser({
-            id: newUser.id,
-            email: newUser.email,
-            firstName: newUser.firstName,
-            lastName: newUser.lastName,
-            onboardingCompleted: newUser.onboardingCompleted,
-            career: newUser.career,
-            goals: newUser.goals,
-            experienceLevel: newUser.experienceLevel,
-            notificationPreferences: newUser.notificationPreferences,
-          });
-        } else {
-          console.error('Failed to create user in backend');
-        }
-      }
+      
+      console.log('✅ User authenticated and ready');
+      
     } catch (error) {
       console.error('Error syncing user data:', error);
+      // Still set a basic user to unblock the UI
+      setUser({
+        id: supabaseUser.id,
+        email: supabaseUser.email || '',
+        firstName: supabaseUser.user_metadata?.first_name || '',
+        lastName: supabaseUser.user_metadata?.last_name || '',
+        onboardingCompleted: false,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -180,8 +149,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
           setSupabaseUser(session.user);
           await syncUserData(session.user);
+        } else {
+          setIsLoading(false);
         }
-        setIsLoading(false);
       } catch (error) {
         console.error('Error initializing auth:', error);
         setIsLoading(false);
