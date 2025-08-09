@@ -89,7 +89,7 @@ router.post('/create-order', authenticateToken, async (req: AuthRequest, res) =>
 });
 
 // Verify payment and upgrade user subscription
-router.post('/verify-payment', authenticateToken, async (req: AuthRequest, res) => {
+router.post('/verify', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const userId = req.userId!;
     const { 

@@ -45,8 +45,6 @@ export default function RazorpayCheckout({ plan, onSuccess, onClose }: RazorpayC
     try {
       // Create order on backend
       const response = await apiRequest("POST", "/api/payments/create-order", {
-        amount: selectedPlan.price,
-        currency: selectedPlan.currency,
         planType: plan
       });
 
@@ -54,7 +52,10 @@ export default function RazorpayCheckout({ plan, onSuccess, onClose }: RazorpayC
         throw new Error('Failed to create order');
       }
 
-      const { orderId, amount, currency } = await response.json();
+      const data = await response.json();
+      const orderId = data.order.id;
+      const amount = data.order.amount;
+      const currency = data.order.currency;
 
       // Initialize Razorpay
       const options = {
@@ -76,10 +77,9 @@ export default function RazorpayCheckout({ plan, onSuccess, onClose }: RazorpayC
           try {
             // Verify payment on backend
             const verifyResponse = await apiRequest("POST", "/api/payments/verify", {
-              orderId: orderId,
-              paymentId: response.razorpay_payment_id,
-              signature: response.razorpay_signature,
-              planType: plan
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature
             });
 
             if (verifyResponse.ok) {
