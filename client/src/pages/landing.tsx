@@ -16,7 +16,6 @@ import {
   Sparkles,
   Clock,
   TrendingUp,
-  Play,
   Users,
   Award,
   Quote
@@ -125,10 +124,6 @@ export default function LandingPage() {
               <CardDescription className="text-lg">
                 "Finish report by Friday" → Automatically categorized, prioritized, and time-estimated with smart suggestions
               </CardDescription>
-              <Button variant="ghost" className="mt-4 text-indigo-600 hover:text-indigo-700">
-                <Play className="h-4 w-4 mr-2" />
-                Watch Demo
-              </Button>
             </CardHeader>
           </Card>
 
@@ -142,10 +137,6 @@ export default function LandingPage() {
               <CardDescription className="text-lg">
                 AI learns your energy patterns and automatically schedules tasks when you're most productive
               </CardDescription>
-              <Button variant="ghost" className="mt-4 text-indigo-600 hover:text-indigo-700">
-                <Play className="h-4 w-4 mr-2" />
-                Watch Demo
-              </Button>
             </CardHeader>
           </Card>
 
@@ -159,10 +150,6 @@ export default function LandingPage() {
               <CardDescription className="text-lg">
                 Get personalized bottleneck analysis, focus forecasts, and optimization recommendations
               </CardDescription>
-              <Button variant="ghost" className="mt-4 text-indigo-600 hover:text-indigo-700">
-                <Play className="h-4 w-4 mr-2" />
-                Watch Demo
-              </Button>
             </CardHeader>
           </Card>
         </div>
