@@ -59,11 +59,12 @@ export function ModernAIRefiner({
   }>>([]);
   
   const { toast } = useToast();
-  const { incrementAiUsage, checkAiUsageLimit } = useSubscription();
+  const { incrementAiUsage, checkAiUsageLimit, updateAiUsageOptimistically } = useSubscription();
 
   const refineMutation = useMutation({
     mutationFn: async ({ task, query }: { task: string; query: string }) => {
-      // AI usage limit checking and increment is handled by the backend endpoint
+      // Optimistically update AI usage count for instant UI feedback
+    updateAiUsageOptimistically();
       // The /api/ai/refine-task endpoint will check and increment usage properly
 
       const response = await apiRequest('POST', '/api/ai/refine-task', {

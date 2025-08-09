@@ -69,14 +69,17 @@ router.post('/refine-task', authenticateToken, async (req: AuthRequest, res) => 
       body: JSON.stringify({ feature: 'task_refiner' })
     });
     
+    console.log(`🔍 Task refiner usage response status: ${usageResponse.status}`);
     const usageData = await usageResponse.json();
+    console.log(`🔍 Task refiner usage data:`, usageData);
+    
     if (!usageData.canUseAi) {
       return res.status(429).json({ 
         error: usageData.message || 'AI usage limit reached. Upgrade to Basic (₹299/month) or Pro (₹599/month) for more usage.' 
       });
     }
     
-    console.log(`✅ Task refiner AI usage approved`);
+    console.log(`✅ Task refiner AI usage approved - count now: ${usageData.dailyAiUsage}`);
 
     const refinement = await aiService.refineTask(originalTask, userQuery, user.tier || 'free');
     
