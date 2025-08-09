@@ -76,28 +76,8 @@ export function SimpleTaskInput({ onTaskCreated, onUpgradeRequired, onAiUsageInc
     e.preventDefault();
     if (!taskInput.trim()) return;
     
-    // Check AI usage limit if using smart mode
-    if (isSmartMode) {
-      if (onAiUsageIncrement) {
-        const canProceed = await onAiUsageIncrement();
-        if (!canProceed) {
-          onUpgradeRequired?.();
-          return;
-        }
-      } else {
-        // Fallback to direct usage check
-        if (!checkAiUsageLimit()) {
-          onUpgradeRequired?.();
-          return;
-        }
-        
-        const canProceed = await incrementAiUsage();
-        if (!canProceed) {
-          onUpgradeRequired?.();
-          return;
-        }
-      }
-    }
+    // AI usage limit checking and increment is handled by the backend endpoint
+    // Smart mode AI parsing calls the /api/ai/parse-task endpoint which handles usage increment
     
     createTaskMutation.mutate({});
   };

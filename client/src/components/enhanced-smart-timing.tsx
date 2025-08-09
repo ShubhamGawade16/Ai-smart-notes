@@ -64,7 +64,7 @@ export function EnhancedSmartTiming() {
       return await response.json();
     },
     onSuccess: async (data) => {
-      await incrementAiUsage();
+      // AI usage is already handled by the backend endpoint
       queryClient.invalidateQueries({ queryKey: ['/api/ai/smart-timing'] });
       toast({
         title: "Smart Timing Analysis Complete",

@@ -63,23 +63,8 @@ export function ModernAIRefiner({
 
   const refineMutation = useMutation({
     mutationFn: async ({ task, query }: { task: string; query: string }) => {
-      // Check AI usage limit using provided function or fallback
-      if (onAiUsageIncrement) {
-        const canProceed = await onAiUsageIncrement();
-        if (!canProceed) {
-          throw new Error("Daily AI usage limit exceeded");
-        }
-      } else {
-        // Fallback to direct usage check
-        if (!checkAiUsageLimit()) {
-          throw new Error("Daily AI usage limit exceeded");
-        }
-        
-        const canProceed = await incrementAiUsage('task_refiner');
-        if (!canProceed) {
-          throw new Error("Daily AI usage limit exceeded");
-        }
-      }
+      // AI usage limit checking and increment is handled by the backend endpoint
+      // The /api/ai/refine-task endpoint will check and increment usage properly
 
       const response = await apiRequest('POST', '/api/ai/refine-task', {
         originalTask: task,

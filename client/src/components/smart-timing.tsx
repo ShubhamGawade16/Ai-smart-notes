@@ -74,16 +74,7 @@ export function SmartTiming() {
       return;
     }
 
-    // Increment AI usage before making the call
-    const canProceed = await incrementAiUsage();
-    if (!canProceed) {
-      toast({
-        title: "AI Usage Limit Reached",
-        description: "You've reached your AI usage limit for this period",
-        variant: "destructive",
-      });
-      return;
-    }
+    // AI usage limit checking and increment is handled by the backend endpoint
 
     setIsAnalyzing(true);
     try {

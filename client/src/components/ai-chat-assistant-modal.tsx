@@ -45,25 +45,7 @@ export default function AIChatAssistantModal({ isOpen, onClose }: AIChatAssistan
   const handleSendMessage = async () => {
     if (!input.trim() || isLoading) return;
 
-    if (!checkAiUsageLimit()) {
-      toast({
-        title: "AI Usage Limit Reached",
-        description: "You've reached your AI usage limit for this period",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Increment AI usage before making the call
-    const canProceed = await incrementAiUsage();
-    if (!canProceed) {
-      toast({
-        title: "AI Usage Limit Reached",
-        description: "You've reached your AI usage limit for this period",
-        variant: "destructive",
-      });
-      return;
-    }
+    // AI usage limit checking and increment is handled by the backend endpoint
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -94,21 +76,39 @@ export default function AIChatAssistantModal({ isOpen, onClose }: AIChatAssistan
       } else {
         throw new Error('Failed to get AI response');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Chat assistant error:', error);
-      toast({
-        title: "Chat Error",
-        description: "Failed to get AI response. Please try again.",
-        variant: "destructive"
-      });
       
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        type: 'assistant',
-        content: "I'm sorry, I'm having trouble responding right now. Please try again in a moment.",
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, errorMessage]);
+      // Check if it's an AI usage limit error
+      if (error.message?.includes('429') || error.message?.includes('usage limit')) {
+        toast({
+          title: "AI Usage Limit Reached",
+          description: "You've reached your AI usage limit. Upgrade to Basic (₹299/month) or Pro (₹599/month) for more usage.",
+          variant: "destructive"
+        });
+        
+        const errorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          type: 'assistant',
+          content: "You've reached your AI usage limit for today. Upgrade to Basic or Pro for more AI interactions!",
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, errorMessage]);
+      } else {
+        toast({
+          title: "Chat Error",
+          description: "Failed to get AI response. Please try again.",
+          variant: "destructive"
+        });
+        
+        const errorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          type: 'assistant',
+          content: "I'm sorry, I'm having trouble responding right now. Please try again in a moment.",
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, errorMessage]);
+      }
     } finally {
       setIsLoading(false);
     }

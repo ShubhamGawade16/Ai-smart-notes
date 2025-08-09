@@ -98,17 +98,8 @@ export default function SimpleDashboard() {
   });
 
   const handleAiFeatureRequest = async () => {
-    if (!checkAiUsageLimit()) {
-      setShowUpgradeModal(true);
-      return false;
-    }
-    
-    const canProceed = await incrementAiUsage();
-    if (!canProceed) {
-      setShowUpgradeModal(true);
-      return false;
-    }
-    
+    // AI usage increment is now handled by backend endpoints
+    // This function is kept for compatibility but no longer increments usage
     return true;
   };
 

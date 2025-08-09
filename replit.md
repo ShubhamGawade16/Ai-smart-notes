@@ -14,6 +14,14 @@ Planify aims to be a leading AI-powered productivity tool with a freemium model.
 - Eliminated friction points and unnecessary waiting screens as requested by user
 - Authentication now provides immediate feedback and seamless user experience
 
+**Critical AI Credit System Fix (August 2025):**
+- Fixed critical double-counting bug where AI features consumed 2-3 credits instead of 1
+- Root cause: Both frontend and backend were incrementing AI usage simultaneously
+- Solution: Centralized all AI credit tracking to backend endpoints only
+- Removed frontend incrementAiUsage() calls from all AI features to prevent double-counting
+- All AI features now properly consume exactly 1 credit per use as intended
+- Fixed components: AI Chat Assistant, Task Refiner, Smart Timing, Productivity Insights, Enhanced Smart Timing, Simple Task Input, and dashboard pages
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.

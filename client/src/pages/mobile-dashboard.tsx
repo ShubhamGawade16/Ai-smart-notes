@@ -46,20 +46,9 @@ export default function MobileDashboard() {
   const [showAIChatAssistant, setShowAIChatAssistant] = useState(false);
 
   const handleAiFeatureRequest = async (feature?: string): Promise<boolean> => {
-    if (!checkAiUsageLimit()) {
-      setShowUpgradeProModal(true);
-      return false;
-    }
-    
-    try {
-      await incrementAiUsage(feature);
-      queryClient.invalidateQueries({ queryKey: ['/api/subscription-status'] });
-      return true;
-    } catch (error) {
-      console.error('Failed to increment AI usage:', error);
-      setShowUpgradeProModal(true);
-      return false;
-    }
+    // AI usage increment is now handled by backend endpoints
+    // This function is kept for compatibility but no longer increments usage
+    return true;
   };
 
   const handleAIFeatureSelect = async (feature: string) => {
