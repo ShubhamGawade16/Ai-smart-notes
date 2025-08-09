@@ -14,7 +14,8 @@ import {
   Clock,
   ChevronDown,
   Sparkles,
-  Settings
+  Settings,
+  Edit
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -25,6 +26,7 @@ import {
 import { ModernTaskItem } from "./modern-task-item";
 import { SmartTaskInput } from "./SmartTaskInput";
 import { SmartTiming } from "./smart-timing";
+import AdvancedTaskEditor from "./advanced-task-editor";
 import type { Task } from "@shared/schema";
 
 interface ModernTaskListProps {
@@ -39,6 +41,7 @@ export function ModernTaskList({ onAdvancedView, onTaskCompleted, onAiView }: Mo
   const [sortBy, setSortBy] = useState<string>("newest");
   const [filterBy, setFilterBy] = useState<string>("all");
   const [lastRefresh, setLastRefresh] = useState(new Date());
+  const [isAdvancedEditorOpen, setIsAdvancedEditorOpen] = useState(false);
   
   const queryClient = useQueryClient();
 
@@ -238,6 +241,18 @@ export function ModernTaskList({ onAdvancedView, onTaskCompleted, onAiView }: Mo
             )}
           </div>
           <div className="flex items-center gap-2">
+            {/* Create New Task Button */}
+            <Button
+              variant="default"
+              size="sm"
+              className="h-8 bg-teal-600 hover:bg-teal-700 text-white"
+              onClick={() => setIsAdvancedEditorOpen(true)}
+              title="Create New Task"
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              New Task
+            </Button>
+            
             {/* AI View Icon Button */}
             <Button
               variant="outline"
@@ -455,6 +470,17 @@ export function ModernTaskList({ onAdvancedView, onTaskCompleted, onAiView }: Mo
           </TabsContent>
         </Tabs>
       </CardContent>
+      
+      {/* Advanced Task Editor */}
+      <AdvancedTaskEditor
+        task={null}
+        isOpen={isAdvancedEditorOpen}
+        onClose={() => setIsAdvancedEditorOpen(false)}
+        onSave={(newTask) => {
+          console.log('New task created:', newTask);
+          setIsAdvancedEditorOpen(false);
+        }}
+      />
     </Card>
   );
 }

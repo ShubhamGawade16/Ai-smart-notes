@@ -1,13 +1,17 @@
+import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MoreVertical, Clock, Tag, Flag } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { MoreVertical, Clock, Tag, Flag, Edit, Trash2, Copy } from "lucide-react";
 import { taskApi } from "@/lib/api";
+import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Task } from "@shared/schema";
 import { cn } from "@/lib/utils";
 import { SimpleTaskEditor } from "@/components/simple-task-editor";
+import AdvancedTaskEditor from "@/components/advanced-task-editor";
 
 interface TaskItemProps {
   task: Task;
@@ -16,6 +20,7 @@ interface TaskItemProps {
 export function TaskItem({ task }: TaskItemProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [isAdvancedEditorOpen, setIsAdvancedEditorOpen] = useState(false);
 
   const updateTaskMutation = useMutation({
     mutationFn: ({ id, updates }: { id: string; updates: Partial<Task> }) =>
@@ -28,6 +33,31 @@ export function TaskItem({ task }: TaskItemProps) {
       toast({
         title: "Error",
         description: "Failed to update task.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteTaskMutation = useMutation({
+    mutationFn: async (taskId: string) => {
+      const response = await apiRequest("DELETE", `/api/tasks/${taskId}`);
+      if (!response.ok) {
+        throw new Error('Failed to delete task');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks/today'] });
+      toast({
+        title: "Task Deleted",
+        description: "Task has been successfully deleted.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete task.",
         variant: "destructive",
       });
     },
@@ -111,9 +141,8 @@ export function TaskItem({ task }: TaskItemProps) {
               }
             />
             
-            <SimpleTaskEditor
-              task={task as any}
-              trigger={
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -121,8 +150,33 @@ export function TaskItem({ task }: TaskItemProps) {
                 >
                   <MoreVertical className="w-4 h-4" />
                 </Button>
-              }
-            />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setIsAdvancedEditorOpen(true)}>
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit Task
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => {
+                  navigator.clipboard.writeText(task.title);
+                  toast({ title: "Copied", description: "Task title copied to clipboard" });
+                }}>
+                  <Copy className="w-4 h-4 mr-2" />
+                  Copy Title
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => {
+                    if (confirm('Are you sure you want to delete this task?')) {
+                      deleteTaskMutation.mutate(task.id);
+                    }
+                  }}
+                  className="text-red-600"
+                  disabled={deleteTaskMutation.isPending}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  {deleteTaskMutation.isPending ? 'Deleting...' : 'Delete Task'}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           
           {task.description && (
@@ -170,6 +224,17 @@ export function TaskItem({ task }: TaskItemProps) {
           )}
         </div>
       </div>
+      
+      {/* Advanced Task Editor */}
+      <AdvancedTaskEditor
+        task={task}
+        isOpen={isAdvancedEditorOpen}
+        onClose={() => setIsAdvancedEditorOpen(false)}
+        onSave={(updatedTask) => {
+          console.log('Task updated:', updatedTask);
+          setIsAdvancedEditorOpen(false);
+        }}
+      />
     </div>
   );
 }
