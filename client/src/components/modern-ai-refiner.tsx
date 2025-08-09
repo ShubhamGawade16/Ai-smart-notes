@@ -75,7 +75,7 @@ export function ModernAIRefiner({
           throw new Error("Daily AI usage limit exceeded");
         }
         
-        const canProceed = await incrementAiUsage();
+        const canProceed = await incrementAiUsage('task_refiner');
         if (!canProceed) {
           throw new Error("Daily AI usage limit exceeded");
         }

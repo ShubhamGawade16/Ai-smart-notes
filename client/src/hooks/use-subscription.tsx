@@ -59,11 +59,11 @@ export function useSubscription() {
 
   // Remove the old fetch function as React Query handles it
 
-  const incrementAiUsage = async () => {
+  const incrementAiUsage = async (feature?: string) => {
     if (!user) return false;
 
     try {
-      const response = await apiRequest("POST", "/api/increment-ai-usage");
+      const response = await apiRequest("POST", "/api/increment-ai-usage", { feature });
       if (response.ok) {
         const data = await response.json();
         

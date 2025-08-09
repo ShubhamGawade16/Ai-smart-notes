@@ -44,10 +44,10 @@ export default function DailyMotivationQuote() {
   const completedTasks = tasks.filter((task: any) => task.completed);
   const incompleteTasks = tasks.filter((task: any) => !task.completed);
 
-  // Get AI-generated personalized quote
+  // Get AI-generated personalized quote (FREE feature - no AI usage increment needed)
   const getAiPersonalizedQuote = async () => {
     try {
-      console.log('Generating AI quote...');
+      console.log('🆓 Generating FREE daily motivation quote...');
       const response = await apiRequest('POST', '/api/ai/motivation-quote', {
         completedTasks: completedTasks.length,
         incompleteTasks: incompleteTasks.length,

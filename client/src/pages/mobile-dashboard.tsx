@@ -45,14 +45,14 @@ export default function MobileDashboard() {
   const [showProductivityInsights, setShowProductivityInsights] = useState(false);
   const [showAIChatAssistant, setShowAIChatAssistant] = useState(false);
 
-  const handleAiFeatureRequest = async (): Promise<boolean> => {
+  const handleAiFeatureRequest = async (feature?: string): Promise<boolean> => {
     if (!checkAiUsageLimit()) {
       setShowUpgradeProModal(true);
       return false;
     }
     
     try {
-      await incrementAiUsage();
+      await incrementAiUsage(feature);
       queryClient.invalidateQueries({ queryKey: ['/api/subscription-status'] });
       return true;
     } catch (error) {
@@ -62,7 +62,21 @@ export default function MobileDashboard() {
     }
   };
 
-  const handleAIFeatureSelect = (feature: string) => {
+  const handleAIFeatureSelect = async (feature: string) => {
+    // Map UI feature names to backend feature names
+    const featureMap: { [key: string]: string } = {
+      'task-refiner': 'task_refiner',
+      'smart-categorizer': 'smart_categorizer', 
+      'timing-optimizer': 'timing_optimizer',
+      'productivity-insights': 'productivity_insights',
+      'ai-assistant': 'ai_assistant'
+    };
+    
+    const backendFeature = featureMap[feature];
+    
+    // Check AI usage for paid features (all except analyze_with_ai and daily_motivation)
+    const canProceed = await handleAiFeatureRequest(backendFeature);
+    if (!canProceed) return;
     
     switch (feature) {
       case 'task-refiner':
