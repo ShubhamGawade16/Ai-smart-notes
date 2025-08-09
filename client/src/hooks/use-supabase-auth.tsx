@@ -173,7 +173,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Handle redirect after auth state change
         if (event === 'SIGNED_IN' && window.location.pathname === '/auth') {
           setTimeout(() => {
-            window.location.href = '/onboarding';
+            window.location.href = '/welcome';
           }, 500);
         }
       } else if (event === 'SIGNED_OUT') {
