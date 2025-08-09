@@ -226,11 +226,11 @@ export function ModernTaskList({ onAdvancedView, onTaskCompleted, onAiView }: Mo
   const emptyState = getEmptyStateMessage();
 
   return (
-    <Card className="border-0 shadow-sm bg-gray-50 dark:bg-gray-900 flex-1">
+    <Card className="border-0 shadow-sm bg-white/50 dark:bg-gray-900/50 flex-1 backdrop-blur-sm">
       <CardHeader className="pb-3 pt-4 px-4 sm:px-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
           <div className="flex items-center gap-3">
-            <CardTitle className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Tasks</CardTitle>
+            <CardTitle className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">Tasks</CardTitle>
             {activeTab === 'today' && (
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" title="Auto-refreshing" />
@@ -240,35 +240,36 @@ export function ModernTaskList({ onAdvancedView, onTaskCompleted, onAiView }: Mo
               </div>
             )}
           </div>
-          <div className="flex items-center gap-2 sm:gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             {/* Create New Task Button */}
             <Button
               variant="default"
               size="sm"
-              className="h-9 sm:h-8 bg-teal-600 hover:bg-teal-700 text-white px-3 sm:px-4 min-h-[44px] sm:min-h-0"
+              className="h-8 sm:h-8 bg-teal-600 hover:bg-teal-700 text-white px-2.5 sm:px-3 min-h-[44px] sm:min-h-0 text-xs sm:text-sm font-medium"
               onClick={() => setIsAdvancedEditorOpen(true)}
               title="Create New Task"
             >
-              <Plus className="w-4 h-4 mr-1 sm:mr-1" />
-              <span className="text-sm">New Task</span>
+              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" />
+              <span className="hidden sm:inline">New Task</span>
+              <span className="sm:hidden">New</span>
             </Button>
             
             {/* AI View Icon Button */}
             <Button
               variant="outline"
               size="sm"
-              className="h-9 w-9 sm:h-8 sm:w-8 p-0 border-gray-200 dark:border-gray-700 min-h-[44px] sm:min-h-0"
+              className="h-8 w-8 sm:h-8 sm:w-8 p-0 border-gray-200/60 dark:border-gray-700/60 min-h-[44px] sm:min-h-0 hover:border-purple-300 dark:hover:border-purple-600"
               onClick={onAiView}
               title="AI View"
             >
-              <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+              <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-600 dark:text-purple-400" />
             </Button>
             
             {/* Advanced View Icon Button */}
             <Button
               variant="outline"
               size="sm"
-              className="h-9 w-9 sm:h-8 sm:w-8 p-0 border-gray-200 dark:border-gray-700 min-h-[44px] sm:min-h-0"
+              className="h-8 w-8 sm:h-8 sm:w-8 p-0 border-gray-200/60 dark:border-gray-700/60 min-h-[44px] sm:min-h-0 hover:border-gray-300 dark:hover:border-gray-600"
               onClick={() => {
                 if (safeTaskList.length > 0) {
                   onAdvancedView?.(safeTaskList[0]);

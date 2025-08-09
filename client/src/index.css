@@ -215,6 +215,7 @@
     min-height: 44px;
     min-width: 44px;
     touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
   
   /* Disable hover animations on mobile */
@@ -228,6 +229,8 @@
   body {
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   
   /* Prevent horizontal overflow */
@@ -239,30 +242,66 @@
   input, textarea, select {
     font-size: 16px; /* Prevents zoom on iOS */
     min-height: 44px;
+    border-radius: 8px;
   }
   
   /* Improved spacing */
   .container {
-    padding-left: 1rem;
-    padding-right: 1rem;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
   }
   
-  /* Better card spacing */
+  /* Better card spacing and appearance */
   .card {
     margin-bottom: 0.75rem;
+    border-radius: 12px;
   }
   
   /* Improve modal sizing on mobile */
   .modal-content {
-    margin: 1rem;
+    margin: 0.75rem;
     max-height: 90vh;
     overflow-y: auto;
+    border-radius: 16px;
   }
   
   /* Better table responsiveness */
   table {
     font-size: 0.875rem;
   }
+  
+  /* Improved button interactions */
+  button:active {
+    transform: scale(0.98);
+  }
+  
+  /* Better backdrop blur support */
+  .backdrop-blur-lg {
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+  }
+}
+
+/* Global UI enhancements */
+.card-enhanced {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Better focus indicators */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid hsl(173, 58%, 39%);
+  outline-offset: 2px;
+}
+
+/* Smooth transitions for all interactive elements */
+* {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
 }
   
   /* Enhanced text readability classes */

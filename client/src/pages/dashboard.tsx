@@ -47,13 +47,13 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background page-enter">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 page-enter">
       <Header />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-6">
         {isMobile ? (
           <>
-            <div className="pb-20 px-2 sm:px-0">
+            <div className="pb-20 px-1 sm:px-0">
               {renderMobileContent()}
             </div>
             <MobileNav activeTab={activeTab} onTabChange={setActiveTab} />
@@ -95,7 +95,7 @@ export default function Dashboard() {
       {isMobile && (
         <Button
           size="lg"
-          className="btn-hover fixed bottom-24 right-4 h-14 w-14 rounded-full shadow-xl hover:scale-110 bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-600 hover:to-blue-700 transition-all duration-300 z-40 animate-pulse min-h-[56px] touch-manipulation"
+          className="fixed bottom-20 right-3 h-12 w-12 rounded-full shadow-lg active:scale-95 bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-600 hover:to-blue-700 transition-all duration-200 z-40 min-h-[48px] touch-manipulation border-0"
           onClick={() => {
             // Find and click the "New Task" button instead
             const newTaskButton = document.querySelector('button[title="Create New Task"]') as HTMLButtonElement;
@@ -104,7 +104,7 @@ export default function Dashboard() {
             }
           }}
         >
-          <Plus className="w-6 h-6 text-white" />
+          <Plus className="w-5 h-5 text-white" />
         </Button>
       )}
     </div>
