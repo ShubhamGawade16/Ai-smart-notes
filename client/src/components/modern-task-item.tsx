@@ -15,7 +15,8 @@ import {
   X,
   MoreHorizontal,
   Brain,
-  Eye
+  Eye,
+  Edit
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -28,6 +29,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { Task } from "@shared/schema";
 import { cn } from "@/lib/utils";
 import { useLocation } from "wouter";
+import AdvancedTaskEditor from "./advanced-task-editor";
 
 interface ModernTaskItemProps {
   task: Task;
@@ -41,6 +43,7 @@ export function ModernTaskItem({ task, onUpdate, onDelete, onAdvancedView, onTas
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(task.title);
   const [isHovered, setIsHovered] = useState(false);
+  const [isAdvancedEditorOpen, setIsAdvancedEditorOpen] = useState(false);
   const [, setLocation] = useLocation();
   
   const { toast } = useToast();
@@ -291,6 +294,10 @@ export function ModernTaskItem({ task, onUpdate, onDelete, onAdvancedView, onTas
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onClick={() => setIsAdvancedEditorOpen(true)}>
+              <Edit className="w-4 h-4 mr-2" />
+              Advanced Edit
+            </DropdownMenuItem>
             <DropdownMenuItem 
               onClick={handleDelete}
               className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950"
@@ -301,6 +308,17 @@ export function ModernTaskItem({ task, onUpdate, onDelete, onAdvancedView, onTas
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+      
+      {/* Advanced Task Editor */}
+      <AdvancedTaskEditor
+        task={task}
+        isOpen={isAdvancedEditorOpen}
+        onClose={() => setIsAdvancedEditorOpen(false)}
+        onSave={(updatedTask) => {
+          console.log('Task updated:', updatedTask);
+          setIsAdvancedEditorOpen(false);
+        }}
+      />
     </div>
   );
 }
