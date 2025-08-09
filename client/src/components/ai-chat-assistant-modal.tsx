@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { MessageCircle, X, Send, User, Bot, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useSubscription } from '@/hooks/use-subscription';
 
 interface Message {
@@ -31,7 +31,7 @@ export default function AIChatAssistantModal({ isOpen, onClose }: AIChatAssistan
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { incrementAiUsage, checkAiUsageLimit } = useSubscription();
+  const { incrementAiUsage, checkAiUsageLimit, updateAiUsageOptimistically } = useSubscription();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -45,7 +45,8 @@ export default function AIChatAssistantModal({ isOpen, onClose }: AIChatAssistan
   const handleSendMessage = async () => {
     if (!input.trim() || isLoading) return;
 
-    // AI usage limit checking and increment is handled by the backend endpoint
+    // Optimistically update AI usage count for instant UI feedback
+    updateAiUsageOptimistically();
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -73,11 +74,17 @@ export default function AIChatAssistantModal({ isOpen, onClose }: AIChatAssistan
           timestamp: new Date()
         };
         setMessages(prev => [...prev, assistantMessage]);
+        
+        // Immediately update AI usage count in UI
+        queryClient.invalidateQueries({ queryKey: ['/api/subscription-status'] });
       } else {
         throw new Error('Failed to get AI response');
       }
     } catch (error: any) {
       console.error('Chat assistant error:', error);
+      
+      // Revert optimistic update since the request failed
+      queryClient.invalidateQueries({ queryKey: ['/api/subscription-status'] });
       
       // Check if it's an AI usage limit error
       if (error.message?.includes('429') || error.message?.includes('usage limit')) {

@@ -32,8 +32,8 @@ export function useSubscription() {
       return response.json();
     },
     enabled: !!user,
-    staleTime: 30000, // 30 seconds
-    refetchOnWindowFocus: false,
+    staleTime: 5000, // 5 seconds - faster refresh for AI usage
+    refetchOnWindowFocus: true, // Update when user switches back to tab
   });
 
   // Fallback subscription status if data is not loaded yet
@@ -106,6 +106,18 @@ export function useSubscription() {
     queryClient.invalidateQueries({ queryKey: ['/api/subscription-status'] });
   };
 
+  // Add optimistic update helper for instant UI feedback
+  const updateAiUsageOptimistically = () => {
+    queryClient.setQueryData(['/api/subscription-status'], (old: any) => {
+      if (!old) return old;
+      return {
+        ...old,
+        dailyAiUsage: (old.dailyAiUsage || 0) + 1,
+        canUseAi: (old.dailyAiUsage || 0) + 1 < (old.dailyAiLimit || 3)
+      };
+    });
+  };
+
   return {
     subscriptionStatus: currentStatus,
     isLoading,
@@ -113,6 +125,7 @@ export function useSubscription() {
     checkAiUsageLimit,
     refetch,
     refreshStatus: refetch,
-    resetAiUsage
+    resetAiUsage,
+    updateAiUsageOptimistically
   };
 }
