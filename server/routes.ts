@@ -126,27 +126,7 @@ const requireAuth = async (req: any, res: any, next: any) => {
           // Get or create user in our database
           let userData = await storage.getUser(user.id);
           if (!userData) {
-            // Create user from Supabase data
-            const insertUserData = {
-              id: user.id,
-              email: user.email || '',
-              firstName: user.user_metadata?.first_name || '',
-              lastName: user.user_metadata?.last_name || '',
-              onboardingCompleted: false,
-              tier: 'free' as const,
-              timezone: 'UTC',
-              passwordHash: null,
-              profileImageUrl: null,
-              subscriptionId: null,
-              subscriptionStatus: null,
-              subscriptionCurrentPeriodEnd: null,
-              dailyAiCalls: 0,
-              dailyAiCallsResetAt: new Date(),
-              monthlyAiCalls: 0,
-              monthlyAiCallsResetAt: new Date(),
-              createdAt: new Date(),
-              updatedAt: new Date(),
-            };
+            // Create user from Supabase data with upsert
             userData = await storage.upsertUser({
               id: user.id,
               email: user.email || '',
@@ -623,40 +603,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Free tier - Check if daily limit needs reset
+      // Free tier: 3 AI calls per day
       const now = new Date();
-      const resetTime = user.dailyAiCallsResetAt ? new Date(user.dailyAiCallsResetAt) : new Date();
-      const shouldReset = now.getTime() - resetTime.getTime() > 24 * 60 * 60 * 1000;
-
+      const dailyResetTime = user.dailyAiCallsResetAt ? new Date(user.dailyAiCallsResetAt) : new Date();
+      const shouldResetDaily = now.getTime() - dailyResetTime.getTime() > 24 * 60 * 60 * 1000;
+      
       let newDailyCount = user.dailyAiCalls || 0;
-      if (shouldReset) {
+      if (shouldResetDaily) {
+        console.log('🔄 Resetting daily AI calls for user:', req.userId);
         newDailyCount = 0;
       }
-
-      // Get tier-based limits for free tier
-      const getDailyLimit = (userTier: string) => {
-        switch (userTier) {
-          case 'basic': return -1; // No daily limit for basic (monthly only)
-          case 'pro': return -1; // No daily limit for pro (unlimited)
-          default: return 3; // free tier
-        }
-      };
       
-      const dailyLimit = getDailyLimit(tier);
-      const canUseAi = dailyLimit === -1 || newDailyCount < dailyLimit;
-
-      if (canUseAi) {
+      const dailyLimit = 3; // 3 daily AI calls for free tier
+      console.log('📊 AI Usage Check - Current:', newDailyCount, 'Limit:', dailyLimit, 'User:', req.userId);
+      
+      if (newDailyCount < dailyLimit) {
         newDailyCount += 1;
-        await storage.updateUser(user.id, {
+        await storage.updateUser(req.userId, {
           dailyAiCalls: newDailyCount,
-          dailyAiCallsResetAt: shouldReset ? now : user.dailyAiCallsResetAt
+          dailyAiCallsResetAt: shouldResetDaily ? now : user.dailyAiCallsResetAt
+        });
+        
+        console.log('✅ AI usage allowed. New count:', newDailyCount);
+        res.json({
+          dailyAiUsage: newDailyCount,
+          canUseAi: true,
+          dailyAiLimit: dailyLimit
+        });
+      } else {
+        console.log('❌ AI usage limit reached. Current:', newDailyCount, 'Limit:', dailyLimit);
+        res.json({
+          dailyAiUsage: newDailyCount,
+          canUseAi: false,
+          dailyAiLimit: dailyLimit,
+          message: 'Daily AI usage limit reached. Upgrade to Basic or Pro for more usage.'
         });
       }
-
-      res.json({
-        dailyAiUsage: newDailyCount,
-        canUseAi: dailyLimit === -1 || newDailyCount < dailyLimit
-      });
     } catch (error) {
       console.error("Failed to increment AI usage:", error);
       res.status(500).json({ error: "Failed to increment AI usage" });

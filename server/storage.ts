@@ -66,12 +66,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
+    const now = new Date();
     const insertData = {
       id: userData.id,
       email: userData.email || 'unknown@example.com',
       firstName: userData.firstName,
       lastName: userData.lastName,
       profileImageUrl: userData.profileImageUrl,
+      onboardingCompleted: false,
+      tier: 'free' as const,
+      timezone: 'UTC',
+      passwordHash: null,
+      subscriptionId: null,
+      subscriptionStatus: null,
+      subscriptionCurrentPeriodEnd: null,
+      dailyAiCalls: 0,
+      dailyAiCallsResetAt: now,
+      monthlyAiCalls: 0,
+      monthlyAiCallsResetAt: now,
+      createdAt: now,
+      updatedAt: now,
     };
     
     const [user] = await db
@@ -80,8 +94,11 @@ export class DatabaseStorage implements IStorage {
       .onConflictDoUpdate({
         target: users.id,
         set: {
-          ...insertData,
-          updatedAt: new Date(),
+          email: userData.email || 'unknown@example.com',
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          profileImageUrl: userData.profileImageUrl,
+          updatedAt: now,
         },
       })
       .returning();
