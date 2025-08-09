@@ -19,7 +19,6 @@ type AppUser = {
 type AuthContextType = {
   user: AppUser | null;
   supabaseUser: User | null;
-  isLoading: boolean;
   isAuthenticated: boolean;
   signup: (email: string, password: string, firstName: string, lastName: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
@@ -31,7 +30,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null);
   const [supabaseUser, setSupabaseUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // Remove loading state - authentication is now instant
   const { toast } = useToast();
 
   // Sync user data from our backend when Supabase user changes
@@ -42,7 +41,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('❌ No supabase user, clearing data');
       setUser(null);
       localStorage.removeItem('auth_token');
-      setIsLoading(false);
       return;
     }
 
@@ -66,8 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log('✅ Stored auth token');
       }
       
-      console.log('✅ User sync complete - setting loading to false');
-      setIsLoading(false);
+      console.log('✅ User sync complete');
       
     } catch (error) {
       console.error('Error in syncUserData:', error);
@@ -81,7 +78,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
       console.log('✅ Using fallback user data:', fallbackUserData);
       setUser(fallbackUserData);
-      setIsLoading(false);
     } finally {
       console.log('🔄 syncUserData complete');
     }
@@ -104,7 +100,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Ensure auth token is set for fallback user
       localStorage.setItem('auth_token', `fallback_${existingFallbackUser.id}`);
       setUser(userData);
-      setIsLoading(false);
       return;
     }
 
@@ -121,12 +116,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
       localStorage.setItem('auth_token', 'fallback_demo-user');
       setUser(demoUser);
-      setIsLoading(false);
       return;
     }
 
     if (!supabase) {
-      setIsLoading(false);
       return;
     }
 
@@ -147,12 +140,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.log('🔄 About to sync user data...');
           await syncUserData(session.user);
         } else {
-          console.log('❌ No initial session found, setting loading to false');
-          setIsLoading(false);
+          console.log('❌ No initial session found');
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
-        setIsLoading(false);
       }
     };
 
@@ -171,15 +162,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSupabaseUser(session.user);
         console.log('🔄 Auth state change - about to sync user data...');
         
-        // Call syncUserData and ensure loading stops
+        // Call syncUserData
         try {
           await syncUserData(session.user);
           console.log('✅ syncUserData completed successfully');
-          console.log('🔄 Explicitly setting loading to false after auth');
-          setIsLoading(false);
         } catch (error) {
           console.error('❌ syncUserData failed:', error);
-          setIsLoading(false);
         }
         
         // Handle redirect after auth state change
@@ -211,7 +199,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         };
         setUser(userData);
       }
-      setIsLoading(false);
     });
 
     return () => {
@@ -222,7 +209,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signup = async (email: string, password: string, firstName: string, lastName: string) => {
     try {
-      setIsLoading(true);
       
       // Try Supabase first
       if (supabase) {
@@ -287,14 +273,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         variant: "destructive",
       });
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const login = async (email: string, password: string) => {
     try {
-      setIsLoading(true);
       
       // Try Supabase first
       if (supabase) {
@@ -359,8 +342,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         variant: "destructive",
       });
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -416,7 +397,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value: AuthContextType = {
     user,
     supabaseUser,
-    isLoading,
     isAuthenticated: !!user && !!supabaseUser,
     signup,
     login,
