@@ -13,6 +13,7 @@ import LandingPage from "@/pages/landing";
 import EmailAuthPage from "@/pages/email-auth";
 
 import AuthCallbackPage from "@/pages/auth-callback";
+import AuthVerifiedPage from "@/pages/auth-verified";
 import SupabaseSetupGuide from "@/pages/supabase-setup-guide";
 import DebugAuthPage from "@/pages/debug-auth";
 import AdvancedFeatures from "./pages/advanced-features";
@@ -66,6 +67,8 @@ function Router() {
       </Route>
       
       <Route path="/auth/callback" component={AuthCallbackPage} />
+      <Route path="/auth/verified" component={AuthVerifiedPage} />
+      <Route path="/verify-email" component={AuthVerifiedPage} />
       <Route path="/supabase-setup" component={SupabaseSetupGuide} />
       <Route path="/debug-auth" component={DebugAuthPage} />
       

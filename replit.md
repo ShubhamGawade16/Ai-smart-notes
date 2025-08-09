@@ -7,6 +7,13 @@ Planify is an AI-first task management application powered by OpenAI GPT-4o Mini
 **Business Vision & Market Potential:**
 Planify aims to be a leading AI-powered productivity tool with a freemium model. The strategy is to provide essential productivity with light AI assistance for free users, with clear upgrade paths to Basic, Advanced, and Premium Pro tiers offering unlimited AI features, predictive focus forecasting, auto-scheduling, and personalized optimization. The ambition is to create a habit-forming platform that encourages natural upgrades through enhanced capabilities.
 
+**Recent Authentication Improvements (August 2025):**
+- Completely removed loading states from authentication for instant sign-in experience
+- Streamlined signup flow: users get immediate success message and can sign in right away
+- Added simple email verification handler that redirects users to sign-in page
+- Eliminated friction points and unnecessary waiting screens as requested by user
+- Authentication now provides immediate feedback and seamless user experience
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
