@@ -176,10 +176,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const currentPath = window.location.pathname;
           console.log('🔄 SIGNED_IN event on path:', currentPath);
           
-          // Redirect from auth or callback pages to dashboard
+          // For deployed environments, add extra delay and force redirect
           if (currentPath === '/auth' || currentPath === '/auth/callback') {
             console.log('✅ Redirecting to dashboard after sign in');
-            safeRedirect('/dashboard', getRedirectDelay());
+            
+            // Force redirect using production-aware helper
+            setTimeout(() => {
+              console.log('🚀 Executing auth state redirect to dashboard');
+              window.location.replace('/dashboard');
+            }, 50);
           }
         }
       } else if (event === 'SIGNED_OUT') {

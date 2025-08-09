@@ -1,92 +1,53 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { Loader2 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
-import { safeRedirect, getRedirectDelay, logEnvironmentInfo } from "@/lib/redirect-helper";
+import { AuthCallbackHandler } from "@/lib/auth-callback-handler";
+import { handleProductionAuthRedirect, forceProductionAuthCheck } from "@/lib/production-auth-fix";
+import "@/lib/immediate-auth-redirect"; // Import for side effects
 
 export default function AuthCallbackPage() {
   const [, navigate] = useLocation();
-  const [attempts, setAttempts] = useState(0);
-  const maxAttempts = 10;
+  const [isProcessing, setIsProcessing] = useState(true);
 
   useEffect(() => {
     const handleAuthCallback = async () => {
+      console.log('🔄 Starting auth callback handling');
+      
+      // First, try production-specific quick redirect
+      if (handleProductionAuthRedirect()) {
+        console.log('✅ Production auth redirect handled');
+        return;
+      }
+      
+      // Check for existing authentication
+      if (await forceProductionAuthCheck()) {
+        console.log('✅ Existing auth found, redirected');
+        return;
+      }
+      
+      // Fall back to comprehensive handler
+      const handler = AuthCallbackHandler.getInstance();
+      
       try {
-        if (!supabase) {
-          navigate("/auth?error=config_error");
-          return;
-        }
-
-        // Log environment info for debugging
-        logEnvironmentInfo();
-        console.log(`Auth callback attempt ${attempts + 1}/${maxAttempts}`);
-
-        // Handle the OAuth callback - this processes URL fragments and establishes session
-        let sessionData = null;
-        let hasError = false;
-
-        // Try exchangeCodeForSession first (for PKCE flow)
-        try {
-          const { data: authData, error: authError } = await supabase.auth.exchangeCodeForSession(window.location.search);
-          if (authError) {
-            console.log("exchangeCodeForSession failed:", authError.message);
-            // This is expected for email verification, so continue to getSession
-          } else if (authData?.session) {
-            sessionData = authData;
-          }
-        } catch (e) {
-          console.log("exchangeCodeForSession not available, trying getSession");
-        }
+        const result = await handler.handleCallback();
         
-        // Fallback to getSession (for email verification or if exchange failed)
-        if (!sessionData?.session) {
-          const { data: fallbackData, error: fallbackError } = await supabase.auth.getSession();
-          if (fallbackError) {
-            console.error("Auth callback error:", fallbackError);
-            hasError = true;
-          } else {
-            sessionData = fallbackData;
-          }
+        if (result.success && result.shouldRedirect && result.redirectUrl) {
+          // Use direct window.location.replace for deployed environments
+          handler.performRedirect(result.redirectUrl);
+        } else if (result.shouldRedirect && result.redirectUrl) {
+          // Fallback to wouter navigate for errors
+          navigate(result.redirectUrl);
         }
-        
-        if (hasError) {
-          navigate("/auth?error=oauth_failed");
-          return;
-        }
-
-        if (sessionData?.session) {
-          console.log("✅ Session found, redirecting to dashboard");
-          // Store the session token immediately
-          localStorage.setItem('auth_token', sessionData.session.access_token);
-          
-          // Use environment-aware redirect with appropriate delay
-          safeRedirect("/dashboard", getRedirectDelay());
-          return;
-        }
-
-        // If no session yet, retry with exponential backoff (common in deployed environments)
-        if (attempts < maxAttempts - 1) {
-          const delay = Math.min(1000 * Math.pow(1.5, attempts), 5000); // Max 5 second delay
-          console.log(`No session found yet, retrying in ${delay}ms...`);
-          
-          setTimeout(() => {
-            setAttempts(prev => prev + 1);
-          }, delay);
-          return;
-        }
-
-        // Max attempts reached, redirect to auth
-        console.log("Max attempts reached, redirecting to auth");
-        navigate("/auth?error=session_timeout");
-        
       } catch (error) {
-        console.error("Auth callback processing error:", error);
+        console.error("Callback handler error:", error);
         navigate("/auth?error=callback_failed");
+      } finally {
+        setIsProcessing(false);
       }
     };
 
     handleAuthCallback();
-  }, [navigate, attempts]);
+  }, [navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
