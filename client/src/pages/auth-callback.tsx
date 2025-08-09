@@ -40,11 +40,10 @@ export default function AuthCallbackPage() {
             // Store auth token for API requests
             localStorage.setItem('auth_token', data.session.access_token);
             
-            // For Google OAuth, redirect to onboarding since it's likely a new user
-            // The auth context will handle user sync automatically
+            // Redirect to home - auth context will handle proper routing to dashboard
             setTimeout(() => {
-              navigate("/onboarding");
-            }, 1500);
+              navigate("/");
+            }, 500);
           }
         } else {
           // No session found, might be an email verification link
@@ -61,8 +60,8 @@ export default function AuthCallbackPage() {
             });
             setAuthStatus("success");
             setTimeout(() => {
-              navigate("/onboarding");
-            }, 1500);
+              navigate("/");
+            }, 500);
           } else {
             setAuthStatus("error");
             setErrorMessage("No valid authentication session found.");
@@ -123,8 +122,8 @@ export default function AuthCallbackPage() {
               </CardTitle>
               <CardDescription>
                 {authStatus === "processing" && "Please wait while we complete your authentication."}
-                {authStatus === "success" && "You've been successfully authenticated. Setting up your account..."}
-                {authStatus === "error" && "There was an issue with your authentication."}
+                {authStatus === "success" && "You've been successfully authenticated. Redirecting to your dashboard..."}
+                {authStatus === "error" && errorMessage}
               </CardDescription>
             </CardHeader>
             <CardContent>
