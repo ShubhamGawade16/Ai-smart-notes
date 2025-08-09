@@ -2587,6 +2587,188 @@ Guidelines:
       res.status(500).json({ error: 'Failed to increment AI usage' });
     }
   });
+
+  // Developer Tools - Reset AI Usage
+  app.post('/api/dev/reset-ai-usage', optionalAuth, async (req: AuthRequest, res) => {
+    try {
+      if (process.env.NODE_ENV === 'production') {
+        return res.status(403).json({ error: 'Developer tools not available in production' });
+      }
+
+      const userId = req.userId;
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      // Reset both daily and monthly AI usage
+      await storage.updateUser(userId, {
+        dailyAiCalls: 0,
+        monthlyAiCalls: 0,
+        dailyAiCallsResetAt: new Date(),
+        monthlyAiCallsResetAt: new Date(),
+      });
+
+      console.log(`🔄 Dev Tools: Reset AI usage for user ${userId}`);
+
+      res.json({ 
+        success: true, 
+        message: 'AI usage counters reset successfully' 
+      });
+    } catch (error) {
+      console.error('Failed to reset AI usage:', error);
+      res.status(500).json({ error: 'Failed to reset AI usage' });
+    }
+  });
+
+  // Developer Tools - Change User Tier 
+  app.post('/api/dev/change-tier', optionalAuth, async (req: AuthRequest, res) => {
+    try {
+      if (process.env.NODE_ENV === 'production') {
+        return res.status(403).json({ error: 'Developer tools not available in production' });
+      }
+
+      const userId = req.userId;
+      const { tier } = req.body;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      if (!['free', 'basic', 'pro'].includes(tier)) {
+        return res.status(400).json({ error: 'Invalid tier. Must be free, basic, or pro' });
+      }
+
+      // Update user tier and reset AI usage
+      await storage.updateUser(userId, {
+        tier: tier as 'free' | 'basic' | 'pro',
+        dailyAiCalls: 0,
+        monthlyAiCalls: 0,
+        dailyAiCallsResetAt: new Date(),
+        monthlyAiCallsResetAt: new Date(),
+        subscriptionStatus: tier === 'free' ? null : 'active',
+      });
+
+      console.log(`🔄 Dev Tools: Changed user ${userId} tier to ${tier}`);
+
+      res.json({ 
+        success: true, 
+        message: `User tier changed to ${tier} successfully`,
+        tier
+      });
+    } catch (error) {
+      console.error('Failed to change user tier:', error);
+      res.status(500).json({ error: 'Failed to change user tier' });
+    }
+  });
+
+  // Developer Tools - Toggle Tier (backward compatibility)
+  app.post('/api/dev/toggle-tier', optionalAuth, async (req: AuthRequest, res) => {
+    try {
+      if (process.env.NODE_ENV === 'production') {
+        return res.status(403).json({ error: 'Developer tools not available in production' });
+      }
+
+      const userId = req.userId;
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      // Cycle through tiers: free -> basic -> pro -> free
+      let nextTier: 'free' | 'basic' | 'pro';
+      if (user.tier === 'free') {
+        nextTier = 'basic';
+      } else if (user.tier === 'basic') {
+        nextTier = 'pro';
+      } else {
+        nextTier = 'free';
+      }
+
+      // Update user tier and reset AI usage
+      await storage.updateUser(userId, {
+        tier: nextTier,
+        dailyAiCalls: 0,
+        monthlyAiCalls: 0,
+        dailyAiCallsResetAt: new Date(),
+        monthlyAiCallsResetAt: new Date(),
+        subscriptionStatus: nextTier === 'free' ? null : 'active',
+      });
+
+      console.log(`🔄 Dev Tools: Toggled user ${userId} tier from ${user.tier} to ${nextTier}`);
+
+      res.json({ 
+        success: true, 
+        message: `User tier toggled to ${nextTier} successfully`,
+        newTier: nextTier,
+        oldTier: user.tier
+      });
+    } catch (error) {
+      console.error('Failed to toggle user tier:', error);
+      res.status(500).json({ error: 'Failed to toggle user tier' });
+    }
+  });
+
+  // Payments - Subscription status endpoint
+  app.get('/api/payments/subscription-status', optionalAuth, async (req: AuthRequest, res) => {
+    try {
+      const userId = req.userId;
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      res.json({
+        success: true,
+        tier: user.tier || 'free',
+        subscriptionStatus: user.subscriptionStatus || null,
+        dailyAiCalls: user.dailyAiCalls || 0,
+        monthlyAiCalls: user.monthlyAiCalls || 0,
+        dailyAiCallsResetAt: user.dailyAiCallsResetAt || null,
+        monthlyAiCallsResetAt: user.monthlyAiCallsResetAt || null,
+      });
+    } catch (error) {
+      console.error('Error getting subscription status:', error);
+      res.status(500).json({ error: 'Failed to get subscription status' });
+    }
+  });
+
+  // Payments - AI limits endpoint
+  app.get('/api/payments/ai-limits', optionalAuth, async (req: AuthRequest, res) => {
+    try {
+      const userId = req.userId;
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      const usageCheck = checkAiUsageLimit(user);
+      
+      res.json({
+        success: true,
+        allowed: usageCheck.allowed,
+        tier: user.tier || 'free',
+        userLimit: usageCheck.userLimit,
+        limitType: usageCheck.limitType,
+        currentUsage: user.tier === 'basic' ? user.monthlyAiCalls || 0 : user.dailyAiCalls || 0,
+        resetAt: user.tier === 'basic' ? user.monthlyAiCallsResetAt : user.dailyAiCallsResetAt,
+      });
+    } catch (error) {
+      console.error('Error getting AI limits:', error);
+      res.status(500).json({ error: 'Failed to get AI limits' });
+    }
+  });
   
   // AI Brain - Central AI controller
   const { registerAIBrainRoutes } = await import("./routes/ai-brain");

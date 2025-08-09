@@ -17,14 +17,15 @@ interface DevModeModalProps {
 
 export default function DevModeModal({ isOpen, onClose }: DevModeModalProps) {
   const { user } = useAuth();
-  const { subscription, isPro, isBasic, isFree } = useSubscription();
+  const { subscription, isPro, isBasic, isFree, refetch } = useSubscription();
   const { toast } = useToast();
   const [isResetting, setIsResetting] = useState(false);
   const queryClient = useQueryClient();
 
   const toggleTierMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest("POST", "/api/dev/toggle-tier");
+      const nextTier = isFree ? 'basic' : isBasic ? 'pro' : 'free';
+      const response = await apiRequest("POST", "/api/dev/change-tier", { tier: nextTier });
       return response.json();
     },
     onSuccess: async (data) => {
@@ -64,6 +65,9 @@ export default function DevModeModal({ isOpen, onClose }: DevModeModalProps) {
         description: "AI usage counters have been reset successfully.",
       });
       refetch();
+      // Invalidate all relevant queries to update the UI
+      queryClient.invalidateQueries({ queryKey: ['/api/payments/subscription-status'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/payments/ai-limits'] });
     },
     onError: () => {
       toast({

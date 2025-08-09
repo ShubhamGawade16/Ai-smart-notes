@@ -122,6 +122,11 @@ export function useSubscription() {
     };
   };
 
+  const refetch = async () => {
+    queryClient.invalidateQueries({ queryKey: ['/api/payments/subscription-status'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/payments/ai-limits'] });
+  };
+
   return {
     // Data
     subscriptionData,
@@ -136,8 +141,15 @@ export function useSubscription() {
     getTier,
     getCurrentUsage,
     getSubscriptionStatus,
+    refetch,
 
     // Mutation states
     isIncrementingUsage: incrementAiUsageMutation.isPending,
+
+    // Legacy compatibility properties
+    subscription: subscriptionData,
+    isPro: subscriptionData?.tier === 'pro',
+    isBasic: subscriptionData?.tier === 'basic', 
+    isFree: subscriptionData?.tier === 'free' || !subscriptionData?.tier,
   };
 }
