@@ -67,6 +67,44 @@ export class DatabaseStorage implements IStorage {
 
   async upsertUser(userData: UpsertUser): Promise<User> {
     const now = new Date();
+    
+    // First try to find existing user by ID
+    let existingUser = await this.getUser(userData.id);
+    if (existingUser) {
+      // Update existing user
+      const [user] = await db
+        .update(users)
+        .set({
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          profileImageUrl: userData.profileImageUrl,
+          updatedAt: now,
+        })
+        .where(eq(users.id, userData.id))
+        .returning();
+      return user;
+    }
+    
+    // Check if user exists by email
+    if (userData.email) {
+      existingUser = await this.getUserByEmail(userData.email);
+      if (existingUser) {
+        // Update existing user found by email
+        const [user] = await db
+          .update(users)
+          .set({
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            profileImageUrl: userData.profileImageUrl,
+            updatedAt: now,
+          })
+          .where(eq(users.email, userData.email))
+          .returning();
+        return user;
+      }
+    }
+    
+    // Create new user
     const insertData = {
       id: userData.id,
       email: userData.email || 'unknown@example.com',
@@ -88,20 +126,7 @@ export class DatabaseStorage implements IStorage {
       updatedAt: now,
     };
     
-    const [user] = await db
-      .insert(users)
-      .values(insertData)
-      .onConflictDoUpdate({
-        target: users.id,
-        set: {
-          email: userData.email || 'unknown@example.com',
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          profileImageUrl: userData.profileImageUrl,
-          updatedAt: now,
-        },
-      })
-      .returning();
+    const [user] = await db.insert(users).values(insertData).returning();
     return user;
   }
 
