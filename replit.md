@@ -29,6 +29,11 @@ Planify aims to be a leading AI-powered productivity tool with a freemium model.
 - Added error handling to revert optimistic updates if API calls fail
 - Users now see AI credit consumption immediately instead of waiting for backend response
 
+**Database Schema Update (August 2025):**
+- Fixed unique constraint issue on payments.razorpay_payment_id for deployment
+- Database schema is now aligned between development and production environments
+- All existing payment records preserved during constraint addition
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
