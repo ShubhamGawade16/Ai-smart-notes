@@ -261,6 +261,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get current user profile
+  app.get("/api/auth/user", requireAuth, async (req, res) => {
+    try {
+      const userId = req.userId;
+      if (!userId) {
+        return res.status(401).json({ error: "User ID not found in token" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      res.json({
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      });
+    } catch (error: any) {
+      console.error('Get user error:', error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Update user profile
+  app.put("/api/auth/user", requireAuth, async (req, res) => {
+    try {
+      const userId = req.userId;
+      if (!userId) {
+        return res.status(401).json({ error: "User ID not found in token" });
+      }
+
+      const { firstName, lastName, timezone } = req.body;
+
+      const updateData: any = {};
+      if (firstName !== undefined) updateData.firstName = firstName;
+      if (lastName !== undefined) updateData.lastName = lastName;
+      if (timezone !== undefined) updateData.timezone = timezone;
+
+      const updatedUser = await storage.updateUser(userId, updateData);
+
+      res.json({
+        id: updatedUser.id,
+        email: updatedUser.email,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+      });
+    } catch (error: any) {
+      console.error('Update user error:', error);
+      res.status(500).json({ error: "Failed to update user profile" });
+    }
+  });
+
   app.post("/api/auth/signout", (req, res) => {
     // For JWT, we just need to remove the token on the client side
     // In a production app, you might want to maintain a blacklist of tokens

@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/use-supabase-auth';
 import { useToast } from '@/hooks/use-toast';
 import { User, Clock, Globe, X, Save } from 'lucide-react';
 import { useTimezone } from '@/hooks/use-timezone';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -50,14 +51,35 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     'Australia/Sydney'
   ];
 
-  const handleSave = () => {
-    // Here you would typically make an API call to update user profile
-    console.log('Saving profile:', formData);
-    toast({
-      title: "Profile Updated",
-      description: "Your profile has been updated successfully.",
-    });
-    onClose();
+  const handleSave = async () => {
+    try {
+      // Make API call to update user profile
+      const response = await apiRequest("PUT", "/api/auth/user", {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        timezone: formData.timezone
+      });
+
+      if (response.ok) {
+        // Refresh user data in cache
+        queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+        
+        toast({
+          title: "Profile Updated",
+          description: "Your profile has been updated successfully.",
+        });
+        onClose();
+      } else {
+        throw new Error('Failed to update profile');
+      }
+    } catch (error) {
+      console.error('Profile update error:', error);
+      toast({
+        title: "Update Failed", 
+        description: "Failed to update profile. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleTimezoneAutoUpdate = () => {
