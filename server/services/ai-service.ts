@@ -42,8 +42,8 @@ export interface ProductivityInsight {
 /**
  * Natural Language Task Entry - Parse user input into structured task
  */
-export async function parseNaturalLanguageTask(input: string): Promise<TaskAnalysis> {
-  const prompt = `
+export async function parseNaturalLanguageTask(input: string, customPrompt?: string): Promise<TaskAnalysis> {
+  const prompt = customPrompt || `
 Analyze this task description and extract structured information:
 "${input}"
 
@@ -68,6 +68,8 @@ Rules:
 - ContextSwitchCost: 1 (easy switch) to 10 (requires deep focus)
 - If due date mentioned (today, tomorrow, Friday, etc.), calculate actual date
 - Return ONLY the JSON object, no other text or formatting
+
+Task to analyze: "${input}"
 `;
 
   try {
