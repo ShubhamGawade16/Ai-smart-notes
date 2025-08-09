@@ -123,10 +123,21 @@ const requireAuth = async (req: any, res: any, next: any) => {
       try {
         const { data: { user }, error } = await supabase.auth.getUser(token);
         if (user && !error) {
+          console.log('🔍 Supabase user found:', { id: user.id, email: user.email });
+          
           // Get or create user in our database
           let userData = await storage.getUser(user.id);
+          console.log('🔍 Database user lookup by ID:', userData ? 'found' : 'not found');
+          
+          if (!userData && user.email) {
+            // Try to find by email in case there's an ID mismatch
+            userData = await storage.getUserByEmail(user.email);
+            console.log('🔍 Database user lookup by email:', userData ? 'found' : 'not found');
+          }
+          
           if (!userData) {
             // Create user from Supabase data with upsert
+            console.log('🔧 Creating new user in database');
             userData = await storage.upsertUser({
               id: user.id,
               email: user.email || '',
@@ -134,9 +145,13 @@ const requireAuth = async (req: any, res: any, next: any) => {
               lastName: user.user_metadata?.last_name || '',
               profileImageUrl: user.user_metadata?.avatar_url || null,
             });
+            console.log('✅ User created:', userData.id);
+          } else {
+            console.log('✅ Using existing user:', userData.id);
           }
+          
           req.user = userData;
-          req.userId = user.id;
+          req.userId = userData.id; // Use our database user ID, not Supabase ID
           return next();
         }
       } catch (supabaseError) {
