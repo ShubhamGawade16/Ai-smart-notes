@@ -31,7 +31,7 @@ export function UnlockProUI({
   variant = "modal" 
 }: UnlockProUIProps) {
   const { user } = useAuth();
-  const { subscriptionStatus } = useSubscription();
+  const { subscription, isFree } = useSubscription();
   const [isAnimating, setIsAnimating] = useState(false);
 
   const handleUpgrade = () => {
@@ -69,7 +69,7 @@ export function UnlockProUI({
           </div>
           <div className="flex items-center gap-2">
             <Badge variant="secondary" className="text-xs">
-              {subscriptionStatus.dailyAiUsage}/{subscriptionStatus.dailyAiLimit} used
+              {subscription?.dailyAiCalls || 0}/3 used
             </Badge>
             <Button size="sm" onClick={handleUpgrade}>
               Upgrade Now
@@ -139,7 +139,7 @@ export function UnlockProUI({
 
           <div className="flex items-center justify-center gap-2 mt-4">
             <Badge variant="outline" className="text-xs">
-              Current: {subscriptionStatus.dailyAiUsage}/{subscriptionStatus.dailyAiLimit} AI requests
+              Current: {subscription?.dailyAiCalls || 0}/3 AI requests
             </Badge>
           </div>
         </CardHeader>

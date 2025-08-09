@@ -13,7 +13,7 @@ interface AIFeaturesModalProps {
 }
 
 export default function AIFeaturesModal({ isOpen, onClose, onFeatureSelect, onUpgradeRequired }: AIFeaturesModalProps) {
-  const { subscriptionStatus, checkAiUsageLimit } = useSubscription();
+  const { subscription, canUseAI, isFree } = useSubscription();
 
   const aiFeatures = [
     {
@@ -54,7 +54,7 @@ export default function AIFeaturesModal({ isOpen, onClose, onFeatureSelect, onUp
   ];
 
   const handleFeatureClick = (featureId: string) => {
-    if (!checkAiUsageLimit()) {
+    if (!canUseAI) {
       onUpgradeRequired();
       return;
     }
@@ -92,11 +92,11 @@ export default function AIFeaturesModal({ isOpen, onClose, onFeatureSelect, onUp
               <div>
                 <h3 className="font-medium text-gray-900 dark:text-white">AI Usage Today</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {subscriptionStatus.dailyAiUsage} of {subscriptionStatus.dailyAiLimit} requests used
+                  {subscription?.dailyAiCalls || 0} of 3 requests used
                 </p>
               </div>
               <div className="text-right">
-                {subscriptionStatus.canUseAi ? (
+                {canUseAI ? (
                   <span className="text-sm font-medium text-green-600 dark:text-green-400">Available</span>
                 ) : (
                   <span className="text-sm font-medium text-red-600 dark:text-red-400">Limit Reached</span>
@@ -111,7 +111,7 @@ export default function AIFeaturesModal({ isOpen, onClose, onFeatureSelect, onUp
               <Card 
                 key={feature.id}
                 className={`stagger-item card-animate cursor-pointer transition-all duration-300 hover:shadow-lg border group ${
-                  subscriptionStatus.canUseAi 
+                  canUseAI 
                     ? 'hover:border-purple-300 dark:hover:border-purple-600 hover:-translate-y-1' 
                     : 'opacity-75'
                 }`}
@@ -136,9 +136,9 @@ export default function AIFeaturesModal({ isOpen, onClose, onFeatureSelect, onUp
                     <Button 
                       size="sm" 
                       className="btn-hover w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 shadow-md hover:shadow-lg transition-all duration-300"
-                      disabled={!subscriptionStatus.canUseAi}
+                      disabled={!canUseAI}
                     >
-                      {subscriptionStatus.canUseAi ? 'Use Feature' : 'Upgrade Required'}
+                      {canUseAI ? 'Use Feature' : 'Upgrade Required'}
                     </Button>
                   </div>
                 </CardContent>
@@ -146,7 +146,7 @@ export default function AIFeaturesModal({ isOpen, onClose, onFeatureSelect, onUp
             ))}
           </div>
 
-          {!subscriptionStatus.canUseAi && (
+          {!canUseAI && (
             <div className="text-center py-4">
               <p className="text-gray-600 dark:text-gray-400 mb-3">
                 You've reached your daily AI limit. Upgrade for unlimited access!

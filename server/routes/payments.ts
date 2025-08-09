@@ -198,4 +198,19 @@ router.get('/ai-limits', authenticateToken, async (req: AuthRequest, res) => {
   }
 });
 
+// Test Razorpay connection endpoint
+router.get('/test-razorpay', async (req, res) => {
+  try {
+    const hasKeys = !!(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET);
+    res.json({
+      success: true,
+      status: hasKeys ? 'Razorpay keys configured' : 'Missing Razorpay keys',
+      keyId: process.env.RAZORPAY_KEY_ID ? `${process.env.RAZORPAY_KEY_ID.substring(0, 12)}...` : 'Not set',
+    });
+  } catch (error) {
+    console.error('Razorpay test failed:', error);
+    res.status(500).json({ error: 'Razorpay test failed' });
+  }
+});
+
 export default router;
