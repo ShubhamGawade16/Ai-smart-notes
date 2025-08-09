@@ -144,7 +144,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Get initial session
     const initializeAuth = async () => {
       try {
+        console.log('🔄 Initializing auth...');
         const session = await getSession();
+        console.log('📡 Got session:', { hasUser: !!session?.user, email: session?.user?.email });
+        
         if (session?.user) {
           // Store access token immediately for API requests
           if (session.access_token) {
@@ -152,8 +155,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.log('✅ Stored auth token for API requests');
           }
           setSupabaseUser(session.user);
+          console.log('🔄 About to sync user data...');
           await syncUserData(session.user);
         } else {
+          console.log('❌ No session found, setting loading to false');
           setIsLoading(false);
         }
       } catch (error) {
@@ -175,6 +180,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.log('✅ Updated auth token for API requests');
         }
         setSupabaseUser(session.user);
+        console.log('🔄 Auth state change - about to sync user data...');
         await syncUserData(session.user);
         
         // Handle redirect after auth state change
