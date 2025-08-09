@@ -61,7 +61,7 @@ export class RazorpayService {
       const options = {
         amount: amount * 100, // Convert to paisa
         currency,
-        receipt: `sub_${planType}_${userId}_${Date.now()}`,
+        receipt: `sub_${planType}_${Date.now().toString().slice(-8)}`,
         notes: {
           user_id: userId,
           plan_type: planType,
