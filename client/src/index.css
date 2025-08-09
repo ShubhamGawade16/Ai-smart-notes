@@ -131,6 +131,45 @@
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   }
 
+  /* Enhanced mobile utilities */
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+
+  .active\:scale-95:active {
+    transform: scale(0.95);
+  }
+
+  .active\:scale-90:active {
+    transform: scale(0.90);
+  }
+
+  .active\:scale-98:active {
+    transform: scale(0.98);
+  }
+
+  /* Smooth animations for better UX */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fadeInUp {
+    animation: fadeInUp 0.3s ease-out;
+  }
+
+  /* Better button feedback */
+  .btn-feedback:active {
+    transform: scale(0.95);
+    transition: transform 0.1s ease-in-out;
+  }
+
   /* Stagger animation for lists */
   .stagger-item {
     animation: slideInUp 400ms ease-out;
