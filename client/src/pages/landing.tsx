@@ -195,46 +195,46 @@ export default function LandingPage() {
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-3 gap-8">
+        <div className="max-w-6xl mx-auto grid lg:grid-cols-3 gap-8">
           {/* Free Forever */}
-          <Card className="relative border-2 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300 hover:shadow-xl">
-            <CardHeader className="text-center pb-8">
-              <div className="w-16 h-16 bg-gradient-to-br from-gray-400 to-gray-600 rounded-2xl flex items-center justify-center mb-4 mx-auto">
-                <Users className="h-8 w-8 text-white" />
+          <Card className="relative border-2 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300 hover:shadow-lg bg-white dark:bg-gray-800">
+            <CardHeader className="text-center pb-6">
+              <div className="w-14 h-14 bg-gradient-to-br from-gray-400 to-gray-600 rounded-xl flex items-center justify-center mb-4 mx-auto">
+                <Users className="h-7 w-7 text-white" />
               </div>
-              <CardTitle className="text-3xl mb-2">Free Forever</CardTitle>
-              <div className="text-6xl font-bold text-gray-900 dark:text-white mb-2">₹0</div>
-              <div className="text-lg text-gray-500 mb-4">No credit card required</div>
-              <CardDescription className="text-lg">Perfect for trying out AI productivity</CardDescription>
+              <CardTitle className="text-2xl mb-3 text-gray-900 dark:text-white">Free Forever</CardTitle>
+              <div className="mb-4">
+                <span className="text-5xl font-bold text-gray-900 dark:text-white">₹0</span>
+                <span className="text-gray-500 text-lg">/month</span>
+              </div>
+              <CardDescription className="text-gray-600 dark:text-gray-400">Perfect for trying out AI productivity</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 mb-6">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">3</div>
-                  <div className="text-sm text-blue-600 dark:text-blue-400 font-medium">AI Requests Daily</div>
-                  <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">Resets every 24 hours</div>
-                </div>
+            <CardContent className="pt-0">
+              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mb-6 text-center">
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-1">3</div>
+                <div className="text-sm text-blue-600 dark:text-blue-400">AI Requests Daily</div>
+                <div className="text-xs text-gray-500 mt-1">Resets every 24 hours</div>
               </div>
-              <div className="space-y-4 mb-8">
-                <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                  <span className="text-sm">AI task categorization & priority setting</span>
+              <div className="space-y-3 mb-8">
+                <div className="flex items-center text-sm">
+                  <CheckCircle className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
+                  <span>AI task categorization</span>
                 </div>
-                <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                  <span className="text-sm">Basic task management & notes</span>
+                <div className="flex items-center text-sm">
+                  <CheckCircle className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
+                  <span>Basic task management</span>
                 </div>
-                <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                  <span className="text-sm">Simple productivity insights</span>
+                <div className="flex items-center text-sm">
+                  <CheckCircle className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
+                  <span>Simple analytics</span>
                 </div>
-                <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                  <span className="text-sm">Community support</span>
+                <div className="flex items-center text-sm">
+                  <CheckCircle className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
+                  <span>Community support</span>
                 </div>
               </div>
               <Link href="/auth">
-                <Button className="w-full text-lg py-6 bg-gray-900 hover:bg-gray-800 text-white">
+                <Button className="w-full py-3 bg-gray-900 hover:bg-gray-800 text-white">
                   Start Free Today
                 </Button>
               </Link>
@@ -242,56 +242,52 @@ export default function LandingPage() {
           </Card>
 
           {/* Basic Plan */}
-          <Card className="relative border-2 border-blue-500 bg-gradient-to-br from-blue-50/70 to-indigo-50/70 dark:from-blue-900/30 dark:to-indigo-900/30 shadow-2xl transform scale-105 hover:scale-110 transition-all duration-300">
-            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
-              <Badge className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 text-lg font-bold shadow-lg">
-                Most Popular 🔥
-              </Badge>
+          <Card className="relative border-2 border-blue-500 bg-white dark:bg-gray-800 shadow-xl">
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white text-center py-2 rounded-t-lg">
+              <span className="font-medium text-sm">Most Popular</span>
             </div>
-            <CardHeader className="text-center pb-8 pt-8">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mb-4 mx-auto">
-                <Zap className="h-8 w-8 text-white" />
+            <CardHeader className="text-center pb-6 pt-6">
+              <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mb-4 mx-auto">
+                <Zap className="h-7 w-7 text-white" />
               </div>
-              <CardTitle className="text-3xl mb-2">Basic Pro</CardTitle>
-              <div className="flex items-baseline justify-center space-x-2 mb-2">
-                <div className="text-6xl font-bold text-blue-600">₹299</div>
-                <div className="text-lg text-gray-600 dark:text-gray-300">/month</div>
+              <CardTitle className="text-2xl mb-3 text-gray-900 dark:text-white">Basic Pro</CardTitle>
+              <div className="mb-2">
+                <span className="text-5xl font-bold text-blue-600">₹299</span>
+                <span className="text-gray-500 text-lg">/month</span>
               </div>
-              <div className="text-sm text-gray-500 mb-4">Only ₹10/day for unlimited productivity</div>
-              <CardDescription className="text-lg">Great for professionals & small teams</CardDescription>
+              <div className="text-sm text-gray-500 mb-4">Only ₹10/day</div>
+              <CardDescription className="text-gray-600 dark:text-gray-400">Great for professionals</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-xl p-4 mb-6">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">100+</div>
-                  <div className="text-sm text-blue-600 dark:text-blue-400 font-medium">AI Requests Monthly</div>
-                  <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">3 daily + 100 bonus • Unused credits carry over while subscribed</div>
-                </div>
+            <CardContent className="pt-0">
+              <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg p-4 mb-6 text-center">
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-1">100+</div>
+                <div className="text-sm text-blue-600 dark:text-blue-400">AI Requests Monthly</div>
+                <div className="text-xs text-gray-500 mt-1">3 daily + 100 bonus credits</div>
               </div>
-              <div className="space-y-4 mb-8">
-                <div className="flex items-center">
-                  <Sparkles className="h-5 w-5 text-blue-500 mr-3 flex-shrink-0" />
-                  <span className="text-sm"><strong>Everything in Free</strong> + advanced features</span>
+              <div className="space-y-3 mb-8">
+                <div className="flex items-center text-sm">
+                  <Sparkles className="h-4 w-4 text-blue-500 mr-3 flex-shrink-0" />
+                  <span><strong>Everything in Free</strong> +</span>
                 </div>
-                <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                  <span className="text-sm">Advanced AI task breakdown & scheduling</span>
+                <div className="flex items-center text-sm">
+                  <CheckCircle className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
+                  <span>Advanced AI task breakdown</span>
                 </div>
-                <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                  <span className="text-sm">Smart timing analysis & energy optimization</span>
+                <div className="flex items-center text-sm">
+                  <CheckCircle className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
+                  <span>Smart timing analysis</span>
                 </div>
-                <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                  <span className="text-sm">Detailed productivity analytics</span>
+                <div className="flex items-center text-sm">
+                  <CheckCircle className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
+                  <span>Detailed analytics</span>
                 </div>
-                <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                  <span className="text-sm">Priority email support</span>
+                <div className="flex items-center text-sm">
+                  <CheckCircle className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
+                  <span>Priority email support</span>
                 </div>
               </div>
               <Link href="/auth">
-                <Button className="w-full text-lg py-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg">
+                <Button className="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white">
                   Upgrade to Basic Pro
                 </Button>
               </Link>
@@ -299,62 +295,53 @@ export default function LandingPage() {
           </Card>
 
           {/* Pro Unlimited */}
-          <Card className="relative border-2 border-amber-400 bg-gradient-to-br from-amber-50/70 to-orange-50/70 dark:from-amber-900/30 dark:to-orange-900/30 shadow-2xl hover:shadow-3xl transition-all duration-300">
-            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
-              <Badge className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 py-3 text-lg font-bold shadow-lg">
-                Maximum Power 👑
-              </Badge>
+          <Card className="relative border-2 border-amber-400 bg-white dark:bg-gray-800 shadow-xl">
+            <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-center py-2 rounded-t-lg">
+              <span className="font-medium text-sm">Maximum Power</span>
             </div>
-            <CardHeader className="text-center pb-8 pt-8">
-              <div className="w-16 h-16 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center mb-4 mx-auto">
-                <Crown className="h-8 w-8 text-white" />
+            <CardHeader className="text-center pb-6 pt-6">
+              <div className="w-14 h-14 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center mb-4 mx-auto">
+                <Crown className="h-7 w-7 text-white" />
               </div>
-              <CardTitle className="text-3xl mb-2">Pro Unlimited</CardTitle>
-              <div className="flex items-baseline justify-center space-x-2 mb-2">
-                <div className="text-6xl font-bold text-amber-600">₹599</div>
-                <div className="text-lg text-gray-600 dark:text-gray-300">/month</div>
+              <CardTitle className="text-2xl mb-3 text-gray-900 dark:text-white">Pro Unlimited</CardTitle>
+              <div className="mb-2">
+                <span className="text-5xl font-bold text-amber-600">₹599</span>
+                <span className="text-gray-500 text-lg">/month</span>
               </div>
-              <div className="text-sm text-gray-500 mb-4">Only ₹20/day for unlimited AI power</div>
-              <CardDescription className="text-lg">For power users, teams & businesses</CardDescription>
+              <div className="text-sm text-gray-500 mb-4">Only ₹20/day</div>
+              <CardDescription className="text-gray-600 dark:text-gray-400">For power users & teams</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 rounded-xl p-4 mb-6 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-amber-400/20 to-orange-400/20 animate-pulse"></div>
-                <div className="text-center relative z-10">
-                  <div className="text-3xl font-bold text-amber-600 dark:text-amber-400 mb-1">∞</div>
-                  <div className="text-sm text-amber-600 dark:text-amber-400 font-medium">Unlimited AI Requests</div>
-                  <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">No limits, no restrictions, pure AI power</div>
-                </div>
+            <CardContent className="pt-0">
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-lg p-4 mb-6 text-center">
+                <div className="text-2xl font-bold text-amber-600 dark:text-amber-400 mb-1">∞</div>
+                <div className="text-sm text-amber-600 dark:text-amber-400">Unlimited AI Requests</div>
+                <div className="text-xs text-gray-500 mt-1">No limits or restrictions</div>
               </div>
-              <div className="space-y-4 mb-8">
-                <div className="flex items-center">
-                  <Crown className="h-5 w-5 text-amber-500 mr-3 flex-shrink-0" />
-                  <span className="text-sm"><strong>Everything in Basic</strong> + unlimited access</span>
+              <div className="space-y-3 mb-8">
+                <div className="flex items-center text-sm">
+                  <Crown className="h-4 w-4 text-amber-500 mr-3 flex-shrink-0" />
+                  <span><strong>Everything in Basic</strong> +</span>
                 </div>
-                <div className="flex items-center">
-                  <Sparkles className="h-5 w-5 text-amber-500 mr-3 flex-shrink-0" />
-                  <span className="text-sm"><strong>Advanced AI insights & predictions</strong></span>
+                <div className="flex items-center text-sm">
+                  <Sparkles className="h-4 w-4 text-amber-500 mr-3 flex-shrink-0" />
+                  <span>Advanced AI insights</span>
                 </div>
-                <div className="flex items-center">
-                  <Sparkles className="h-5 w-5 text-amber-500 mr-3 flex-shrink-0" />
-                  <span className="text-sm"><strong>Smart automation & scheduling</strong></span>
+                <div className="flex items-center text-sm">
+                  <Sparkles className="h-4 w-4 text-amber-500 mr-3 flex-shrink-0" />
+                  <span>Smart automation</span>
                 </div>
-                <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                  <span className="text-sm">Team collaboration & sharing features</span>
+                <div className="flex items-center text-sm">
+                  <CheckCircle className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
+                  <span>Team collaboration</span>
                 </div>
-                <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                  <span className="text-sm">24/7 priority support & dedicated help</span>
-                </div>
-                <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-                  <span className="text-sm">Custom integrations & API access</span>
+                <div className="flex items-center text-sm">
+                  <CheckCircle className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
+                  <span>24/7 priority support</span>
                 </div>
               </div>
               <Link href="/auth">
-                <Button className="w-full text-lg py-6 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white shadow-lg">
-                  Get Unlimited Power 👑
+                <Button className="w-full py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white">
+                  Get Unlimited Power
                 </Button>
               </Link>
             </CardContent>
