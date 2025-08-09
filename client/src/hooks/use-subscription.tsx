@@ -1,131 +1,258 @@
-import { useState, useEffect } from "react";
-import { useAuth } from "./use-supabase-auth";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
 
-export interface SubscriptionStatus {
-  isPremium: boolean;
-  isBasic: boolean;
+interface SubscriptionStatus {
   tier: 'free' | 'basic' | 'pro';
-  dailyAiUsage: number;
-  dailyAiLimit: number;
-  monthlyAiUsage: number;
-  monthlyAiLimit: number;
-  canUseAi: boolean;
-  subscriptionId?: string;
-  subscriptionStatus?: string;
-  expiresAt?: string;
+  isActive: boolean;
+  subscriptionEndDate?: Date;
+  daysRemaining: number;
+  dailyAiCalls: number;
+  monthlyAiCalls: number;
+  frozenProCredits: number;
+  limits: {
+    daily: number;
+    monthly: number;
+    unlimited: boolean;
+  };
+}
+
+interface PlanPricing {
+  basic: {
+    name: string;
+    price: number;
+    currency: string;
+    features: string[];
+    dailyLimit: number;
+    monthlyLimit: number;
+  };
+  pro: {
+    name: string;
+    price: number;
+    currency: string;
+    features: string[];
+    dailyLimit: number;
+    monthlyLimit: number;
+  };
+}
+
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
 }
 
 export function useSubscription() {
-  const { user } = useAuth();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
-  
-  // Use React Query for subscription status
-  const { data: subscriptionStatus, isLoading, refetch } = useQuery({
-    queryKey: ['/api/subscription-status'],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/subscription-status");
-      if (!response.ok) {
-        throw new Error('Failed to fetch subscription status');
-      }
-      return response.json();
-    },
-    enabled: !!user,
-    staleTime: 5000, // 5 seconds - faster refresh for AI usage
-    refetchOnWindowFocus: true, // Update when user switches back to tab
+
+  // Get subscription status
+  const {
+    data: subscriptionStatus,
+    isLoading: statusLoading,
+    error: statusError
+  } = useQuery<SubscriptionStatus>({
+    queryKey: ['/api/payments/subscription-status'],
+    staleTime: 5000, // Fast updates for subscription changes
+    refetchInterval: 30000, // Auto-refresh every 30 seconds
   });
 
-  // Fallback subscription status if data is not loaded yet
-  const currentStatus: SubscriptionStatus = subscriptionStatus || {
-    isPremium: false,
-    isBasic: false,
-    tier: 'free',
-    dailyAiUsage: 0,
-    dailyAiLimit: 3,
-    monthlyAiUsage: 0,
-    monthlyAiLimit: -1,
-    canUseAi: true,
-  };
+  // Get pricing plans
+  const {
+    data: plans,
+    isLoading: plansLoading
+  } = useQuery<{ plans: PlanPricing }>({
+    queryKey: ['/api/payments/plans'],
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
 
-  // Get tier-based limits
-  const getTierLimits = (tier: string) => {
-    switch (tier) {
-      case 'basic': return 100; // 100 AI requests per month + 3 daily
-      case 'pro': return -1; // unlimited
-      default: return 3; // free
-    }
-  };
+  // Get AI usage limits
+  const {
+    data: aiLimits,
+    isLoading: limitsLoading
+  } = useQuery({
+    queryKey: ['/api/payments/ai-limits'],
+    staleTime: 1000, // Fast updates for AI usage
+    refetchInterval: 10000, // Check every 10 seconds
+  });
 
-  // Remove the old fetch function as React Query handles it
+  // Create payment order
+  const createOrder = useMutation({
+    mutationFn: async (planType: 'basic' | 'pro') => {
+      const response = await apiRequest('POST', '/api/payments/create-order', { planType });
+      return response;
+    },
+    onError: (error) => {
+      console.error('Failed to create payment order:', error);
+      toast({
+        title: "Payment Error",
+        description: "Failed to create payment order. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
-  const incrementAiUsage = async (feature?: string) => {
-    if (!user) return false;
+  // Verify payment
+  const verifyPayment = useMutation({
+    mutationFn: async (paymentData: {
+      razorpay_payment_id: string;
+      razorpay_order_id: string;
+      razorpay_signature: string;
+    }) => {
+      const response = await apiRequest('POST', '/api/payments/verify-payment', paymentData);
+      return response;
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: "Payment Successful!",
+        description: `Successfully upgraded to ${data.payment?.planType || 'premium'} plan!`,
+      });
+      // Invalidate and refetch subscription status
+      queryClient.invalidateQueries({ queryKey: ['/api/payments/subscription-status'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/payments/ai-limits'] });
+    },
+    onError: (error) => {
+      console.error('Payment verification failed:', error);
+      toast({
+        title: "Payment Verification Failed",
+        description: "Payment could not be verified. Please contact support.",
+        variant: "destructive",
+      });
+    },
+  });
 
+  // Handle Razorpay payment
+  const handlePayment = async (planType: 'basic' | 'pro') => {
     try {
-      const response = await apiRequest("POST", "/api/increment-ai-usage", { feature });
-      if (response.ok) {
-        const data = await response.json();
-        
-        // Invalidate subscription query to refresh the data
-        queryClient.invalidateQueries({ queryKey: ['/api/subscription-status'] });
-        
-        return data.canUseAi;
-      } else {
-        console.error("Failed to increment AI usage:", response.status, response.statusText);
+      // Create order
+      const orderData: any = await createOrder.mutateAsync(planType);
+      
+      if (!orderData?.success) {
+        throw new Error('Failed to create order');
       }
-    } catch (error) {
-      console.error("Failed to increment AI usage:", error);
-    }
-    return false;
-  };
 
-  const checkAiUsageLimit = () => {
-    // For premium_pro users, always allow AI usage (only if subscription is active)
-    if (currentStatus.isPremium) {
-      return currentStatus.canUseAi;
-    }
-    
-    const userTier = currentStatus.tier || 'free';
-    
-    // Check tier-specific limits
-    if (userTier === 'pro') {
-      // Pro tier: Unlimited but only if subscription is active
-      return currentStatus.canUseAi;
-    } else if (userTier === 'basic') {
-      // Basic tier: 100 monthly (3 daily + monthly pool) but only if subscription is active
-      return currentStatus.canUseAi && (currentStatus.monthlyAiUsage || 0) < 100;
-    } else {
-      // Free tier: 3 daily
-      return currentStatus.canUseAi && (currentStatus.dailyAiUsage || 0) < 3;
-    }
-  };
+      // Load Razorpay script if not already loaded
+      if (!window.Razorpay) {
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
+        document.body.appendChild(script);
+        
+        await new Promise((resolve, reject) => {
+          script.onload = resolve;
+          script.onerror = reject;
+        });
+      }
 
-  const resetAiUsage = async () => {
-    // Invalidate the query to refresh data
-    queryClient.invalidateQueries({ queryKey: ['/api/subscription-status'] });
-  };
+      const plan = plans?.plans[planType];
+      if (!plan) {
+        throw new Error('Plan not found');
+      }
 
-  // Add optimistic update helper for instant UI feedback
-  const updateAiUsageOptimistically = () => {
-    queryClient.setQueryData(['/api/subscription-status'], (old: any) => {
-      if (!old) return old;
-      return {
-        ...old,
-        dailyAiUsage: (old.dailyAiUsage || 0) + 1,
-        canUseAi: (old.dailyAiUsage || 0) + 1 < (old.dailyAiLimit || 3)
+      // Configure Razorpay options
+      const options = {
+        key: orderData.razorpayKeyId,
+        amount: orderData.order?.amount,
+        currency: orderData.order?.currency,
+        name: 'Smart To-Do AI',
+        description: `${plan.name} - ₹${plan.price}/month`,
+        order_id: orderData.order?.id,
+        handler: async (response: any) => {
+          // Verify payment with backend
+          await verifyPayment.mutateAsync({
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_signature: response.razorpay_signature,
+          });
+        },
+        prefill: {
+          name: 'Smart To-Do User',
+          email: '', // Will be filled by Razorpay if available
+        },
+        theme: {
+          color: '#2dd4bf', // Teal theme color
+        },
+        modal: {
+          ondismiss: () => {
+            console.log('Payment modal closed');
+          },
+        },
       };
-    });
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (error) {
+      console.error('Payment process failed:', error);
+      toast({
+        title: "Payment Failed",
+        description: "Unable to process payment. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Helper function to check if user can use AI features
+  const canUseAI = (): boolean => {
+    return (aiLimits as any)?.allowed || false;
+  };
+
+  // Helper function to get usage display
+  const getUsageDisplay = () => {
+    if (!subscriptionStatus || !aiLimits) return null;
+
+    const { tier } = subscriptionStatus;
+    const limits = (aiLimits as any)?.limits;
+
+    if (tier === 'free' || tier === 'basic') {
+      return {
+        type: 'daily',
+        used: limits?.used || 0,
+        total: 3,
+        remaining: Math.max(0, 3 - (limits?.used || 0)),
+      };
+    }
+
+    if (tier === 'pro') {
+      return {
+        type: 'pro',
+        dailyUsed: limits?.dailyUsed || 0,
+        dailyTotal: 3,
+        dailyRemaining: Math.max(0, 3 - (limits?.dailyUsed || 0)),
+        monthlyUsed: limits?.monthlyUsed || 0,
+        monthlyTotal: 100,
+        monthlyRemaining: Math.max(0, 100 - (limits?.monthlyUsed || 0)),
+        usingMonthlyPool: limits?.usingMonthlyPool || false,
+      };
+    }
+
+    return null;
   };
 
   return {
-    subscriptionStatus: currentStatus,
-    isLoading,
-    incrementAiUsage,
-    checkAiUsageLimit,
-    refetch,
-    refreshStatus: refetch,
-    resetAiUsage,
-    updateAiUsageOptimistically
+    // Subscription status
+    subscription: subscriptionStatus,
+    isLoading: statusLoading,
+    error: statusError,
+
+    // Plans and pricing
+    plans: plans?.plans,
+    plansLoading,
+
+    // AI usage limits
+    aiLimits,
+    limitsLoading,
+    canUseAI: canUseAI(),
+    usage: getUsageDisplay(),
+
+    // Payment actions
+    handlePayment,
+    isProcessingPayment: createOrder.isPending || verifyPayment.isPending,
+
+    // Helper functions
+    isPro: subscriptionStatus?.tier === 'pro',
+    isBasic: subscriptionStatus?.tier === 'basic',
+    isFree: subscriptionStatus?.tier === 'free',
+    isActive: subscriptionStatus?.isActive || false,
+    daysRemaining: subscriptionStatus?.daysRemaining || 0,
   };
 }

@@ -2244,6 +2244,10 @@ Guidelines:
   // AI Brain - Central AI controller
   const { registerAIBrainRoutes } = await import("./routes/ai-brain");
   registerAIBrainRoutes(app);
+
+  // Payment Routes
+  const paymentRoutes = await import("./routes/payments");
+  app.use('/api/payments', paymentRoutes.default);
   
   // ============================================================================
   // NOTIFICATION ROUTES

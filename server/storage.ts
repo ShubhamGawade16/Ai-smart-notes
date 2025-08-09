@@ -2,6 +2,7 @@ import {
   users,
   tasks,
   notes,
+  payments,
   type User,
   type InsertUser,
   type UpsertUser,
@@ -11,6 +12,8 @@ import {
   type Note,
   type InsertNote,
   type UpdateNote,
+  type Payment,
+  type InsertPayment,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
@@ -45,6 +48,13 @@ export interface IStorage {
   resetDailyLimits(userId: string): Promise<void>;
   resetMonthlyLimits(userId: string): Promise<void>;
   incrementDailyAiCalls(userId: string): Promise<void>;
+  getAllUsers(): Promise<User[]>;
+
+  // Payment operations
+  createPayment(payment: InsertPayment): Promise<Payment>;
+  getPayment(id: string): Promise<Payment | undefined>;
+  getPaymentByOrderId(orderId: string): Promise<Payment | undefined>;
+  updatePayment(id: string, updates: Partial<Payment>): Promise<Payment | undefined>;
 }
 
 // Database storage implementation
@@ -259,6 +269,34 @@ export class DatabaseStorage implements IStorage {
         })
         .where(eq(users.id, userId));
     }
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users);
+  }
+
+  // Payment operations
+  async createPayment(payment: InsertPayment): Promise<Payment> {
+    const [newPayment] = await db.insert(payments).values(payment).returning();
+    return newPayment;
+  }
+
+  async getPayment(id: string): Promise<Payment | undefined> {
+    const [payment] = await db.select().from(payments).where(eq(payments.id, id));
+    return payment;
+  }
+
+  async getPaymentByOrderId(orderId: string): Promise<Payment | undefined> {
+    const [payment] = await db.select().from(payments).where(eq(payments.razorpayOrderId, orderId));
+    return payment;
+  }
+
+  async updatePayment(id: string, updates: Partial<Payment>): Promise<Payment | undefined> {
+    const [payment] = await db.update(payments)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(payments.id, id))
+      .returning();
+    return payment;
   }
 }
 

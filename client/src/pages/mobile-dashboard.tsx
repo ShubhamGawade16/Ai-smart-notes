@@ -21,6 +21,7 @@ import ConfettiBurst from "@/components/confetti-burst";
 import DailyMotivationQuote from "@/components/daily-motivation-quote";
 import TaskProgressRadar from "@/components/task-progress-radar";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { SubscriptionUpgradeBanner } from "@/components/subscription-upgrade-banner";
 import { Plus, MessageCircle, Crown, User, Settings, LogOut, Sparkles, Sun, Moon, Code } from "lucide-react";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -30,7 +31,7 @@ export default function MobileDashboard() {
   const { user, logout } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { subscriptionStatus, checkAiUsageLimit, incrementAiUsage } = useSubscription();
+  const { subscription, canUseAI, isPro, isBasic, isFree } = useSubscription();
   
   const [showSmartInput, setShowSmartInput] = useState(false);
   const [showAIRefiner, setShowAIRefiner] = useState(false);
@@ -228,6 +229,9 @@ export default function MobileDashboard() {
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
         <div className="space-y-6">
+          {/* Subscription Upgrade Banner */}
+          <SubscriptionUpgradeBanner />
+          
           {/* Task Input */}
           {showSmartInput && (
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 p-6">
@@ -317,26 +321,22 @@ export default function MobileDashboard() {
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 p-4">
               <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">AI Usage</h3>
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                {subscriptionStatus.tier === 'basic' ? 
-                  `${subscriptionStatus.monthlyAiUsage}/${subscriptionStatus.monthlyAiLimit === -1 ? '∞' : subscriptionStatus.monthlyAiLimit}` :
-                  `${subscriptionStatus.dailyAiUsage}/${subscriptionStatus.dailyAiLimit === -1 ? '∞' : subscriptionStatus.dailyAiLimit}`
-                }
+                {isPro ? '∞' : 
+                 isBasic ? `${subscription?.monthlyAiCalls || 0}/100` :
+                 `${subscription?.dailyAiCalls || 0}/3`}
               </div>
               <div className="text-xs text-gray-500 dark:text-gray-400">
-                {subscriptionStatus.tier === 'basic' ? 'Monthly' : 
-                 subscriptionStatus.tier === 'pro' ? 'Unlimited' : 'Daily'}
+                {isPro ? 'Unlimited' : isBasic ? 'Monthly' : 'Daily'}
               </div>
             </div>
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 p-4">
               <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Status</h3>
               <div className={`text-lg font-semibold ${
-                subscriptionStatus.tier === 'pro' ? 'text-purple-600 dark:text-purple-400' :
-                subscriptionStatus.tier === 'basic' ? 'text-blue-600 dark:text-blue-400' :
+                isPro ? 'text-purple-600 dark:text-purple-400' :
+                isBasic ? 'text-blue-600 dark:text-blue-400' :
                 'text-gray-600 dark:text-gray-400'
               }`}>
-                {subscriptionStatus.tier === 'pro' ? 'Pro User' :
-                 subscriptionStatus.tier === 'basic' ? 'Basic Plan' :
-                 'Free Plan'}
+                {isPro ? 'Pro User' : isBasic ? 'Basic Plan' : 'Free Plan'}
               </div>
             </div>
           </div>

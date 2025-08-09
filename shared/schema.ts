@@ -18,6 +18,7 @@ import { z } from "zod";
 // Enums
 export const userTierEnum = pgEnum("user_tier", ["free", "basic", "pro"]);
 export const subscriptionStatusEnum = pgEnum("subscription_status", ["active", "canceled", "past_due", "incomplete"]);
+export const paymentStatusEnum = pgEnum("payment_status", ["pending", "captured", "failed", "refunded"]);
 export const taskPriorityEnum = pgEnum("task_priority", ["low", "medium", "high", "urgent"]);
 export const taskTypeEnum = pgEnum("task_type", ["creative", "routine", "analytical", "deep_work", "communication", "learning"]);
 
@@ -42,14 +43,16 @@ export const users = pgTable("users", {
   profileImageUrl: varchar("profile_image_url"),
   timezone: varchar("timezone", { length: 100 }).default("UTC").notNull(),
   tier: userTierEnum("tier").default("free").notNull(),
-  subscriptionId: varchar("subscription_id"), // Payment processor subscription ID
+  subscriptionId: varchar("subscription_id"), // Razorpay subscription ID
   subscriptionStatus: subscriptionStatusEnum("subscription_status"),
-  subscriptionCurrentPeriodEnd: timestamp("subscription_current_period_end"),
-  // Removed trial fields - not needed for current monetization model
+  subscriptionStartDate: timestamp("subscription_start_date"),
+  subscriptionEndDate: timestamp("subscription_end_date"),
+  razorpayCustomerId: varchar("razorpay_customer_id"), // Razorpay customer ID for future payments
   dailyAiCalls: integer("daily_ai_calls").default(0),
   dailyAiCallsResetAt: timestamp("daily_ai_calls_reset_at").defaultNow(),
   monthlyAiCalls: integer("monthly_ai_calls").default(0),
   monthlyAiCallsResetAt: timestamp("monthly_ai_calls_reset_at").defaultNow(),
+  frozenProCredits: integer("frozen_pro_credits").default(0), // Credits preserved when downgraded
   // Removed gamification fields - not implemented in current app
   // Keep only essential onboarding fields
   onboardingCompleted: boolean("onboarding_completed").default(false),
@@ -125,6 +128,30 @@ export const notesRelations = relations(notes, ({ one }) => ({
   }),
 }));
 
+// Payments table for Razorpay transactions
+export const payments = pgTable("payments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  razorpayPaymentId: varchar("razorpay_payment_id").unique(),
+  razorpayOrderId: varchar("razorpay_order_id").notNull(),
+  razorpaySignature: varchar("razorpay_signature"),
+  amount: integer("amount").notNull(), // Amount in paisa (INR smallest unit)
+  currency: varchar("currency", { length: 3 }).default("INR").notNull(),
+  status: paymentStatusEnum("status").default("pending").notNull(),
+  planType: userTierEnum("plan_type").notNull(), // Which plan they're purchasing
+  subscriptionDurationDays: integer("subscription_duration_days").default(30),
+  metadata: jsonb("metadata"), // Additional payment metadata
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const paymentsRelations = relations(payments, ({ one }) => ({
+  user: one(users, {
+    fields: [payments.userId],
+    references: [users.id],
+  }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -177,6 +204,15 @@ export const updateNoteSchema = insertNoteSchema.partial().extend({
   aiSummary: z.string().optional(),
 });
 
+// Payment schemas
+export const insertPaymentSchema = createInsertSchema(payments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const updatePaymentSchema = insertPaymentSchema.partial();
+
 export const updateUserSchema = insertUserSchema.partial().extend({
   id: z.string(),
   tier: z.enum(["free", "basic", "pro"]).optional(),
@@ -208,7 +244,8 @@ export type Note = typeof notes.$inferSelect;
 export type InsertNote = z.infer<typeof insertNoteSchema>;
 export type UpdateNote = z.infer<typeof updateNoteSchema>;
 
-// Removed unused table types
+export type Payment = typeof payments.$inferSelect;
+export type InsertPayment = z.infer<typeof insertPaymentSchema>;
 
 export type LoginRequest = z.infer<typeof loginSchema>;
 export type RegisterRequest = z.infer<typeof registerSchema>;
