@@ -153,6 +153,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = onAuthStateChange(async (event, session) => {
       console.log('Auth state changed:', event, session?.user?.email);
       
+      // Force immediate auth state update on sign in
+      if (event === 'SIGNED_IN' && session?.user) {
+        console.log('✅ User signed in, updating auth state immediately');
+        if (session.access_token) {
+          localStorage.setItem('auth_token', session.access_token);
+          console.log('✅ Updated auth token for API requests');
+        }
+        setSupabaseUser(session.user);
+        await syncUserData(session.user);
+      }
+      
       if (session?.user) {
         // Store access token for API requests
         if (session.access_token) {

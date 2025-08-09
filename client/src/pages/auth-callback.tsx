@@ -149,10 +149,29 @@ export default function AuthCallbackPage() {
                     </AlertDescription>
                   </Alert>
                   <Button
-                    onClick={() => {
-                      console.log('🔄 Sign In Now clicked, navigating to dashboard...');
-                      // Force a page refresh to ensure auth state is properly loaded
-                      window.location.href = '/dashboard';
+                    onClick={async () => {
+                      console.log('🔄 Sign In Now clicked, checking auth state...');
+                      
+                      // Ensure auth state is properly set before navigation
+                      if (supabase) {
+                        try {
+                          const { data: { session } } = await supabase.auth.getSession();
+                          if (session?.access_token) {
+                            localStorage.setItem('auth_token', session.access_token);
+                            console.log('✅ Auth token stored, refreshing page to load dashboard');
+                            // Force a full page refresh to ensure auth state is loaded
+                            window.location.href = '/dashboard';
+                          } else {
+                            console.log('⚠️ No session found, redirecting to home');
+                            window.location.href = '/';
+                          }
+                        } catch (error) {
+                          console.error('Error checking session:', error);
+                          window.location.href = '/';
+                        }
+                      } else {
+                        window.location.href = '/';
+                      }
                     }}
                     className="w-full bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700"
                   >
