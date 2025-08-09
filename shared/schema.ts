@@ -53,6 +53,10 @@ export const users = pgTable("users", {
   monthlyAiCalls: integer("monthly_ai_calls").default(0),
   monthlyAiCallsResetAt: timestamp("monthly_ai_calls_reset_at").defaultNow(),
   frozenProCredits: integer("frozen_pro_credits").default(0), // Credits preserved when downgraded
+  // Additional fields needed by routes
+  subscriptionCurrentPeriodEnd: timestamp("subscription_current_period_end"),
+  currentStreak: integer("current_streak").default(0),
+  primaryGoal: text("primary_goal"),
   // Removed gamification fields - not implemented in current app
   // Keep only essential onboarding fields
   onboardingCompleted: boolean("onboarding_completed").default(false),
