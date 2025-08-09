@@ -21,7 +21,7 @@ import {
   type Task,
   type Note
 } from "@shared/schema";
-import { checkTier, incrementUsage, getUserLimits, FREE_TIER_LIMITS } from "./middleware/tier-check";
+import { checkTier, incrementUsage, getUserLimits } from "./middleware/tier-check";
 import { parseNaturalLanguageTask, optimizeTaskOrder, generateProductivityInsights, refineTask } from "./services/ai-service";
 import { notificationService } from "./services/notification-service";
 import OpenAI from 'openai';
@@ -133,6 +133,19 @@ const requireAuth = async (req: any, res: any, next: any) => {
               firstName: user.user_metadata?.first_name || '',
               lastName: user.user_metadata?.last_name || '',
               onboardingCompleted: false,
+              tier: 'free' as const,
+              timezone: 'UTC',
+              passwordHash: null,
+              profileImageUrl: null,
+              subscriptionId: null,
+              subscriptionStatus: null,
+              subscriptionCurrentPeriodEnd: null,
+              dailyAiCalls: 0,
+              dailyAiCallsResetAt: new Date(),
+              monthlyAiCalls: 0,
+              monthlyAiCallsResetAt: new Date(),
+              createdAt: new Date(),
+              updatedAt: new Date(),
             };
             userData = await storage.createUser(insertUserData);
           }
@@ -168,6 +181,26 @@ const requireAuth = async (req: any, res: any, next: any) => {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
+  // Add authentication routes
+  app.get('/api/auth/me', requireAuth, async (req: any, res) => {
+    try {
+      res.json(req.user);
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      res.status(500).json({ message: 'Failed to fetch user' });
+    }
+  });
+
+  app.post('/api/auth/sync-user', requireAuth, async (req: any, res) => {
+    try {
+      // User already created in requireAuth middleware if it didn't exist
+      res.json(req.user);
+    } catch (error) {
+      console.error('Error syncing user:', error);
+      res.status(500).json({ message: 'Failed to sync user' });
+    }
+  });
+  
   // Setup Replit Auth
   try {
     await setupAuth(app);
@@ -175,39 +208,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   } catch (error) {
     console.log('⚠️ Replit Auth not available (expected in development), using fallback auth');
   }
-  // Supabase Authentication Routes
-  app.get("/api/auth/me", requireAuth, async (req: any, res) => {
-    try {
-      res.json(req.user);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
-    }
-  });
 
-  app.post("/api/auth/sync-user", requireAuth, async (req: any, res) => {
-    try {
-      const { id, email, firstName, lastName } = req.body;
-      
-      // Get or create user in our database
-      let userData = await storage.getUser(id);
-      if (!userData) {
-        const insertUserData = {
-          id,
-          email: email || '',
-          firstName: firstName || '',
-          lastName: lastName || '',
-          onboardingCompleted: false,
-        };
-        userData = await storage.createUser(insertUserData);
-      }
-      
-      res.json(userData);
-    } catch (error) {
-      console.error("Error syncing user:", error);
-      res.status(500).json({ message: "Failed to sync user" });
-    }
-  });
 
   // Simple Authentication Routes (fallback)
   app.post("/api/auth/signup", async (req, res) => {
