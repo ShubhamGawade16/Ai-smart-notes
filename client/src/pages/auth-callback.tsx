@@ -20,7 +20,12 @@ export default function AuthCallbackPage() {
           return;
         }
 
-        // Handle the auth callback
+        // Handle the auth callback - process URL hash for OAuth
+        console.log('🔍 Current URL:', window.location.href);
+        console.log('🔍 Hash:', window.location.hash);
+        console.log('🔍 Search:', window.location.search);
+        
+        // For Google OAuth, the tokens are in the URL hash
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -31,7 +36,7 @@ export default function AuthCallbackPage() {
         }
 
         if (data.session) {
-          console.log('✅ Authentication successful');
+          console.log('✅ Authentication successful via session');
           setAuthStatus("success");
           
           // Check if this is a new user or returning user
@@ -44,22 +49,52 @@ export default function AuthCallbackPage() {
             // User can click the sign in button when ready
           }
         } else {
-          // No session found, might be an email verification link
-          const urlParams = new URLSearchParams(window.location.search);
-          const accessToken = urlParams.get('access_token');
-          const refreshToken = urlParams.get('refresh_token');
-          const type = urlParams.get('type');
-
-          if (type === 'signup' && accessToken && refreshToken) {
-            // This is an email verification, set the session
-            await supabase.auth.setSession({
+          // Check if there are OAuth tokens in the URL hash (Google OAuth)
+          const hashParams = new URLSearchParams(window.location.hash.substring(1));
+          const accessToken = hashParams.get('access_token');
+          const refreshToken = hashParams.get('refresh_token');
+          const tokenType = hashParams.get('token_type');
+          
+          console.log('🔍 Hash tokens:', { accessToken: !!accessToken, refreshToken: !!refreshToken, tokenType });
+          
+          if (accessToken) {
+            console.log('✅ Found OAuth tokens in hash, setting session...');
+            // Set the session from hash tokens
+            const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
               access_token: accessToken,
-              refresh_token: refreshToken,
+              refresh_token: refreshToken || '',
             });
-            setAuthStatus("success");
+            
+            if (sessionError) {
+              console.error('❌ Failed to set session:', sessionError);
+              setAuthStatus("error");
+              setErrorMessage(sessionError.message || "Failed to complete authentication");
+            } else if (sessionData.session) {
+              console.log('✅ Authentication successful via hash tokens');
+              setAuthStatus("success");
+              localStorage.setItem('auth_token', accessToken);
+            } else {
+              setAuthStatus("error");
+              setErrorMessage("Failed to establish session");
+            }
           } else {
-            setAuthStatus("error");
-            setErrorMessage("No valid authentication session found.");
+            // No session found, might be an email verification link
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlAccessToken = urlParams.get('access_token');
+            const urlRefreshToken = urlParams.get('refresh_token');
+            const type = urlParams.get('type');
+
+            if (type === 'signup' && urlAccessToken && urlRefreshToken) {
+              // This is an email verification, set the session
+              await supabase.auth.setSession({
+                access_token: urlAccessToken,
+                refresh_token: urlRefreshToken,
+              });
+              setAuthStatus("success");
+            } else {
+              setAuthStatus("error");
+              setErrorMessage("No valid authentication session found.");
+            }
           }
         }
       } catch (error: any) {
