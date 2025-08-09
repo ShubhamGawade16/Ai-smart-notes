@@ -87,9 +87,9 @@ function checkAiUsageLimit(user: any): { allowed: boolean; userLimit: number; li
   return { allowed, userLimit: dailyLimit, limitType: 'daily' };
 }
 
-// Initialize Supabase client using environment variables (matches frontend)
-const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || '';
+// Initialize Supabase client for JWT verification (force using new credentials)
+const supabaseUrl = 'https://qtdjrdxwfvhcwowebxnm.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0ZGpyZHh3ZnZoY3dvd2VieG5tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ1OTE2NDgsImV4cCI6MjA3MDE2NzY0OH0.084iehz8I9T71uaN-xbdUgc8_GXJvP-KWBKUOrP4CRg';
 const supabase = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
 console.log('🔧 Backend Supabase client initialized with URL:', supabaseUrl);
@@ -98,7 +98,7 @@ console.log('🔧 Backend Supabase client initialized with URL:', supabaseUrl);
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
 
 // Unified auth middleware for both Supabase and fallback auth
-const requireAuth = async (req: AuthRequest, res: any, next: any) => {
+const requireAuth = async (req: any, res: any, next: any) => {
   try {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -183,7 +183,7 @@ const requireAuth = async (req: AuthRequest, res: any, next: any) => {
 export async function registerRoutes(app: Express): Promise<Server> {
   
   // Add authentication routes
-  app.get('/api/auth/me', requireAuth, async (req: AuthRequest, res) => {
+  app.get('/api/auth/me', requireAuth, async (req: any, res) => {
     try {
       res.json(req.user);
     } catch (error) {
@@ -192,7 +192,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/auth/sync-user', requireAuth, async (req: AuthRequest, res) => {
+  app.post('/api/auth/sync-user', requireAuth, async (req: any, res) => {
     try {
       // User already created in requireAuth middleware if it didn't exist
       res.json(req.user);
@@ -313,10 +313,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Duplicate route removed - already defined above
+  app.get("/api/auth/me", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      });
+    } catch (error: any) {
+      console.error('Get user error:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
 
   // Get current user profile
-  app.get("/api/auth/user", requireAuth, async (req: AuthRequest, res) => {
+  app.get("/api/auth/user", requireAuth, async (req, res) => {
     try {
       const userId = req.userId;
       if (!userId) {
@@ -341,7 +358,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update user profile
-  app.put("/api/auth/user", requireAuth, async (req: AuthRequest, res) => {
+  app.put("/api/auth/user", requireAuth, async (req, res) => {
     try {
       const userId = req.userId;
       if (!userId) {
@@ -395,7 +412,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================================================
 
   // Get subscription status with Basic tier support
-  app.get("/api/subscription-status", requireAuth, async (req: AuthRequest, res) => {
+  app.get("/api/subscription-status", requireAuth, async (req, res) => {
     try {
       if (!req.userId) {
         return res.status(401).json({ error: "User ID not found in token" });
@@ -498,7 +515,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Increment AI usage (with feature exceptions)
-  app.post("/api/increment-ai-usage", requireAuth, async (req: AuthRequest, res) => {
+  app.post("/api/increment-ai-usage", requireAuth, async (req, res) => {
     try {
       if (!req.userId) {
         return res.status(401).json({ error: "User ID not found in token" });
@@ -654,7 +671,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Development endpoint to reset AI usage
-  app.post("/api/dev/reset-ai-usage", requireAuth, async (req: AuthRequest, res) => {
+  app.post("/api/dev/reset-ai-usage", requireAuth, async (req, res) => {
     try {
       if (!req.userId) {
         return res.status(401).json({ error: "User ID not found in token" });
@@ -680,7 +697,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Development endpoint to toggle user tier for testing
-  app.post("/api/dev/toggle-tier", requireAuth, async (req: AuthRequest, res) => {
+  app.post("/api/dev/toggle-tier", requireAuth, async (req, res) => {
     try {
       if (!req.userId) {
         return res.status(401).json({ error: "User ID not found in token" });
@@ -720,8 +737,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Update user tier and reset AI usage
       await storage.updateUser(req.userId, {
-        tier: newTier as "pro" | "free" | "basic",
-        subscriptionStatus: subscriptionStatus as "active" | "canceled" | "past_due" | "incomplete" | null,
+        tier: newTier,
+        subscriptionStatus,
         subscriptionCurrentPeriodEnd: subscriptionEnd,
         dailyAiCalls: 0,
         monthlyAiCalls: 0,
@@ -813,8 +830,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       const updatedUser = await storage.updateUser(req.userId, {
-        tier: (tierMap[plan as keyof typeof tierMap] || 'basic') as "pro" | "free" | "basic",
-        subscriptionStatus: 'active' as "active" | "canceled" | "past_due" | "incomplete",
+        tier: tierMap[plan] || 'basic',
+        subscriptionStatus: 'active',
         subscriptionCurrentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
       });
 
@@ -841,8 +858,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // For now, simulate successful upgrade
       // In production, this would integrate with actual payment processor
       const updatedUser = await storage.updateUser(req.userId, {
-        tier: 'pro' as "pro" | "free" | "basic",
-        subscriptionStatus: 'active' as "active" | "canceled" | "past_due" | "incomplete",
+        tier: 'pro',
+        subscriptionStatus: 'active',
         subscriptionCurrentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
       });
 
@@ -881,7 +898,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Duplicate route removed - already defined above
+  // Get current user
+  app.get("/api/auth/user", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      if (!req.userId) {
+        return res.status(401).json({ error: "User ID not found in token" });
+      }
+
+      const user = await storage.getUser(req.userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      res.json({ user });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get user" });
+    }
+  });
 
   // Delete account endpoint
   app.delete("/api/auth/delete-account", requireAuth, async (req: AuthRequest, res) => {
@@ -914,6 +947,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const user = await storage.updateUser(req.userId, {
         primaryGoal,
+        customGoals,
         onboardingCompleted: true,
       });
 
@@ -945,7 +979,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   );
 
   // Smart Task Optimization - Reorder tasks for maximum efficiency (FREE for testing)
-  app.post("/api/ai/optimize-tasks", requireAuth, async (req: AuthRequest, res) => {
+  app.post("/api/ai/optimize-tasks", async (req: AuthRequest, res) => {
       try {
         const { taskIds, userContext } = req.body;
         
@@ -967,7 +1001,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   );
 
   // Generate Productivity Insights (FREE for testing)
-  app.get("/api/ai/insights", requireAuth, async (req: AuthRequest, res) => {
+  app.get("/api/ai/insights", async (req: AuthRequest, res) => {
       try {
         const tasks = await storage.getTasks(req.userId!);
         const user = await storage.getUser(req.userId!);
