@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Moon, Sun } from "lucide-react";
 import { useAuth } from '@/hooks/use-supabase-auth';
+import SubscriptionStatusIndicator from '@/components/subscription-status-indicator';
 
 export function Header() {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -61,6 +62,11 @@ export function Header() {
 
           {/* Right Side Actions */}
           <div className="flex items-center space-x-4">
+            {/* Compact Subscription Status */}
+            <div className="hidden md:block">
+              <SubscriptionStatusIndicator compact={true} />
+            </div>
+            
             <Button
               variant="ghost"
               size="sm"

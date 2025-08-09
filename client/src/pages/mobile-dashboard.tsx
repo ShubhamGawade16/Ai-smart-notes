@@ -22,6 +22,7 @@ import DailyMotivationQuote from "@/components/daily-motivation-quote";
 import TaskProgressRadar from "@/components/task-progress-radar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SubscriptionUpgradeBanner } from "@/components/subscription-upgrade-banner";
+import SubscriptionStatusIndicator from "@/components/subscription-status-indicator";
 import { Plus, MessageCircle, Crown, User, Settings, LogOut, Sparkles, Sun, Moon, Code } from "lucide-react";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -229,6 +230,9 @@ export default function MobileDashboard() {
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
         <div className="space-y-6">
+          {/* Subscription Status Indicator */}
+          <SubscriptionStatusIndicator />
+          
           {/* Subscription Upgrade Banner */}
           <SubscriptionUpgradeBanner />
           
