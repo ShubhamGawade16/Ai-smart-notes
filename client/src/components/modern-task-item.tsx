@@ -293,78 +293,32 @@ export function ModernTaskItem({ task, onUpdate, onDelete, onAdvancedView, onTas
               <MoreHorizontal className="w-4 h-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <div className="p-3 space-y-3">
-              <div className="text-sm font-medium text-gray-900 dark:text-gray-100">Quick Edit</div>
-              
-              {/* Priority Selector */}
-              <div>
-                <label className="text-xs text-gray-500 dark:text-gray-400 block mb-1">Priority</label>
-                <select 
-                  value={task.priority || 'low'}
-                  onChange={(e) => updateTaskMutation.mutate({ 
-                    id: task.id, 
-                    updates: { priority: e.target.value as any } 
-                  })}
-                  className="w-full text-xs border rounded px-2 py-1 bg-white dark:bg-gray-800"
-                >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                </select>
-              </div>
-
-              {/* Category Selector */}
-              <div>
-                <label className="text-xs text-gray-500 dark:text-gray-400 block mb-1">Category</label>
-                <select 
-                  value={task.category || 'general'}
-                  onChange={(e) => updateTaskMutation.mutate({ 
-                    id: task.id, 
-                    updates: { category: e.target.value } 
-                  })}
-                  className="w-full text-xs border rounded px-2 py-1 bg-white dark:bg-gray-800"
-                >
-                  <option value="general">General</option>
-                  <option value="work">Work</option>
-                  <option value="personal">Personal</option>
-                  <option value="health">Health</option>
-                  <option value="learning">Learning</option>
-                </select>
-              </div>
-
-              {/* Time Estimate */}
-              <div>
-                <label className="text-xs text-gray-500 dark:text-gray-400 block mb-1">Time</label>
-                <select 
-                  value={task.estimatedTime || 30}
-                  onChange={(e) => updateTaskMutation.mutate({ 
-                    id: task.id, 
-                    updates: { estimatedTime: parseInt(e.target.value) } 
-                  })}
-                  className="w-full text-xs border rounded px-2 py-1 bg-white dark:bg-gray-800"
-                >
-                  <option value={15}>15 min</option>
-                  <option value={30}>30 min</option>
-                  <option value={60}>1 hour</option>
-                  <option value={120}>2 hours</option>
-                  <option value={240}>4 hours</option>
-                </select>
-              </div>
-            </div>
-            
-            <div className="border-t p-1">
-              <DropdownMenuItem 
-                onClick={handleDelete}
-                className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete task
-              </DropdownMenuItem>
-            </div>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onClick={() => setIsAdvancedEditorOpen(true)}>
+              <Edit className="w-4 h-4 mr-2" />
+              Advanced Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={handleDelete}
+              className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete task
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+      
+      {/* Advanced Task Editor */}
+      <AdvancedTaskEditor
+        task={task}
+        isOpen={isAdvancedEditorOpen}
+        onClose={() => setIsAdvancedEditorOpen(false)}
+        onSave={(updatedTask) => {
+          console.log('Task updated:', updatedTask);
+          setIsAdvancedEditorOpen(false);
+        }}
+      />
     </div>
   );
 }
