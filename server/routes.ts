@@ -2443,6 +2443,150 @@ Guidelines:
       res.status(500).json({ error: 'Failed to analyze optimal timing' });
     }
   });
+
+  // Additional AI endpoints to match frontend calls
+  app.post('/api/ai/chat-assistant', optionalAuth, async (req: AuthRequest, res) => {
+    try {
+      const { message, context = [] } = req.body;
+      const userId = req.userId;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      // Check AI usage limits
+      const usageCheck = checkAiUsageLimit(user);
+      if (!usageCheck.allowed) {
+        return res.status(429).json({ 
+          error: 'AI usage limit reached',
+          userLimit: usageCheck.userLimit,
+          limitType: usageCheck.limitType
+        });
+      }
+
+      if (!message || typeof message !== 'string') {
+        return res.status(400).json({ error: 'Message is required' });
+      }
+
+      // Increment AI usage
+      await storage.incrementAiUsage(userId);
+
+      // Simple AI chat response
+      const aiResponse = `I understand you're asking about: "${message}". Based on your productivity needs, I'd suggest breaking this down into smaller, actionable steps. Consider prioritizing urgent tasks first and setting clear deadlines for better time management.`;
+
+      res.json({
+        success: true,
+        response: aiResponse,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error in AI chat assistant:', error);
+      res.status(500).json({ error: 'Failed to process AI chat request' });
+    }
+  });
+
+  // Smart timing analysis endpoint 
+  app.post('/api/ai/smart-timing', optionalAuth, async (req: AuthRequest, res) => {
+    try {
+      const { tasks = [] } = req.body;
+      const userId = req.userId;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      // Check AI usage limits
+      const usageCheck = checkAiUsageLimit(user);
+      if (!usageCheck.allowed) {
+        return res.status(429).json({ 
+          error: 'AI usage limit reached',
+          userLimit: usageCheck.userLimit,
+          limitType: usageCheck.limitType
+        });
+      }
+
+      // Increment AI usage
+      await storage.incrementAiUsage(userId);
+
+      // Simple timing analysis
+      const currentHour = new Date().getHours();
+      const analyses = tasks.slice(0, 5).map((task: any, index: number) => {
+        let readinessScore = 75 + (Math.random() * 20) - 10; // Random score between 65-85
+        let recommendation = 'Good time for this task';
+        
+        if (currentHour >= 9 && currentHour <= 11) {
+          readinessScore += 15;
+          recommendation = 'Peak focus time - ideal for complex work';
+        } else if (currentHour >= 14 && currentHour <= 16) {
+          readinessScore += 10;
+          recommendation = 'Good for collaborative tasks';
+        }
+
+        return {
+          taskId: task.id,
+          readinessScore: Math.min(100, Math.max(0, readinessScore)),
+          recommendation,
+          taskFactors: {
+            complexity: task.priority === 'high' ? 'high' : 'medium',
+            urgency: task.priority === 'high' ? 'urgent' : 'normal',
+            estimatedDuration: '30-60 minutes',
+            preferredTime: currentHour >= 9 && currentHour <= 11 ? 'now' : 'morning',
+            distractionLevel: 'low'
+          },
+          circadianFactors: {
+            timeOfDay: currentHour >= 9 && currentHour <= 11 ? 'peak' : 'moderate',
+            energyPeak: currentHour >= 9 && currentHour <= 11,
+            focusWindow: currentHour >= 9 && currentHour <= 11
+          }
+        };
+      });
+
+      res.json({
+        success: true,
+        analyses
+      });
+    } catch (error) {
+      console.error('Error in smart timing analysis:', error);
+      res.status(500).json({ error: 'Failed to analyze task timing' });
+    }
+  });
+
+  // AI usage increment endpoint for optimistic updates
+  app.post('/api/ai/increment-usage', optionalAuth, async (req: AuthRequest, res) => {
+    try {
+      const userId = req.userId;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      // Increment AI usage
+      await storage.incrementAiUsage(userId);
+
+      res.json({
+        success: true,
+        message: 'AI usage incremented'
+      });
+    } catch (error) {
+      console.error('Error incrementing AI usage:', error);
+      res.status(500).json({ error: 'Failed to increment AI usage' });
+    }
+  });
   
   // AI Brain - Central AI controller
   const { registerAIBrainRoutes } = await import("./routes/ai-brain");

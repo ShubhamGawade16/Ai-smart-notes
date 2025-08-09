@@ -31,7 +31,7 @@ export default function AIChatAssistantModal({ isOpen, onClose }: AIChatAssistan
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { incrementAiUsage, checkAiUsageLimit, updateAiUsageOptimistically } = useSubscription();
+  const { checkAiUsageLimit, updateAiUsageOptimistically } = useSubscription();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
