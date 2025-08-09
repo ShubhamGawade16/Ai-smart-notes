@@ -104,42 +104,58 @@ export const ConversationalRefiner: React.FC<ConversationalRefinerProps> = ({
     }
   };
 
-  const handleUseRefinedTasks = async (tasks: TaskRefinement['refinedTasks']) => {
-    try {
-      console.log("Creating refined tasks:", tasks);
+  const addTasksMutation = useMutation({
+    mutationFn: async (tasks: TaskRefinement['refinedTasks']) => {
+      console.log("Adding refined tasks:", tasks);
+      const createdTasks = [];
       
-      // Create all refined tasks
       for (const task of tasks) {
         console.log("Creating task:", task.title);
         const response = await apiRequest("POST", "/api/tasks", {
           title: task.title,
-          description: task.description,
-          priority: task.priority,
-          category: task.category,
-          tags: task.tags,
-          estimatedTime: task.estimatedTime
+          description: task.description || undefined,
+          priority: task.priority || 'medium',
+          category: task.category || 'general',
+          tags: task.tags || [],
+          estimatedTime: task.estimatedTime || 30
         });
-        console.log("Task created successfully:", await response.json());
+        
+        if (!response.ok) {
+          throw new Error(`Failed to create task: ${task.title}`);
+        }
+        
+        const createdTask = await response.json();
+        console.log("Task created successfully:", createdTask);
+        createdTasks.push(createdTask);
       }
       
+      return createdTasks;
+    },
+    onSuccess: (createdTasks) => {
       // Refresh task lists
       queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
       queryClient.invalidateQueries({ queryKey: ['/api/tasks/today'] });
       
       toast({
-        title: "Tasks created successfully!",
-        description: `${tasks.length} refined task(s) have been added to your list.`,
+        title: "Tasks Added Successfully!",
+        description: `${createdTasks.length} refined task(s) have been added to your task list.`,
       });
       
-      onTasksRefined?.(tasks);
-    } catch (error) {
-      console.error("Error creating refined tasks:", error);
+      console.log("All tasks added successfully:", createdTasks);
+    },
+    onError: (error: Error) => {
+      console.error("Error adding refined tasks:", error);
       toast({
-        title: "Error creating tasks",
-        description: "Failed to create refined tasks. Please try again.",
+        title: "Failed to Add Tasks",
+        description: error.message || "Could not add refined tasks. Please try again.",
         variant: "destructive"
       });
     }
+  });
+
+  const handleUseRefinedTasks = (tasks: TaskRefinement['refinedTasks']) => {
+    console.log("Button clicked - About to add tasks:", tasks);
+    addTasksMutation.mutate(tasks);
   };
 
   const canRefine = canUseFeature('basic_tasks');
@@ -276,8 +292,16 @@ export const ConversationalRefiner: React.FC<ConversationalRefinerProps> = ({
                       size="sm"
                       onClick={() => handleUseRefinedTasks(message.refinement!.refinedTasks)}
                       className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                      disabled={addTasksMutation.isPending}
                     >
-                      ✓ Add These Tasks to My List
+                      {addTasksMutation.isPending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Adding Tasks...
+                        </>
+                      ) : (
+                        "✓ Add These Tasks to My List"
+                      )}
                     </Button>
                   </div>
                 )}

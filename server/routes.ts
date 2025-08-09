@@ -1770,7 +1770,48 @@ Guidelines:
         // Use the refineTask function instead of aiBrain (which isn't imported)
         const refinement = await refineTask(originalTask, userQuery, context || {});
         
-        res.json(refinement);
+        // Transform the response to match frontend expectations
+        const transformedRefinement = {
+          refinedTasks: refinement.refined_tasks?.map((task: any) => {
+            if (typeof task === 'string') {
+              // Simple string format - convert to full task object
+              return {
+                title: task,
+                description: '',
+                priority: 'medium' as const,
+                category: 'general',
+                tags: [],
+                estimatedTime: 30
+              };
+            } else {
+              // Already an object - ensure correct format
+              return {
+                title: task.title || task,
+                description: task.description || '',
+                priority: task.priority || 'medium',
+                category: task.category || 'general',
+                tags: task.tags || [],
+                estimatedTime: task.estimatedTime || task.estimated_time || 30,
+                subtasks: task.subtasks || []
+              };
+            }
+          }) || [{ 
+            title: originalTask, 
+            description: '', 
+            priority: 'medium' as const, 
+            category: 'general', 
+            tags: [], 
+            estimatedTime: 30 
+          }],
+          explanation: refinement.insights || refinement.explanation || "Task breakdown completed.",
+          suggestions: Array.isArray(refinement.suggestions) ? refinement.suggestions : 
+                      (typeof refinement.suggestions === 'string' ? [refinement.suggestions] : 
+                       ["Consider breaking down complex tasks further."])
+        };
+        
+        console.log("Refined task:", originalTask, transformedRefinement.refinedTasks.map(t => t.title));
+        
+        res.json(transformedRefinement);
       } catch (error) {
         console.error("Task refinement error:", error);
         res.status(500).json({ error: "Failed to refine task" });
