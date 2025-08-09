@@ -17,7 +17,7 @@ interface DevModeModalProps {
 
 export default function DevModeModal({ isOpen, onClose }: DevModeModalProps) {
   const { user } = useAuth();
-  const { subscriptionStatus, refetch } = useSubscription();
+  const { subscription, isPro, isBasic, isFree } = useSubscription();
   const { toast } = useToast();
   const [isResetting, setIsResetting] = useState(false);
   const queryClient = useQueryClient();
@@ -92,8 +92,8 @@ export default function DevModeModal({ isOpen, onClose }: DevModeModalProps) {
       action: handleToggleTier,
       loading: toggleTierMutation.isPending,
       buttonText: `Switch to ${
-        subscriptionStatus.tier === 'free' ? 'Basic' :
-        subscriptionStatus.tier === 'basic' ? 'Pro' :
+        isFree ? 'Basic' :
+        isBasic ? 'Pro' :
         'Free'
       }`
     },
@@ -158,21 +158,21 @@ export default function DevModeModal({ isOpen, onClose }: DevModeModalProps) {
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-gray-600 dark:text-gray-400">Current Tier:</span>
               <Badge className={
-                subscriptionStatus.tier === 'pro' ? "bg-purple-500" : 
-                subscriptionStatus.tier === 'basic' ? "bg-blue-500" : 
+                isPro ? "bg-purple-500" : 
+                isBasic ? "bg-blue-500" : 
                 "bg-gray-500"
               }>
-                {subscriptionStatus.tier === 'pro' ? 'Pro' : 
-                 subscriptionStatus.tier === 'basic' ? 'Basic' : 
+                {isPro ? 'Pro' : 
+                 isBasic ? 'Basic' : 
                  'Free'}
               </Badge>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600 dark:text-gray-400">AI Usage:</span>
               <span className="text-sm font-medium text-gray-900 dark:text-white">
-                {subscriptionStatus.tier === 'basic' ? 
-                  `${subscriptionStatus.monthlyAiUsage || 0}/${subscriptionStatus.monthlyAiLimit === -1 ? '∞' : subscriptionStatus.monthlyAiLimit || '∞'}` :
-                  `${subscriptionStatus.dailyAiUsage}/${subscriptionStatus.dailyAiLimit === -1 ? '∞' : subscriptionStatus.dailyAiLimit}`
+                {isBasic ? 
+                  `${subscription?.monthlyAiCalls || 0}/100` :
+                  `${subscription?.dailyAiCalls || 0}/${isPro ? '∞' : '3'}`
                 }
               </span>
             </div>

@@ -120,12 +120,12 @@ export default function MobileDashboard() {
             {/* Theme Toggle and Subscription Badge */}
             <div className="flex items-center gap-2">
               <ThemeToggle />
-              {subscriptionStatus.tier === 'pro' ? (
+              {isPro ? (
                 <Badge className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-3 py-1 text-sm font-medium">
                   <Crown className="w-4 h-4 mr-1" />
                   Pro
                 </Badge>
-              ) : subscriptionStatus.tier === 'basic' ? (
+              ) : isBasic ? (
                 <Badge className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-1 text-sm font-medium">
                   Basic
                 </Badge>
@@ -171,7 +171,7 @@ export default function MobileDashboard() {
               Dev
             </Button>
 
-            {subscriptionStatus.tier === 'free' && (
+            {isFree && (
               <Button
                 onClick={() => setShowUpgradeProModal(true)}
                 size="sm"
@@ -181,7 +181,7 @@ export default function MobileDashboard() {
                 Upgrade
               </Button>
             )}
-            {subscriptionStatus.tier === 'basic' && (
+            {isBasic && (
               <Button
                 onClick={() => setShowUpgradeProModal(true)}
                 size="sm"
@@ -342,7 +342,7 @@ export default function MobileDashboard() {
           </div>
 
           {/* Upgrade Card for Free Users */}
-          {!subscriptionStatus.isPremium && (
+          {!isPro && (
             <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-2xl shadow-lg border-2 border-amber-200 dark:border-amber-700 p-6 text-center">
               <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full mx-auto mb-4 flex items-center justify-center">
                 <Crown className="w-8 h-8 text-white" />

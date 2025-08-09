@@ -48,7 +48,7 @@ interface TimingAnalysisResponse {
 export function SmartTiming() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const { toast } = useToast();
-  const { subscriptionStatus, checkAiUsageLimit, incrementAiUsage } = useSubscription();
+  const { canUseAI } = useSubscription();
 
   // Fetch user's tasks for analysis
   const { data: tasksResponse } = useQuery({
