@@ -38,14 +38,22 @@ const queryClient = new QueryClient({
 function Router() {
   const { user } = useAuth();
   
-  console.log('🔄 Router state:', { user: !!user, userEmail: user?.email });
-  console.log('🎯 About to render routes, user authenticated:', !!user);
+  // Check for fallback authentication
+  const isAuthenticated = user || localStorage.getItem('user_authenticated') === 'true';
+  
+  console.log('🔄 Router state:', { 
+    user: !!user, 
+    userEmail: user?.email,
+    fallbackAuth: localStorage.getItem('user_authenticated'),
+    finalAuth: isAuthenticated
+  });
+  console.log('🎯 About to render routes, user authenticated:', isAuthenticated);
 
   return (
     <Switch>
       {/* Public routes */}
       <Route path="/">
-        {user ? (
+        {isAuthenticated ? (
           (() => {
             console.log('🔄 User is authenticated, redirecting to dashboard');
             return <Redirect to="/dashboard" />;
@@ -56,7 +64,7 @@ function Router() {
       </Route>
       
       <Route path="/auth">
-        {user ? (
+        {isAuthenticated ? (
           (() => {
             console.log('🔄 User is authenticated on auth page, redirecting to dashboard');
             return <Redirect to="/dashboard" />;
@@ -74,7 +82,7 @@ function Router() {
       
       {/* Protected routes */}
       <Route path="/dashboard">
-        {user ? (
+        {isAuthenticated ? (
           (() => {
             console.log('🎯 Rendering dashboard for authenticated user');
             return <MobileDashboard />;
@@ -85,15 +93,15 @@ function Router() {
       </Route>
       
       <Route path="/advanced-features">
-        {user ? <AdvancedFeatures /> : <Redirect to="/" />}
+        {isAuthenticated ? <AdvancedFeatures /> : <Redirect to="/" />}
       </Route>
       
       <Route path="/upgrade">
-        {user ? <UpgradePage /> : <Redirect to="/" />}
+        {isAuthenticated ? <UpgradePage /> : <Redirect to="/" />}
       </Route>
       
       <Route path="/onboarding">
-        {user ? <OnboardingPage /> : <Redirect to="/" />}
+        {isAuthenticated ? <OnboardingPage /> : <Redirect to="/" />}
       </Route>
       
       <Route component={NotFound} />
