@@ -66,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log('✅ Stored auth token');
       }
       
-      console.log('✅ User sync complete');
+      console.log('✅ User sync complete - authentication stable');
       
     } catch (error) {
       console.error('Error in syncUserData:', error);
@@ -146,7 +146,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.log('🔄 About to sync user data...');
           await syncUserData(session.user);
         } else {
-          console.log('❌ No session found, setting loading to false');
+          console.log('❌ No initial session found, setting loading to false');
           setIsLoading(false);
         }
       } catch (error) {
@@ -186,10 +186,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             window.location.href = '/onboarding';
           }, 500);
         }
-      } else {
+      } else if (event === 'SIGNED_OUT') {
+        console.log('🚪 User signed out, clearing data');
         setSupabaseUser(null);
         setUser(null);
         localStorage.removeItem('auth_token');
+      } else {
+        console.log('⚠️ Auth state change without user, event:', event);
+        // Don't clear user data on other events like TOKEN_REFRESHED
       }
     });
 
