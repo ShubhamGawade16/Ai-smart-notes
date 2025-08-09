@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/use-supabase-auth';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { Crown, Zap, Check } from 'lucide-react';
@@ -44,10 +44,10 @@ export default function RazorpayCheckout({ plan, onSuccess, onClose }: RazorpayC
     setIsLoading(true);
     try {
       // Create order on backend
-      const response = await apiRequest("POST", "/api/razorpay/create-order", {
+      const response = await apiRequest("POST", "/api/payments/create-order", {
         amount: selectedPlan.price,
         currency: selectedPlan.currency,
-        plan: plan
+        planType: plan
       });
 
       if (!response.ok) {
@@ -58,7 +58,7 @@ export default function RazorpayCheckout({ plan, onSuccess, onClose }: RazorpayC
 
       // Initialize Razorpay
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID, // Your Razorpay key ID
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_placeholder', // Your Razorpay key ID
         amount: amount,
         currency: currency,
         name: 'Planify',
