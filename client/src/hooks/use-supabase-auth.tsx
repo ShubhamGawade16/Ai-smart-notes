@@ -36,7 +36,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Sync user data from our backend when Supabase user changes
   const syncUserData = async (supabaseUser: User | null) => {
+    console.log('🔄 syncUserData called with user:', supabaseUser?.email);
+    
     if (!supabaseUser) {
+      console.log('❌ No supabase user, clearing data');
       setUser(null);
       localStorage.removeItem('auth_token');
       setIsLoading(false);
@@ -44,31 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      // Get and store the access token for API requests
-      const session = (await supabase?.auth.getSession())?.data.session;
-      const accessToken = session?.access_token;
-      
-      console.log('🔄 Syncing user data with token:', !!accessToken);
-      
-      if (!accessToken) {
-        console.error('No access token available, skipping backend sync');
-        // Create a basic user object from Supabase data
-        setUser({
-          id: supabaseUser.id,
-          email: supabaseUser.email || '',
-          firstName: supabaseUser.user_metadata?.first_name || '',
-          lastName: supabaseUser.user_metadata?.last_name || '',
-          onboardingCompleted: false,
-        });
-        setIsLoading(false);
-        return;
-      }
-      
-      localStorage.setItem('auth_token', accessToken);
-      console.log('✅ Updated auth token for API requests');
-
-      // Create a user object from Supabase data to unblock the UI
-      console.log('📡 Creating user from Supabase data...');
+      console.log('📡 Creating user from Supabase data directly...');
       const userData = {
         id: supabaseUser.id,
         email: supabaseUser.email || '',
@@ -77,11 +56,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         onboardingCompleted: false,
       };
       
+      console.log('✅ Setting user data:', userData);
       setUser(userData);
-      console.log('✅ User authenticated and ready:', userData);
+      
+      // Store token for API requests
+      const session = (await supabase?.auth.getSession())?.data.session;
+      if (session?.access_token) {
+        localStorage.setItem('auth_token', session.access_token);
+        console.log('✅ Stored auth token');
+      }
+      
+      console.log('✅ User sync complete');
       
     } catch (error) {
-      console.error('Error syncing user data:', error);
+      console.error('Error in syncUserData:', error);
       // Still set a basic user to unblock the UI
       const fallbackUserData = {
         id: supabaseUser.id,
@@ -90,10 +78,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         lastName: supabaseUser.user_metadata?.last_name || '',
         onboardingCompleted: false,
       };
-      setUser(fallbackUserData);
       console.log('✅ Using fallback user data:', fallbackUserData);
+      setUser(fallbackUserData);
     } finally {
-      console.log('🔄 Setting loading to false');
+      console.log('🔄 Setting loading to false in syncUserData');
       setIsLoading(false);
     }
   };
@@ -181,7 +169,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         setSupabaseUser(session.user);
         console.log('🔄 Auth state change - about to sync user data...');
-        await syncUserData(session.user);
+        
+        // Call syncUserData and ensure it completes
+        try {
+          await syncUserData(session.user);
+          console.log('✅ syncUserData completed successfully');
+        } catch (error) {
+          console.error('❌ syncUserData failed:', error);
+          // Ensure loading is stopped even if sync fails
+          setIsLoading(false);
+        }
         
         // Handle redirect after auth state change
         if (event === 'SIGNED_IN' && window.location.pathname === '/auth') {
