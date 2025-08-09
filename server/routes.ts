@@ -87,9 +87,9 @@ function checkAiUsageLimit(user: any): { allowed: boolean; userLimit: number; li
   return { allowed, userLimit: dailyLimit, limitType: 'daily' };
 }
 
-// Initialize Supabase client for JWT verification (force using new credentials)
-const supabaseUrl = 'https://qtdjrdxwfvhcwowebxnm.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0ZGpyZHh3ZnZoY3dvd2VieG5tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ1OTE2NDgsImV4cCI6MjA3MDE2NzY0OH0.084iehz8I9T71uaN-xbdUgc8_GXJvP-KWBKUOrP4CRg';
+// Initialize Supabase client using environment variables (matches frontend)
+const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || '';
 const supabase = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
 console.log('🔧 Backend Supabase client initialized with URL:', supabaseUrl);

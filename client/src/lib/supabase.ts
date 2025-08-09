@@ -9,15 +9,17 @@ console.log('🔑 Has anon key:', !!supabaseAnonKey)
 console.log('📅 Config loaded at:', new Date().toISOString())
 console.log('🎯 Using environment variables for credentials')
 
-// Force clear any old cached auth data
+// Force clear any old cached auth data and sessions
 if (typeof window !== 'undefined') {
   // Clear all localStorage keys that might contain old Supabase data
   Object.keys(localStorage).forEach(key => {
-    if (key.includes('supabase') || key.includes('humafgs')) {
+    if (key.includes('supabase') || key.includes('humafgs') || key.includes('qtdjrd')) {
       localStorage.removeItem(key)
+      console.log('🧹 Cleared old auth data:', key)
     }
   })
   sessionStorage.clear()
+  console.log('🧹 Cleared all session storage')
 }
 
 // Check if we have valid Supabase credentials
