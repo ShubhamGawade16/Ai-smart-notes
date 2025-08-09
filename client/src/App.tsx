@@ -53,6 +53,7 @@ function Router() {
       </Route>
       <Route path="/auth" component={EmailAuthPage} />
       <Route path="/auth/callback" component={AuthCallbackPage} />
+      <Route path="/auth/verified" component={VerifyEmailPage} />
       <Route path="/verify-email" component={VerifyEmailPage} />
       <Route path="/supabase-setup" component={SupabaseSetupGuide} />
       <Route path="/debug-auth" component={DebugAuthPage} />
