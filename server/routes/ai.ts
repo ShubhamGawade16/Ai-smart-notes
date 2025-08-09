@@ -7,6 +7,50 @@ import * as aiService from '../services/ai-service';
 const router = express.Router();
 const legacyAiService = new AIService();
 
+// Helper function to check AI usage limits
+async function checkAiUsageLimits(user: any) {
+  if (!user) return { allowed: false, userLimit: 0, limitType: 'daily' };
+
+  // Pro tier: unlimited
+  if (user.tier === 'pro') {
+    return { allowed: true, userLimit: -1, limitType: 'unlimited' };
+  }
+
+  // Basic tier: 3 daily + 100 monthly
+  if (user.tier === 'basic') {
+    const currentUsage = user.dailyAiCalls || 0;
+    const dailyLimit = 3;
+    
+    if (currentUsage < dailyLimit) {
+      const allowed = currentUsage < dailyLimit;
+      return { allowed, userLimit: dailyLimit, limitType: 'daily' };
+    }
+    
+    const monthlyUsage = user.monthlyAiCalls || 0;
+    const monthlyLimit = 100;
+    
+    // Check if monthly reset is needed (1st of month)
+    const now = new Date();
+    const resetDate = new Date(user.monthlyAiCallsResetAt);
+    
+    if (now.getMonth() !== resetDate.getMonth() || now.getFullYear() !== resetDate.getFullYear()) {
+      // Month changed, reset needed but will be handled by incrementMonthlyAiCalls
+      const allowed = true; // Allow first call of new month
+      return { allowed, userLimit: monthlyLimit, limitType: 'monthly' };
+    }
+    
+    // Basic tier logic: 3 daily + monthly pool
+    const allowed = monthlyUsage < monthlyLimit;
+    return { allowed, userLimit: monthlyLimit, limitType: 'monthly' };
+  }
+  
+  // Default to free tier limits
+  const currentUsage = user.dailyAiCalls || 0;
+  const dailyLimit = 3;
+  const allowed = currentUsage < dailyLimit;
+  return { allowed, userLimit: dailyLimit, limitType: 'daily' };
+}
+
 // Natural Language Task Parsing - Core Phase 3 feature
 router.post('/parse-task', authenticateToken, async (req: AuthRequest, res) => {
   try {
@@ -58,28 +102,22 @@ router.post('/refine-task', authenticateToken, async (req: AuthRequest, res) => 
       return res.status(400).json({ error: 'Original task and user query are required' });
     }
 
-    // Check AI usage limits using the new endpoint
-    console.log(`🧠 Task refiner request - checking AI usage limits`);
-    const usageResponse = await fetch(`${req.protocol}://${req.get('host')}/api/increment-ai-usage`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': req.headers.authorization || ''
-      },
-      body: JSON.stringify({ feature: 'task_refiner' })
-    });
+    // Check AI usage limits - call increment function directly instead of fetch
+    console.log(`🧠 Task refiner request - checking AI usage limits for user: ${userId}`);
     
-    console.log(`🔍 Task refiner usage response status: ${usageResponse.status}`);
-    const usageData = await usageResponse.json();
-    console.log(`🔍 Task refiner usage data:`, usageData);
-    
-    if (!usageData.canUseAi) {
+    // Check current usage first
+    const usageLimitCheck = await checkAiUsageLimits(user);
+    if (!usageLimitCheck.allowed) {
+      console.log(`❌ Task refiner: AI usage limit reached for user ${userId}`);
       return res.status(429).json({ 
-        error: usageData.message || 'AI usage limit reached. Upgrade to Basic (₹299/month) or Pro (₹599/month) for more usage.' 
+        error: `AI usage limit reached. You've used ${user.dailyAiCalls || 0}/${usageLimitCheck.userLimit} ${usageLimitCheck.limitType} AI calls. Upgrade to Basic (₹299/month) or Pro (₹599/month) for more usage.`
       });
     }
     
-    console.log(`✅ Task refiner AI usage approved - count now: ${usageData.dailyAiUsage}`);
+    // Increment AI usage
+    await storage.incrementDailyAiCalls(userId);
+    const updatedUser = await storage.getUser(userId);
+    console.log(`✅ Task refiner AI usage approved - count now: ${updatedUser?.dailyAiCalls || 0}/3`);
 
     const refinement = await aiService.refineTask(originalTask, userQuery, user.tier || 'free');
     
