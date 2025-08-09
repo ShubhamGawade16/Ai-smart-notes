@@ -65,34 +65,65 @@ export async function refineTask(originalTask: string, userQuestion: string) {
       messages: [
         {
           role: "system",
-          content: `You are an expert task breakdown assistant. Help users refine their tasks into actionable steps.
-          Always respond with a JSON object containing:
-          - refined_tasks: array of specific, actionable subtasks
+          content: `You are an expert task breakdown assistant. Break down tasks into 3-5 specific, actionable subtasks.
+
+          ALWAYS respond with a JSON object containing:
+          - refined_tasks: array of 3-5 specific subtask objects, each with {title, description, priority, category, estimatedTime}
           - insights: helpful insights about the task
           - suggestions: optimization suggestions
-          - estimated_time: total estimated time in minutes`
+
+          Example format:
+          {
+            "refined_tasks": [
+              {
+                "title": "Research venue options",
+                "description": "Find 3-4 potential meeting locations",
+                "priority": "high",
+                "category": "planning",
+                "estimatedTime": 30
+              },
+              {
+                "title": "Prepare dhokla ingredients",
+                "description": "Buy or gather all ingredients needed",
+                "priority": "medium", 
+                "category": "preparation",
+                "estimatedTime": 45
+              }
+            ],
+            "insights": "This task involves both social coordination and food preparation",
+            "suggestions": ["Plan ahead for timing", "Consider dietary restrictions"]
+          }`
         },
         {
           role: "user",
           content: `Original task: "${originalTask}"
           
-          User question: "${userQuestion}"
+          User's refinement request: "${userQuestion}"
           
-          Please break this down into specific, actionable steps and provide insights.`
+          Break this down into 3-5 specific, actionable subtasks with detailed information for each step.`
         }
       ],
       response_format: { type: "json_object" },
-      max_tokens: 800
+      max_tokens: 1000
     });
 
     const result = JSON.parse(response.choices[0].message.content || "{}");
+    console.log("Raw AI refinement result:", result);
     return result;
   } catch (error) {
+    console.error("Error in refineTask:", error);
     return {
-      refined_tasks: [originalTask],
+      refined_tasks: [
+        {
+          title: originalTask,
+          description: "Original task to be completed",
+          priority: "medium",
+          category: "general",
+          estimatedTime: 60
+        }
+      ],
       insights: "Unable to analyze task at the moment.",
-      suggestions: "Try breaking the task into smaller steps manually.",
-      estimated_time: 60
+      suggestions: ["Try breaking the task into smaller steps manually."]
     };
   }
 }

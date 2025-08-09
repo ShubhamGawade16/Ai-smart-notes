@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { MessageSquare, Wand2, Lightbulb, ArrowRight, CheckCircle, Maximize2 } from 'lucide-react';
+import { MessageSquare, Wand2, Lightbulb, ArrowRight, CheckCircle, Maximize2, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { AIFeatureModal } from '@/components/expanded-views/ai-feature-modal';
@@ -32,6 +32,7 @@ export default function TaskRefiner({
   const [refinementRequest, setRefinementRequest] = useState('');
   const [refinement, setRefinement] = useState<TaskRefinement | null>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const refineTaskMutation = useMutation({
     mutationFn: async (data: { taskContent: string; refinementRequest: string }) => {
@@ -88,12 +89,80 @@ export default function TaskRefiner({
     });
   };
 
-  const handleAcceptRefinement = () => {
-    if (refinement && onTaskRefined) {
-      onTaskRefined(refinement.refinedTask, refinement.decomposition);
-      setTaskContent(refinement.refinedTask);
+  const addRefinedTaskMutation = useMutation({
+    mutationFn: async (refinement: TaskRefinement) => {
+      // Create the main refined task
+      const response = await apiRequest("POST", "/api/tasks", {
+        title: refinement.refinedTask,
+        description: refinement.suggestions?.join('. ') || '',
+        priority: 'medium',
+        category: 'general',
+        tags: [],
+        estimatedTime: 60
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to create refined task');
+      }
+      
+      const createdTask = await response.json();
+      
+      // If there are decomposition/subtasks, create them as separate tasks
+      if (refinement.decomposition && refinement.decomposition.length > 0) {
+        for (const subtask of refinement.decomposition) {
+          const subtaskResponse = await apiRequest("POST", "/api/tasks", {
+            title: subtask,
+            description: `Subtask of: ${refinement.refinedTask}`,
+            priority: 'medium',
+            category: 'general',
+            tags: ['subtask'],
+            estimatedTime: 30
+          });
+          
+          if (!subtaskResponse.ok) {
+            console.warn(`Failed to create subtask: ${subtask}`);
+          }
+        }
+      }
+      
+      return createdTask;
+    },
+    onSuccess: (createdTask) => {
+      // Refresh task lists
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks/today'] });
+      
+      toast({
+        title: "Task Added Successfully!",
+        description: `"${createdTask.title}" has been added to your task list.`,
+      });
+      
+      // Call the original callback if provided
+      if (onTaskRefined && refinement) {
+        onTaskRefined(refinement.refinedTask, refinement.decomposition);
+      }
+      
+      // Reset the form
+      setTaskContent('');
       setRefinement(null);
       setRefinementRequest('');
+      
+      console.log("Refined task added successfully:", createdTask);
+    },
+    onError: (error: Error) => {
+      console.error("Error adding refined task:", error);
+      toast({
+        title: "Failed to Add Task",
+        description: error.message || "Could not add refined task. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handleAcceptRefinement = () => {
+    if (refinement) {
+      console.log("Accepting refinement:", refinement);
+      addRefinedTaskMutation.mutate(refinement);
     }
   };
 
@@ -241,14 +310,28 @@ export default function TaskRefiner({
                   )}
 
                   <div className="flex gap-2">
-                    <Button onClick={handleAcceptRefinement} className="flex-1">
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      Accept Refinement
+                    <Button 
+                      onClick={handleAcceptRefinement} 
+                      className="flex-1"
+                      disabled={addRefinedTaskMutation.isPending}
+                    >
+                      {addRefinedTaskMutation.isPending ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Adding Task...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          Accept Refinement
+                        </>
+                      )}
                     </Button>
                     <Button 
                       variant="outline" 
                       onClick={() => setRefinement(null)} 
                       className="flex-1"
+                      disabled={addRefinedTaskMutation.isPending}
                     >
                       Try Again
                     </Button>
@@ -391,13 +474,27 @@ export default function TaskRefiner({
 
             {/* Accept Refinement */}
             <div className="flex gap-2">
-              <Button onClick={handleAcceptRefinement} className="flex-1">
-                <CheckCircle className="h-4 w-4 mr-2" />
-                Accept Refinement
+              <Button 
+                onClick={handleAcceptRefinement} 
+                className="flex-1"
+                disabled={addRefinedTaskMutation.isPending}
+              >
+                {addRefinedTaskMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Adding Task...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Accept Refinement
+                  </>
+                )}
               </Button>
               <Button 
                 variant="outline" 
                 onClick={() => setRefinement(null)}
+                disabled={addRefinedTaskMutation.isPending}
               >
                 Try Again
               </Button>
