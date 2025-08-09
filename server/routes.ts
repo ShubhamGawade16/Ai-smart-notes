@@ -1880,7 +1880,7 @@ Guidelines:
   });
 
   // Conversational Task Refiner (FREE for testing)
-  app.post("/api/ai/refine-task", optionalAuth, async (req: AuthRequest, res) => {
+  app.post("/api/ai/refine-task-old", optionalAuth, async (req: AuthRequest, res) => {
       try {
         const { originalTask, userQuery, context } = req.body;
         
