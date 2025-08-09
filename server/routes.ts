@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { storage } from "./storage";
+import { createClient } from '@supabase/supabase-js';
 import { 
   optionalAuth,
   type AuthRequest 
@@ -86,6 +87,11 @@ function checkAiUsageLimit(user: any): { allowed: boolean; userLimit: number; li
   return { allowed, userLimit: dailyLimit, limitType: 'daily' };
 }
 
+// Initialize Supabase client for JWT verification
+const supabaseUrl = process.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
+const supabase = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
+
 // JWT secret for signing tokens
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
 
@@ -110,7 +116,34 @@ const requireAuth = async (req: any, res: any, next: any) => {
       }
     }
 
-    // Try JWT verification for regular tokens
+    // Try Supabase JWT verification first
+    if (supabase) {
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser(token);
+        if (user && !error) {
+          // Get or create user in our database
+          let userData = await storage.getUser(user.id);
+          if (!userData) {
+            // Create user from Supabase data
+            const insertUserData = {
+              id: user.id,
+              email: user.email || '',
+              firstName: user.user_metadata?.first_name || '',
+              lastName: user.user_metadata?.last_name || '',
+              onboardingCompleted: false,
+            };
+            userData = await storage.createUser(insertUserData);
+          }
+          req.user = userData;
+          req.userId = user.id;
+          return next();
+        }
+      } catch (supabaseError) {
+        console.log('Supabase auth failed, trying JWT:', supabaseError);
+      }
+    }
+
+    // Fallback to JWT verification for regular tokens
     jwt.verify(token, JWT_SECRET, async (err: any, decoded: any) => {
       if (err) {
         return res.status(401).json({ message: 'Invalid token' });
@@ -140,7 +173,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
   } catch (error) {
     console.log('⚠️ Replit Auth not available (expected in development), using fallback auth');
   }
-  // Simple Authentication Routes
+  // Supabase Authentication Routes
+  app.get("/api/auth/me", requireAuth, async (req: any, res) => {
+    try {
+      res.json(req.user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  app.post("/api/auth/sync-user", requireAuth, async (req: any, res) => {
+    try {
+      const { id, email, firstName, lastName } = req.body;
+      
+      // Get or create user in our database
+      let userData = await storage.getUser(id);
+      if (!userData) {
+        const insertUserData = {
+          id,
+          email: email || '',
+          firstName: firstName || '',
+          lastName: lastName || '',
+          onboardingCompleted: false,
+        };
+        userData = await storage.createUser(insertUserData);
+      }
+      
+      res.json(userData);
+    } catch (error) {
+      console.error("Error syncing user:", error);
+      res.status(500).json({ message: "Failed to sync user" });
+    }
+  });
+
+  // Simple Authentication Routes (fallback)
   app.post("/api/auth/signup", async (req, res) => {
     try {
       const { email, password, firstName, lastName } = req.body;

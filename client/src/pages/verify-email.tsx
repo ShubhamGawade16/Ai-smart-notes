@@ -1,217 +1,142 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Mail, Clock, RefreshCw, CheckCircle, AlertCircle, ArrowLeft } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { useAuth } from "@/hooks/use-supabase-auth";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Brain, CheckCircle, AlertCircle, ArrowLeft, Loader2 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 export default function VerifyEmailPage() {
-  const { toast } = useToast();
   const [, navigate] = useLocation();
-  const { login } = useAuth();
-  const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [countdown, setCountdown] = useState(45);
-  const [showResend, setShowResend] = useState(false);
-  const [isResending, setIsResending] = useState(false);
-  const [checkingVerification, setCheckingVerification] = useState(false);
+  const [verificationStatus, setVerificationStatus] = useState<"verifying" | "success" | "error">("verifying");
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    // Get email from localStorage (set during signup)
-    const email = localStorage.getItem('verification_email');
-    if (email) {
-      setUserEmail(email);
-    } else {
-      // If no email stored, redirect to auth
-      navigate('/auth');
-      return;
-    }
+    const handleEmailVerification = async () => {
+      try {
+        // Get the current URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const accessToken = urlParams.get('access_token');
+        const refreshToken = urlParams.get('refresh_token');
+        const type = urlParams.get('type');
 
-    // Auto-check verification status every 3 seconds by calling auth check
-    const checkInterval = setInterval(() => {
-      setCheckingVerification(true);
-      // Add a small delay to show checking state
-      setTimeout(() => setCheckingVerification(false), 500);
-    }, 3000);
+        if (type === 'signup' && accessToken) {
+          // Email verification successful
+          setVerificationStatus("success");
+          
+          // Set the session with the tokens
+          if (supabase) {
+            await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken || '',
+            });
+          }
 
-    // Countdown timer
-    const countdownInterval = setInterval(() => {
-      setCountdown(prev => {
-        if (prev <= 1) {
-          setShowResend(true);
-          clearInterval(countdownInterval);
-          return 0;
+          // Redirect to onboarding after a short delay
+          setTimeout(() => {
+            navigate("/onboarding");
+          }, 2000);
+        } else {
+          setVerificationStatus("error");
+          setErrorMessage("Invalid verification link or expired token.");
         }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => {
-      clearInterval(checkInterval);
-      clearInterval(countdownInterval);
+      } catch (error: any) {
+        console.error('Email verification error:', error);
+        setVerificationStatus("error");
+        setErrorMessage(error.message || "Failed to verify email. Please try again.");
+      }
     };
+
+    handleEmailVerification();
   }, [navigate]);
 
-  const handleResendEmail = async () => {
-    if (!userEmail) return;
-    
-    setIsResending(true);
-    try {
-      // For now, just show a success message
-      
-      // Reset countdown
-      setCountdown(45);
-      setShowResend(false);
-      
-      // Restart countdown timer
-      const newCountdownInterval = setInterval(() => {
-        setCountdown(prev => {
-          if (prev <= 1) {
-            setShowResend(true);
-            clearInterval(newCountdownInterval);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-      
-    } catch (error) {
-      toast({
-        title: "Failed to Resend",
-        description: "Please try again in a moment.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsResending(false);
-    }
-  };
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
-      <Card className="w-full max-w-lg shadow-2xl border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg">
-        <CardHeader className="text-center space-y-4 pb-6">
-          {/* Back Button */}
-          <div className="flex justify-start mb-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/auth')}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              <ArrowLeft className="w-4 h-4 mr-1" />
-              Back to Sign In
-            </Button>
+    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      {/* Navigation */}
+      <div className="p-6">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate('/')}
+          className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Home
+        </Button>
+      </div>
+      
+      <div className="container mx-auto px-6 pb-6">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center space-x-2 mb-4">
+            <div className="w-10 h-10 bg-gradient-to-br from-teal-600 to-blue-600 rounded-lg flex items-center justify-center">
+              <Brain className="w-6 h-6 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Planify</h1>
           </div>
-          
-          <div className="w-20 h-20 bg-gradient-to-br from-teal-500 to-blue-600 rounded-full flex items-center justify-center mx-auto">
-            <Mail className="w-10 h-10 text-white" />
-          </div>
-          
-          <div>
-            <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-              Verify Your Email
-            </CardTitle>
-            <p className="text-gray-600 dark:text-gray-400">
-              We've sent a verification link to your email address
-            </p>
-          </div>
+          <p className="text-gray-600 dark:text-gray-300 max-w-md mx-auto">
+            Email Verification
+          </p>
+        </div>
 
-          <Badge variant="outline" className="text-sm px-4 py-2">
-            {userEmail}
-          </Badge>
-        </CardHeader>
-
-        <CardContent className="space-y-6">
-          {/* Status Indicator */}
-          <div className="flex items-center justify-center space-x-3">
-            {checkingVerification ? (
-              <>
-                <RefreshCw className="w-5 h-5 text-teal-600 animate-spin" />
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                  Checking verification status...
+        {/* Verification Status */}
+        <div className="max-w-md mx-auto">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                {verificationStatus === "verifying" && <Loader2 className="w-5 h-5 animate-spin text-teal-600" />}
+                {verificationStatus === "success" && <CheckCircle className="w-5 h-5 text-green-600" />}
+                {verificationStatus === "error" && <AlertCircle className="w-5 h-5 text-red-600" />}
+                <span>
+                  {verificationStatus === "verifying" && "Verifying Email..."}
+                  {verificationStatus === "success" && "Email Verified!"}
+                  {verificationStatus === "error" && "Verification Failed"}
                 </span>
-              </>
-            ) : (
-              <>
-                <Clock className="w-5 h-5 text-gray-400" />
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                  Waiting for email verification
-                </span>
-              </>
-            )}
-          </div>
-
-          {/* Instructions */}
-          <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-4 space-y-3">
-            <h4 className="font-semibold text-blue-900 dark:text-blue-200 flex items-center">
-              <CheckCircle className="w-4 h-4 mr-2" />
-              What to do next:
-            </h4>
-            <ol className="text-sm text-blue-800 dark:text-blue-300 space-y-2 ml-6">
-              <li>1. Check your email inbox for a verification message</li>
-              <li>2. Look in your spam/junk folder if not found</li>
-              <li>3. Click the verification link in the email</li>
-              <li>4. You'll be automatically redirected to Planify</li>
-            </ol>
-          </div>
-
-          {/* Resend Section */}
-          <div className="text-center space-y-4">
-            {!showResend ? (
-              <div className="space-y-2">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Didn't receive the email?
-                </p>
-                <div className="flex items-center justify-center space-x-2">
-                  <Clock className="w-4 h-4 text-gray-400" />
-                  <span className="text-sm font-mono text-gray-500">
-                    Resend available in {formatTime(countdown)}
-                  </span>
+              </CardTitle>
+              <CardDescription>
+                {verificationStatus === "verifying" && "Please wait while we verify your email address."}
+                {verificationStatus === "success" && "Your email has been successfully verified. You'll be redirected to complete your profile setup."}
+                {verificationStatus === "error" && "There was an issue verifying your email address."}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {verificationStatus === "success" && (
+                <Alert>
+                  <CheckCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    Welcome to Planify! Redirecting you to complete your profile setup...
+                  </AlertDescription>
+                </Alert>
+              )}
+              
+              {verificationStatus === "error" && (
+                <div className="space-y-4">
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      {errorMessage}
+                    </AlertDescription>
+                  </Alert>
+                  <div className="flex space-x-3">
+                    <Button 
+                      onClick={() => navigate("/auth")}
+                      className="bg-teal-600 hover:bg-teal-700"
+                    >
+                      Try Again
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => navigate("/")}
+                    >
+                      Go Home
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <div className="flex items-center justify-center space-x-2 text-amber-600 dark:text-amber-400">
-                  <AlertCircle className="w-4 h-4" />
-                  <span className="text-sm">Still haven't received the email?</span>
-                </div>
-                
-                <Button
-                  onClick={handleResendEmail}
-                  disabled={isResending}
-                  className="w-full bg-teal-600 hover:bg-teal-700"
-                >
-                  {isResending ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                      Sending...
-                    </>
-                  ) : (
-                    <>
-                      <Mail className="w-4 h-4 mr-2" />
-                      Resend Verification Email
-                    </>
-                  )}
-                </Button>
-              </div>
-            )}
-          </div>
-
-          {/* Additional Help */}
-          <div className="text-center">
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Having trouble? Contact support at support@planify.com
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }
