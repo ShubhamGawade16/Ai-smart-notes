@@ -107,16 +107,27 @@ router.post('/refine-task', optionalAuth, async (req: AuthRequest, res) => {
       return res.status(400).json({ error: 'Original task and user query are required' });
     }
 
-    // Check AI usage limits - use standardized approach
-    console.log(`🧠 Task refiner request - checking AI usage limits for user: ${userId}`);
+    // Check AI usage limits - use direct validation
+    console.log(`🧠 Task refiner request - checking AI usage limits for user: ${userId}`, {
+      dailyAiCalls: user.dailyAiCalls,
+      tier: user.tier,
+      subscriptionStatus: user.subscriptionStatus
+    });
     
-    // Check current usage first
-    const usageLimitCheck = await checkAiUsageLimits(user);
-    if (!usageLimitCheck.allowed) {
-      console.log(`❌ Task refiner: AI usage limit reached for user ${userId}`);
-      return res.status(429).json({ 
-        error: `AI usage limit reached. You've used ${user.dailyAiCalls || 0}/${usageLimitCheck.userLimit} ${usageLimitCheck.limitType} AI calls. Upgrade to Basic (₹299/month) or Pro (₹599/month) for more usage.`
-      });
+    // Check current usage first - for free users, check daily limit
+    if (user.tier === 'free' || !user.tier) {
+      const dailyUsage = user.dailyAiCalls || 0;
+      const dailyLimit = 3;
+      
+      if (dailyUsage >= dailyLimit) {
+        console.log(`❌ Task refiner: Free tier limit reached for user ${userId} - ${dailyUsage}/${dailyLimit}`);
+        return res.status(429).json({ 
+          error: `AI usage limit reached. You've used ${dailyUsage}/${dailyLimit} daily AI calls. Upgrade to Basic (₹299/month) or Pro (₹599/month) for more usage.`
+        });
+      }
+      console.log(`✅ Task refiner: Free tier usage OK - ${dailyUsage}/${dailyLimit}`);
+    } else {
+      console.log(`✅ Task refiner: Premium tier user, usage allowed`);
     }
     
     // Increment AI usage via the standardized endpoint
@@ -140,22 +151,30 @@ router.post('/refine-task', optionalAuth, async (req: AuthRequest, res) => {
       return res.status(500).json({ error: 'Failed to track AI usage' });
     }
 
-    const refinement = await aiService.refineTask(originalTask, userQuery, user.tier || 'free');
-    
-    res.json({
-      success: true,
-      refinedTasks: [{
-        title: refinement.refinedTask,
-        description: refinement.refinedTask,
-        priority: 'medium',
-        category: 'General',
-        tags: [],
-        estimatedTime: 30,
-        subtasks: refinement.decomposition || [],
-      }],
-      explanation: `Task refined based on your request: "${userQuery}"`,
-      suggestions: refinement.suggestions,
-    });
+    try {
+      const refinement = await aiService.refineTask(originalTask, userQuery, user.tier || 'free');
+      
+      res.json({
+        success: true,
+        refinedTasks: [{
+          title: refinement.refinedTask,
+          description: refinement.refinedTask,
+          priority: 'medium',
+          category: 'General',
+          tags: [],
+          estimatedTime: 30,
+          subtasks: refinement.decomposition || [],
+        }],
+        explanation: `Task refined based on your request: "${userQuery}"`,
+        suggestions: refinement.suggestions,
+      });
+    } catch (aiError) {
+      console.error('AI service error:', aiError);
+      res.status(500).json({ 
+        error: 'Failed to refine task using AI service',
+        details: aiError instanceof Error ? aiError.message : 'Unknown AI error'
+      });
+    }
   } catch (error) {
     console.error('Task refinement error:', error);
     res.status(500).json({ error: 'Failed to refine task' });

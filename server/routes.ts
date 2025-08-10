@@ -2624,15 +2624,26 @@ Guidelines:
         return res.status(404).json({ error: 'User not found' });
       }
 
-      console.log(`🧠 AI categorizer request - checking AI usage limits for user: ${userId}`);
+      console.log(`🧠 AI categorizer request - checking AI usage limits for user: ${userId}`, {
+        dailyAiCalls: user.dailyAiCalls,
+        tier: user.tier,
+        subscriptionStatus: user.subscriptionStatus
+      });
 
-      // Check AI usage limits
-      const usageCheck = checkAiUsageLimit(user);
-      if (!usageCheck.allowed) {
-        console.log(`❌ AI categorizer: AI usage limit reached for user ${userId}`);
-        return res.status(429).json({ 
-          error: `AI usage limit reached. You've used ${user.dailyAiCalls || 0}/${usageCheck.userLimit} ${usageCheck.limitType} AI calls. Upgrade to Basic (₹299/month) or Pro (₹599/month) for more usage.`
-        });
+      // Check AI usage limits - for free users, check daily limit
+      if (user.tier === 'free' || !user.tier) {
+        const dailyUsage = user.dailyAiCalls || 0;
+        const dailyLimit = 3;
+        
+        if (dailyUsage >= dailyLimit) {
+          console.log(`❌ AI categorizer: Free tier limit reached for user ${userId} - ${dailyUsage}/${dailyLimit}`);
+          return res.status(429).json({ 
+            error: `AI usage limit reached. You've used ${dailyUsage}/${dailyLimit} daily AI calls. Upgrade to Basic (₹299/month) or Pro (₹599/month) for more usage.`
+          });
+        }
+        console.log(`✅ AI categorizer: Free tier usage OK - ${dailyUsage}/${dailyLimit}`);
+      } else {
+        console.log(`✅ AI categorizer: Premium tier user, usage allowed`);
       }
 
       if (!title) {
