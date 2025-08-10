@@ -28,9 +28,15 @@ export class SubscriptionService {
 
     return await storage.updateUser(userId, {
       tier: 'basic',
+      subscriptionStatus: 'active', // CRITICAL: Enable subscription logic
       subscriptionStartDate: now,
       subscriptionEndDate: endDate,
       razorpayCustomerId: paymentId, // Store payment reference
+      // Reset AI usage for immediate benefits
+      dailyAiCalls: 0,
+      monthlyAiCalls: 0,
+      dailyAiCallsResetAt: now,
+      monthlyAiCallsResetAt: now,
     });
   }
 
@@ -41,6 +47,7 @@ export class SubscriptionService {
 
     return await storage.updateUser(userId, {
       tier: 'pro',
+      subscriptionStatus: 'active', // CRITICAL: Enable subscription logic
       subscriptionStartDate: now,
       subscriptionEndDate: endDate,
       razorpayCustomerId: paymentId, // Store payment reference
@@ -66,6 +73,7 @@ export class SubscriptionService {
 
     return await storage.updateUser(userId, {
       tier: 'free',
+      subscriptionStatus: null, // Disable subscription logic for free users
       subscriptionStartDate: null,
       subscriptionEndDate: null,
       frozenProCredits: frozenCredits,

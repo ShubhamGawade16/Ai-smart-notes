@@ -39,6 +39,15 @@ Planify aims to be a leading AI-powered productivity tool with a freemium model.
 - Enhanced subscription modal with usage tracking and proper tier-based plan recommendations
 - Both admin dev tools and View Plans payment flow now working seamlessly
 
+**Critical Subscription Logic Fix (August 2025):**
+- Fixed fundamental subscription flow bug where tier badges updated but plan logic didn't apply
+- Root cause: subscriptionStatus: 'active' was missing from upgradeUserToBasic() and upgradeUserToPro()
+- Solution: Added subscriptionStatus: 'active' to both subscription service functions like dev menu toggle
+- Users with 'basic' or 'pro' tier but null subscriptionStatus were treated as Free functionally
+- Standard payment upgrades now mirror dev menu logic for complete subscription activation
+- Fixed API endpoint naming: /verify-payment route now matches frontend calls
+- Both badge display and functional permissions now work correctly after payment
+
 **Admin Security System Complete (August 2025):**
 - Fixed critical security vulnerability where unauthorized users could access developer tools
 - Implemented comprehensive admin security checks across all UI components
