@@ -9,14 +9,19 @@ import {
   LogOut, 
   Settings,
   Sparkles,
-  MessageCircle
+  MessageCircle,
+  Shield
 } from 'lucide-react';
 import { Moon, Sun } from "lucide-react";
 import { useAuth } from '@/hooks/use-supabase-auth';
+import { useAdmin } from '@/hooks/use-admin';
+import { AdminPanel } from '@/components/admin-panel';
 
 export function Header() {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
   const { logout } = useAuth();
+  const { isAdmin, isLoading } = useAdmin();
 
   const navigationItems = [
     { label: 'Dashboard', path: '/dashboard', icon: Home },
@@ -62,6 +67,19 @@ export function Header() {
 
           {/* Right Side Actions */}
           <div className="flex items-center space-x-1 sm:space-x-2">
+            {/* Admin Dev Button - Only shown to admin users */}
+            {isAdmin && !isLoading && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowAdminPanel(true)}
+                className="hidden md:flex items-center space-x-1 h-8 px-3 border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/20"
+              >
+                <Shield className="h-3.5 w-3.5" />
+                <span className="text-sm font-medium">Dev</span>
+              </Button>
+            )}
+
             <Button
               variant="ghost"
               size="sm"
@@ -122,6 +140,21 @@ export function Header() {
                 );
               })}
               
+              {/* Admin Dev Button - Mobile */}
+              {isAdmin && !isLoading && (
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start space-x-2 text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20"
+                  onClick={() => {
+                    setShowAdminPanel(true);
+                    setShowMobileMenu(false);
+                  }}
+                >
+                  <Shield className="h-4 w-4" />
+                  <span>Developer Panel</span>
+                </Button>
+              )}
+              
               <Button
                 variant="outline"
                 className="w-full justify-start space-x-2 mt-4"
@@ -134,6 +167,11 @@ export function Header() {
           </div>
         )}
       </div>
+      
+      {/* Admin Panel Modal */}
+      {showAdminPanel && (
+        <AdminPanel onClose={() => setShowAdminPanel(false)} />
+      )}
     </header>
   );
 }

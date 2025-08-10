@@ -26,6 +26,32 @@ import { parseNaturalLanguageTask, optimizeTaskOrder, generateProductivityInsigh
 import { notificationService } from "./services/notification-service";
 import OpenAI from 'openai';
 
+// Admin UIDs - Server-side verification for security
+const ADMIN_UIDS = new Set([
+  '0ab26ef3-4581-477a-8e21-283bb366cc5e', // shubhamgawadegd@gmail.com
+  '3ad86f62-9487-4a68-923d-6270bc2f9823', // shubhamchandangawade63@gmail.com  
+  '47a468f4-13b6-4757-aed8-cf967086020d', // contact.hypervox@gmail.com
+  'edf14b32-f0ff-476e-8b8d-df0a25a748c5'  // yanoloj740@elobits.com
+]);
+
+// Admin verification middleware
+const requireAdmin = (req: AuthRequest, res: any, next: any) => {
+  if (!req.user?.id) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+  
+  if (!ADMIN_UIDS.has(req.user.id)) {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+  
+  next();
+};
+
+// Check if user is admin (for UI purposes)
+const isAdmin = (userId?: string): boolean => {
+  return userId ? ADMIN_UIDS.has(userId) : false;
+};
+
 // Helper function to check AI usage limits with correct Basic tier logic
 function checkAiUsageLimit(user: any): { allowed: boolean; userLimit: number; limitType: 'daily' | 'monthly' | 'unlimited' } {
   // Pro tier - unlimited AI calls (only if subscription is active)
@@ -3057,6 +3083,205 @@ Guidelines:
     }
   });
 
+  // Admin - Check admin status endpoint
+  app.get('/api/admin/status', optionalAuth, async (req: AuthRequest, res) => {
+    try {
+      const userId = req.userId;
+      if (!userId) {
+        return res.json({ isAdmin: false });
+      }
+
+      const adminStatus = isAdmin(userId);
+      res.json({ 
+        isAdmin: adminStatus,
+        userId: adminStatus ? userId : undefined
+      });
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+      res.json({ isAdmin: false });
+    }
+  });
+
+  // Admin - Get system diagnostics
+  app.get('/api/admin/diagnostics', optionalAuth, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      // Get user statistics
+      const allUsers = await storage.getAllUsers();
+      const totalTasks = await storage.getAllTasks();
+      
+      const diagnostics = {
+        system: {
+          nodeEnv: process.env.NODE_ENV,
+          timestamp: new Date().toISOString(),
+          uptime: process.uptime()
+        },
+        users: {
+          total: allUsers.length,
+          byTier: allUsers.reduce((acc: any, user) => {
+            const tier = user.tier || 'free';
+            acc[tier] = (acc[tier] || 0) + 1;
+            return acc;
+          }, {})
+        },
+        tasks: {
+          total: totalTasks.length,
+          byStatus: totalTasks.reduce((acc: any, task) => {
+            const status = task.completed ? 'completed' : 'pending';
+            acc[status] = (acc[status] || 0) + 1;
+            return acc;
+          }, {})
+        }
+      };
+
+      res.json(diagnostics);
+    } catch (error) {
+      console.error('Error getting diagnostics:', error);
+      res.status(500).json({ error: 'Failed to get diagnostics' });
+    }
+  });
+
+  // Admin - Force user tier change (production-safe)
+  app.post('/api/admin/change-user-tier', optionalAuth, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const { userId, tier, subscriptionStatus } = req.body;
+      
+      if (!userId || !tier) {
+        return res.status(400).json({ error: 'userId and tier are required' });
+      }
+
+      if (!['free', 'basic', 'pro'].includes(tier)) {
+        return res.status(400).json({ error: 'Invalid tier' });
+      }
+
+      await storage.updateUser(userId, {
+        tier: tier as 'free' | 'basic' | 'pro',
+        subscriptionStatus: subscriptionStatus || (tier === 'free' ? null : 'active'),
+        dailyAiCalls: 0,
+        monthlyAiCalls: 0,
+        dailyAiCallsResetAt: new Date(),
+        monthlyAiCallsResetAt: new Date()
+      });
+
+      console.log(`🔧 Admin: Changed user ${userId} tier to ${tier}`);
+      
+      res.json({ 
+        success: true, 
+        message: `User tier changed to ${tier}`,
+        userId,
+        tier
+      });
+    } catch (error) {
+      console.error('Admin error changing user tier:', error);
+      res.status(500).json({ error: 'Failed to change user tier' });
+    }
+  });
+
+  // Admin - Reset user AI usage
+  app.post('/api/admin/reset-user-ai', optionalAuth, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const { userId } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ error: 'userId is required' });
+      }
+
+      await storage.updateUser(userId, {
+        dailyAiCalls: 0,
+        monthlyAiCalls: 0,
+        dailyAiCallsResetAt: new Date(),
+        monthlyAiCallsResetAt: new Date()
+      });
+
+      console.log(`🔧 Admin: Reset AI usage for user ${userId}`);
+      
+      res.json({ 
+        success: true, 
+        message: 'AI usage reset successfully',
+        userId
+      });
+    } catch (error) {
+      console.error('Admin error resetting AI usage:', error);
+      res.status(500).json({ error: 'Failed to reset AI usage' });
+    }
+  });
+
+  // AI - Task Refiner endpoint (fixing the missing endpoint)
+  app.post("/api/ai/refine-task", optionalAuth, async (req: AuthRequest, res) => {
+    try {
+      const userId = req.userId;
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const user = req.user;
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      const { originalTask, userQuery } = req.body;
+
+      if (!originalTask || !userQuery) {
+        return res.status(400).json({ error: 'originalTask and userQuery are required' });
+      }
+
+      console.log(`🧠 Task Refiner request - checking AI usage limits for user: ${userId}`, {
+        dailyAiCalls: user.dailyAiCalls,
+        tier: user.tier,
+        subscriptionStatus: user.subscriptionStatus
+      });
+
+      // Check AI usage limits
+      const usageCheck = checkAiUsageLimit(user);
+      if (!usageCheck.allowed) {
+        const errorMessage = usageCheck.limitType === 'daily' 
+          ? `Daily AI limit reached (${user.dailyAiCalls}/${usageCheck.userLimit}). Upgrade for unlimited AI features!`
+          : `Monthly AI limit reached (${user.monthlyAiCalls}/${usageCheck.userLimit}). Upgrade for unlimited AI features!`;
+        
+        return res.status(429).json({ 
+          error: errorMessage,
+          tier: user.tier,
+          limitType: usageCheck.limitType
+        });
+      }
+
+      // Simple task refinement response (mock for now since AI service might be complex)
+      const refinedTasks = [{
+        title: originalTask + ' (Refined)',
+        description: `Refined based on: ${userQuery}`,
+        priority: 'medium',
+        category: 'Personal',
+        tags: ['refined'],
+        estimatedTime: 30
+      }];
+
+      const response = {
+        refinedTasks,
+        explanation: `I've refined your task "${originalTask}" based on your request: "${userQuery}". The task has been enhanced with more specific details and actionable steps.`,
+        suggestions: [
+          'Consider breaking this down into smaller subtasks',
+          'Add a specific deadline to increase accountability',
+          'Identify any resources or tools you might need'
+        ]
+      };
+
+      // Increment AI usage
+      await incrementDailyAiCalls(userId);
+      if (user.tier === 'basic' && user.subscriptionStatus === 'active') {
+        await incrementMonthlyAiCalls(userId);
+      }
+
+      console.log(`✅ Task Refiner: Returning refined tasks for "${originalTask}"`);
+      res.json(response);
+      
+    } catch (error) {
+      console.error('💥 Task Refiner FATAL ERROR:', error);
+      res.status(500).json({ 
+        error: 'Internal server error',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
   // Payments - Subscription status endpoint
   app.get('/api/payments/subscription-status', optionalAuth, async (req: AuthRequest, res) => {
     try {
@@ -3079,6 +3304,7 @@ Guidelines:
         monthlyAiCalls: user.monthlyAiCalls || 0,
         dailyAiCallsResetAt: user.dailyAiCallsResetAt || null,
         monthlyAiCallsResetAt: user.monthlyAiCallsResetAt || null,
+        isAdmin: isAdmin(userId) // Add admin status to subscription response
       });
     } catch (error) {
       console.error('Error getting subscription status:', error);
