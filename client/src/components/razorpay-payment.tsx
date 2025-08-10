@@ -77,26 +77,25 @@ export function RazorpayPayment({ onSuccess, onError, userEmail }: RazorpayPayme
         throw new Error("Failed to load payment gateway");
       }
 
-      // Create subscription order
+      // Create subscription order using same endpoint as View Plans modal
       console.log("Creating subscription order...");
-      const response = await apiRequest("POST", "/api/razorpay/subscription", {
-        planId: SUBSCRIPTION_PLAN.id,
-        customerEmail: userEmail,
+      const response = await apiRequest("POST", "/api/payments/create-order", {
+        plan: plan,
       });
       
-      const responseData = await response.json();
-      console.log("Subscription order response:", responseData);
+      const orderData = await response.json();
+      console.log("Subscription order response:", orderData);
 
-      if (!responseData.success) {
-        throw new Error(responseData.error || "Failed to create subscription");
+      if (!response.ok) {
+        throw new Error("Failed to create subscription order");
       }
 
-      // Configure Razorpay checkout
+      // Configure Razorpay checkout (same structure as View Plans modal)
       const options = {
-        key: responseData.key_id,
-        amount: responseData.order.amount,
-        currency: responseData.order.currency,
-        order_id: responseData.order.id,
+        key: orderData.razorpayKeyId || import.meta.env.VITE_RAZORPAY_KEY_ID,
+        amount: orderData.order.amount,
+        currency: orderData.order.currency,
+        order_id: orderData.order.id,
         name: "Planify",
         description: `${SUBSCRIPTION_PLAN.name} Subscription`,
         image: "/attached_assets/Planify_imresizer_1754161747016.jpg",
@@ -105,35 +104,41 @@ export function RazorpayPayment({ onSuccess, onError, userEmail }: RazorpayPayme
             setLoading(true);
             console.log("Payment response received:", paymentResponse);
             
-            // Verify payment
-            const verifyResponse = await apiRequest("POST", "/api/razorpay/verify", {
+            // Verify payment using same endpoint as View Plans modal
+            const verifyResponse = await apiRequest("POST", "/api/payments/verify-payment", {
               razorpay_order_id: paymentResponse.razorpay_order_id,
               razorpay_payment_id: paymentResponse.razorpay_payment_id,
               razorpay_signature: paymentResponse.razorpay_signature,
             });
 
-            const verifyData = await verifyResponse.json();
-            console.log("Verification response:", verifyData);
+            console.log("Verification response:", verifyResponse);
 
-            if (verifyData.success) {
+            if (verifyResponse.ok) {
               toast({
                 title: "Payment Successful!",
                 description: `Welcome to ${SUBSCRIPTION_PLAN.name}! Your premium features are now active.`,
               });
               
-              // Clear all related caches and force fresh data
-              queryClient.removeQueries({ queryKey: ['/api/subscription-status'] });
-              queryClient.removeQueries({ queryKey: ['/api/user/profile'] });
+              // Clear all related caches and force fresh data (same as View Plans modal)
+              queryClient.removeQueries({ queryKey: ['/api/payments/subscription-status'] });
+              queryClient.removeQueries({ queryKey: ['/api/payments/ai-limits'] });
               
               // Add delay to ensure backend has processed the update
               await new Promise(resolve => setTimeout(resolve, 1000));
               
-              // Force fresh fetch
+              // Force fresh fetch using same cache keys as View Plans modal
+              const authToken = localStorage.getItem('auth_token');
+              const headers = authToken ? { 'Authorization': `Bearer ${authToken}` } : {};
+              
               await queryClient.fetchQuery({ 
-                queryKey: ['/api/subscription-status'], 
-                queryFn: () => fetch('/api/subscription-status', {
-                  headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
-                }).then(res => res.json()),
+                queryKey: ['/api/payments/subscription-status'], 
+                queryFn: () => fetch('/api/payments/subscription-status', { headers }).then(res => res.json()),
+                staleTime: 0
+              });
+              
+              await queryClient.fetchQuery({ 
+                queryKey: ['/api/payments/ai-limits'], 
+                queryFn: () => fetch('/api/payments/ai-limits', { headers }).then(res => res.json()),
                 staleTime: 0
               });
               
@@ -142,7 +147,7 @@ export function RazorpayPayment({ onSuccess, onError, userEmail }: RazorpayPayme
               setLoading(false);
               onSuccess?.();
             } else {
-              throw new Error(verifyData.error || "Payment verification failed");
+              throw new Error("Payment verification failed");
             }
           } catch (error: any) {
             console.error("Payment verification error:", error);
