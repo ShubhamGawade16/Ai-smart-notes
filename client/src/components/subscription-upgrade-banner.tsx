@@ -10,8 +10,6 @@ export function SubscriptionUpgradeBanner() {
   const [dismissed, setDismissed] = useState(false);
   const { subscription, usage, isFree, isBasic, canUseAI } = useSubscription();
   
-  console.log('🔵 SubscriptionUpgradeBanner render:', { showModal, dismissed, isFree, isBasic });
-  
   // Handle loading state
   if (!subscription) {
     return null;
@@ -99,10 +97,7 @@ export function SubscriptionUpgradeBanner() {
             <div className="flex items-center gap-2 ml-4">
               <Button 
                 size="sm" 
-                onClick={() => {
-                  console.log('🔵 View Plans button clicked, opening modal...');
-                  setShowModal(true);
-                }}
+                onClick={() => setShowModal(true)}
                 className="bg-teal-600 hover:bg-teal-700 text-white"
               >
                 {bannerContent.cta}
@@ -123,10 +118,7 @@ export function SubscriptionUpgradeBanner() {
 
       <SubscriptionModal
         isOpen={showModal}
-        onOpenChange={(open) => {
-          console.log('🔵 Modal state change:', open);
-          setShowModal(open);
-        }}
+        onOpenChange={setShowModal}
         defaultPlan={isFree ? 'basic' : 'pro'}
       />
     </>

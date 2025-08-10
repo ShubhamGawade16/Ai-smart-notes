@@ -2,6 +2,13 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 
+// Razorpay TypeScript declaration
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
 interface SubscriptionData {
   tier: 'free' | 'basic' | 'pro';
   subscriptionStatus: string | null;
@@ -173,15 +180,102 @@ export function useSubscription() {
     usingMonthlyPool: aiLimitsData.limitType === 'monthly' && (subscriptionData?.dailyAiCalls || 0) >= 3
   } : null;
 
-  // Mock payment handler for now
+  // Razorpay payment handler
   const handlePayment = async (plan: 'basic' | 'pro') => {
-    // This would normally integrate with Razorpay
-    console.log('Payment initiated for plan:', plan);
-    // For now, just show success message
-    toast({
-      title: "Payment Integration",
-      description: `Payment for ${plan} plan would be processed here with Razorpay`,
-    });
+    try {
+      console.log('Payment initiated for plan:', plan);
+      
+      // Create Razorpay order
+      const response = await apiRequest('POST', '/api/payments/create-order', {
+        plan: plan,
+        tier: plan
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create payment order');
+      }
+
+      const orderData = await response.json();
+      
+      // Load Razorpay script if not already loaded
+      if (!window.Razorpay) {
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
+        document.body.appendChild(script);
+        
+        // Wait for script to load
+        await new Promise((resolve, reject) => {
+          script.onload = resolve;
+          script.onerror = reject;
+        });
+      }
+
+      // Configure Razorpay options
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        amount: orderData.order.amount,
+        currency: orderData.order.currency,
+        name: 'Planify',
+        description: `${plan.charAt(0).toUpperCase() + plan.slice(1)} Plan Subscription`,
+        order_id: orderData.order.id,
+        handler: async function (response: any) {
+          try {
+            // Verify payment on backend
+            const verifyResponse = await apiRequest('POST', '/api/payments/verify-payment', {
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+
+            if (verifyResponse.ok) {
+              toast({
+                title: "Payment Successful!",
+                description: `Welcome to ${plan.charAt(0).toUpperCase() + plan.slice(1)} plan! Your subscription is now active.`,
+              });
+              
+              // Refresh subscription data
+              await refetch();
+              queryClient.invalidateQueries({ queryKey: ['/api/payments/subscription-status'] });
+              queryClient.invalidateQueries({ queryKey: ['/api/payments/ai-limits'] });
+            } else {
+              throw new Error('Payment verification failed');
+            }
+          } catch (error) {
+            console.error('Payment verification failed:', error);
+            toast({
+              title: "Payment Verification Failed",
+              description: "Please contact support if amount was deducted.",
+              variant: "destructive"
+            });
+          }
+        },
+        prefill: {
+          email: '', // Will be filled by Razorpay or user
+          contact: ''
+        },
+        theme: {
+          color: '#14b8a6' // Teal theme color
+        },
+        modal: {
+          ondismiss: function() {
+            console.log('Payment modal closed by user');
+          }
+        }
+      };
+
+      // Open Razorpay payment modal
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
+
+    } catch (error) {
+      console.error('Payment initiation failed:', error);
+      toast({
+        title: "Payment Failed",
+        description: "Unable to initiate payment. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   return {

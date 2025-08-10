@@ -30,6 +30,15 @@ Planify aims to be a leading AI-powered productivity tool with a freemium model.
 - All AI features now properly consume exactly 1 credit per use as intended
 - Fixed components: AI Chat Assistant, Task Refiner, Smart Timing, Productivity Insights, Enhanced Smart Timing, Simple Task Input, and dashboard pages
 
+**Dev Tools & View Plans Integration Complete (August 2025):**
+- Fixed dev tools tier toggle functionality with proper cache invalidation using correct query keys
+- Resolved View Plans button modal issue by adding missing plans object to useSubscription hook
+- Integrated complete Razorpay payment system with subscription modal
+- Added dynamic pricing display: Basic (₹199/month), Pro (₹499/month) 
+- Implemented full payment flow: order creation, Razorpay modal, payment verification, and success handling
+- Enhanced subscription modal with usage tracking and proper tier-based plan recommendations
+- Both admin dev tools and View Plans payment flow now working seamlessly
+
 **Admin Security System Complete (August 2025):**
 - Fixed critical security vulnerability where unauthorized users could access developer tools
 - Implemented comprehensive admin security checks across all UI components

@@ -25,10 +25,7 @@ export function SubscriptionModal({ isOpen, onOpenChange, defaultPlan }: Subscri
     usage
   } = useSubscription();
 
-  console.log('🔵 SubscriptionModal render:', { isOpen, plans: !!plans, plansData: plans });
-
   if (!plans) {
-    console.log('🔵 SubscriptionModal: No plans available, not rendering');
     return null;
   }
 
