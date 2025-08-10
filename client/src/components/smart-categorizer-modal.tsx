@@ -55,8 +55,8 @@ export default function SmartCategorizerModal({ isOpen, onClose }: SmartCategori
           const data = await response.json();
           if (data.success && data.analysis) {
             categorizedTasks.push({
-              title: data.analysis.title,
-              description: data.analysis.description,
+              title: taskTitle, // Use the original task title from input
+              description: '', // AI doesn't return description currently
               category: data.analysis.category,
               priority: data.analysis.priority,
               tags: data.analysis.tags,
@@ -101,9 +101,17 @@ export default function SmartCategorizerModal({ isOpen, onClose }: SmartCategori
 
     try {
       for (const task of results.categorizedTasks) {
+        // Ensure title is properly extracted
+        const taskTitle = task.title || task.text || '';
+        
+        if (!taskTitle.trim()) {
+          console.error('Task has no title:', task);
+          continue; // Skip tasks without titles
+        }
+        
         const taskData = {
-          title: task.title,
-          description: task.description || null,
+          title: taskTitle.trim(),
+          description: task.description && task.description.trim() ? task.description.trim() : null,
           category: task.category || null,
           tags: task.tags && task.tags.length > 0 ? task.tags : null,
           priority: task.priority || 'medium',
