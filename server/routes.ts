@@ -3092,9 +3092,23 @@ Guidelines:
       }
 
       const adminStatus = isAdmin(userId);
+      
+      // Debug logging for admin users
+      if (req.user?.email) {
+        const adminEmails = ['shubhamgawadegd@gmail.com', 'shubhamchandangawade63@gmail.com', 'contact.hypervox@gmail.com', 'yanoloj740@elobits.com'];
+        if (adminEmails.includes(req.user.email)) {
+          console.log(`🔍 Admin Login Debug - Email: ${req.user.email}, UserID: ${userId}, IsAdmin: ${adminStatus}`);
+        }
+      }
+      
       res.json({ 
         isAdmin: adminStatus,
-        userId: adminStatus ? userId : undefined
+        userId: adminStatus ? userId : undefined,
+        // Temporarily include debug info for admin identification
+        debug: process.env.NODE_ENV === 'development' ? {
+          email: req.user?.email,
+          userId: userId
+        } : undefined
       });
     } catch (error) {
       console.error('Error checking admin status:', error);
