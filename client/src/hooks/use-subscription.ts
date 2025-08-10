@@ -215,7 +215,7 @@ export function useSubscription() {
 
       // Configure Razorpay options
       const options = {
-        key: orderData.razorpayKeyId || import.meta.env.VITE_RAZORPAY_KEY_ID,
+        key: orderData.razorpayKeyId || 'rzp_live_npgcAwqPvHDL0L',
         amount: orderData.order.amount,
         currency: orderData.order.currency,
         name: 'Planify',

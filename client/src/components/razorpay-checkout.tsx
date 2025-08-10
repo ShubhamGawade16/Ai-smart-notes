@@ -59,7 +59,7 @@ export default function RazorpayCheckout({ plan, onSuccess, onClose }: RazorpayC
 
       // Initialize Razorpay
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID, // Your Razorpay key ID
+        key: 'rzp_live_npgcAwqPvHDL0L', // Live Razorpay key ID
         amount: amount,
         currency: currency,
         name: 'Planify',
