@@ -2,7 +2,10 @@ import OpenAI from 'openai';
 
 // Configure for OpenAI GPT models
 if (!process.env.OPENAI_API_KEY) {
-  console.error('OPENAI_API_KEY environment variable is required');
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('OPENAI_API_KEY environment variable is required in production');
+  }
+  console.warn('⚠️ OPENAI_API_KEY not set - AI features will use fallback responses');
 }
 
 const openai = new OpenAI({

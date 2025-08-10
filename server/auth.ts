@@ -3,13 +3,19 @@ import jwt from 'jsonwebtoken';
 import { createClient } from '@supabase/supabase-js';
 import { User } from '@shared/schema';
 import { storage } from './storage';
+import { logger } from './utils/logger';
 
 export interface AuthRequest extends Request {
   user?: User;
   userId?: string;
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || "planify-secret-key-change-in-production";
+const JWT_SECRET = process.env.JWT_SECRET || (() => {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET environment variable is required in production');
+  }
+  return "planify-secret-key-development";
+})();
 
 // Initialize Supabase client
 const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
