@@ -2634,30 +2634,24 @@ Guidelines:
         return res.status(400).json({ error: 'Task title is required' });
       }
 
-      // Check and increment AI usage via the standardized endpoint
-      try {
-        const response = await fetch(`${process.env.BASE_URL || 'http://localhost:5000'}/api/increment-ai-usage`, {
-          method: 'POST',
-          headers: {
-            'Authorization': req.headers.authorization || '',
-            'Content-Type': 'application/json'
-          }
+      // Check and increment AI usage directly in the same request
+      const dailyUsage = user.dailyAiCalls || 0;
+      const dailyLimit = 3;
+      
+      if (dailyUsage >= dailyLimit) {
+        console.log(`❌ AI categorizer: Free tier limit reached for user ${userId} - ${dailyUsage}/${dailyLimit}`);
+        return res.status(429).json({ 
+          error: `AI usage limit reached. You've used ${dailyUsage}/${dailyLimit} daily AI calls. Upgrade to Basic (₹299/month) or Pro (₹599/month) for more usage.`
         });
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.log(`❌ AI categorizer: Usage limit reached for user ${userId}`);
-          return res.status(429).json({ 
-            error: errorData.message || 'AI usage limit reached. Upgrade to Basic (₹299/month) or Pro (₹599/month) for more usage.'
-          });
-        }
-        
-        const usageData = await response.json();
-        console.log(`✅ AI categorizer usage approved - count now: ${usageData.dailyAiUsage || usageData.monthlyAiUsage || 0}`);
-      } catch (error) {
-        console.error('Failed to increment AI usage:', error);
-        return res.status(500).json({ error: 'Failed to track AI usage' });
       }
+      
+      // Increment usage directly
+      await storage.updateUser(userId, {
+        dailyAiCalls: dailyUsage + 1,
+        dailyAiCallsResetAt: user.dailyAiCallsResetAt || new Date()
+      });
+      
+      console.log(`✅ AI categorizer: Usage incremented to ${dailyUsage + 1}/${dailyLimit}`);
 
       // Simple categorization logic (enhanced)
       const taskTitle = title.toLowerCase();
