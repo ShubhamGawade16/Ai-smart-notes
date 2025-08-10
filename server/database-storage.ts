@@ -2,6 +2,7 @@ import {
   users,
   tasks,
   notes,
+  payments,
   type User,
   type InsertUser,
   type UpsertUser,
@@ -11,6 +12,8 @@ import {
   type Note,
   type InsertNote,
   type UpdateNote,
+  type Payment,
+  type InsertPayment,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql } from "drizzle-orm";
@@ -307,8 +310,8 @@ export class DatabaseStorage implements IStorage {
       await db
         .update(users)
         .set({
-          monthlyTaskCount: 0,
-          monthlyTaskCountResetAt: new Date(),
+          monthlyAiCalls: 0,
+          monthlyAiCallsResetAt: new Date(),
           updatedAt: new Date(),
         })
         .where(eq(users.id, userId));
@@ -331,32 +334,73 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async incrementMonthlyTaskCount(userId: string): Promise<void> {
+  async getAllUsers(): Promise<User[]> {
     try {
-      await db
-        .update(users)
-        .set({
-          monthlyTaskCount: sql`${users.monthlyTaskCount} + 1`,
-          updatedAt: new Date(),
-        })
-        .where(eq(users.id, userId));
+      return await db.select().from(users);
     } catch (error) {
-      console.error(`Error incrementing monthly task count for user ${userId}:`, error);
+      console.error('Error getting all users:', error);
+      return [];
     }
   }
 
-  async resetDailyAiUsage(userId: string): Promise<void> {
+  // Payment operations
+  async createPayment(payment: InsertPayment): Promise<Payment> {
     try {
-      await db
-        .update(users)
-        .set({
-          dailyAiCalls: 0,
-          dailyAiCallsResetAt: new Date(),
+      const [newPayment] = await db
+        .insert(payments)
+        .values({
+          ...payment,
+          createdAt: new Date(),
           updatedAt: new Date(),
         })
-        .where(eq(users.id, userId));
+        .returning();
+      return newPayment;
     } catch (error) {
-      console.error(`Error resetting daily AI usage for user ${userId}:`, error);
+      console.error('Error creating payment:', error);
+      throw new Error('Failed to create payment');
+    }
+  }
+
+  async getPayment(id: string): Promise<Payment | undefined> {
+    try {
+      const [payment] = await db
+        .select()
+        .from(payments)
+        .where(eq(payments.id, id));
+      return payment || undefined;
+    } catch (error) {
+      console.error(`Error getting payment ${id}:`, error);
+      return undefined;
+    }
+  }
+
+  async getPaymentByOrderId(orderId: string): Promise<Payment | undefined> {
+    try {
+      const [payment] = await db
+        .select()
+        .from(payments)
+        .where(eq(payments.razorpayOrderId, orderId));
+      return payment || undefined;
+    } catch (error) {
+      console.error(`Error getting payment by order ${orderId}:`, error);
+      return undefined;
+    }
+  }
+
+  async updatePayment(id: string, updates: Partial<Payment>): Promise<Payment | undefined> {
+    try {
+      const [payment] = await db
+        .update(payments)
+        .set({
+          ...updates,
+          updatedAt: new Date(),
+        })
+        .where(eq(payments.id, id))
+        .returning();
+      return payment || undefined;
+    } catch (error) {
+      console.error(`Error updating payment ${id}:`, error);
+      return undefined;
     }
   }
 }
