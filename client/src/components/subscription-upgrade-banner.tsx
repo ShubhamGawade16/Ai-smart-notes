@@ -97,7 +97,10 @@ export function SubscriptionUpgradeBanner() {
             <div className="flex items-center gap-2 ml-4">
               <Button 
                 size="sm" 
-                onClick={() => setShowModal(true)}
+                onClick={() => {
+                  console.log('🔵 View Plans button clicked, opening modal...');
+                  setShowModal(true);
+                }}
                 className="bg-teal-600 hover:bg-teal-700 text-white"
               >
                 {bannerContent.cta}
@@ -118,7 +121,10 @@ export function SubscriptionUpgradeBanner() {
 
       <SubscriptionModal
         isOpen={showModal}
-        onOpenChange={setShowModal}
+        onOpenChange={(open) => {
+          console.log('🔵 Modal state change:', open);
+          setShowModal(open);
+        }}
         defaultPlan={isFree ? 'basic' : 'pro'}
       />
     </>

@@ -29,19 +29,24 @@ export default function DevModeModal({ isOpen, onClose }: DevModeModalProps) {
       return response.json();
     },
     onSuccess: async (data) => {
-      // Force invalidate all subscription-related queries
-      await queryClient.invalidateQueries({ queryKey: ['/api/subscription-status'] });
-      await queryClient.refetchQueries({ queryKey: ['/api/subscription-status'] });
-      
-      // Also invalidate tasks queries to refresh any tier-dependent UI
+      // Force invalidate all subscription-related queries with correct query keys
+      await queryClient.invalidateQueries({ queryKey: ['/api/payments/subscription-status'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/payments/ai-limits'] });
       await queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/admin/status'] });
       
-      // Force refetch subscription status
+      // Force refetch subscription status immediately
       await refetch();
+      
+      // Small delay then refetch again to ensure UI updates
+      setTimeout(() => {
+        queryClient.refetchQueries({ queryKey: ['/api/payments/subscription-status'] });
+        queryClient.refetchQueries({ queryKey: ['/api/payments/ai-limits'] });
+      }, 100);
       
       toast({
         title: "Tier Updated", 
-        description: `Successfully switched to ${data.newTier} tier. Badge should update now.`,
+        description: `Successfully switched to ${data.newTier} tier. UI should refresh now.`,
       });
       
       // Don't close modal automatically, let user see the change
