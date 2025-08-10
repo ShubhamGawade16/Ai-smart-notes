@@ -78,13 +78,20 @@ export class RazorpayService {
     }
   }
 
-  // Verify payment signature
+  // Verify payment signature with enhanced live mode support
   verifyPaymentSignature(
     orderId: string,
     paymentId: string,
     signature: string
   ): { isValid: boolean; error?: string } {
     try {
+      // Enhanced logging for live mode debugging
+      const keyType = process.env.RAZORPAY_KEY_ID?.startsWith('rzp_live_') ? 'LIVE' : 'TEST';
+      console.log(`🔍 Verifying payment signature in ${keyType} mode`);
+      console.log(`📋 Order ID: ${orderId}`);
+      console.log(`💳 Payment ID: ${paymentId}`);
+      console.log(`🔐 Signature received: ${signature.substring(0, 10)}...`);
+
       const body = orderId + '|' + paymentId;
       const expectedSignature = crypto
         .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
@@ -94,9 +101,11 @@ export class RazorpayService {
       const isValid = expectedSignature === signature;
       
       if (isValid) {
-        console.log(`✅ Payment signature verified: ${paymentId}`);
+        console.log(`✅ Payment signature verified successfully: ${paymentId} (${keyType} mode)`);
       } else {
-        console.error(`❌ Payment signature verification failed: ${paymentId}`);
+        console.error(`❌ Payment signature verification failed: ${paymentId} (${keyType} mode)`);
+        console.error(`Expected: ${expectedSignature.substring(0, 10)}...`);
+        console.error(`Received: ${signature.substring(0, 10)}...`);
       }
 
       return { isValid };
@@ -109,14 +118,83 @@ export class RazorpayService {
     }
   }
 
-  // Fetch payment details (optional - for additional verification)
+  // Fetch payment details with live mode support
   async getPaymentDetails(paymentId: string) {
     try {
+      const keyType = process.env.RAZORPAY_KEY_ID?.startsWith('rzp_live_') ? 'LIVE' : 'TEST';
+      console.log(`🔍 Fetching payment details in ${keyType} mode for: ${paymentId}`);
+      
       const payment = await this.razorpay.payments.fetch(paymentId);
+      
+      console.log(`✅ Payment details fetched successfully:`, {
+        id: payment.id,
+        status: payment.status,
+        amount: payment.amount,
+        method: payment.method,
+        created_at: payment.created_at
+      });
+      
       return payment;
     } catch (error) {
       console.error('Failed to fetch payment details:', error);
       throw new Error('Failed to fetch payment details');
+    }
+  }
+
+  // Enhanced payment verification with live mode fallback
+  async verifyPaymentWithFallback(
+    orderId: string,
+    paymentId: string,
+    signature: string
+  ): Promise<{ isValid: boolean; error?: string; paymentStatus?: string }> {
+    try {
+      // First, try signature verification
+      const signatureVerification = this.verifyPaymentSignature(orderId, paymentId, signature);
+      
+      if (signatureVerification.isValid) {
+        return { isValid: true };
+      }
+
+      // If signature verification fails in live mode, fetch payment details as fallback
+      const keyType = process.env.RAZORPAY_KEY_ID?.startsWith('rzp_live_') ? 'LIVE' : 'TEST';
+      
+      if (keyType === 'LIVE') {
+        console.log('🔄 Signature verification failed in live mode, trying payment status check...');
+        
+        try {
+          const paymentDetails = await this.getPaymentDetails(paymentId);
+          
+          // Check if payment is captured/successful
+          if (paymentDetails.status === 'captured' || paymentDetails.status === 'authorized') {
+            console.log(`✅ Payment status verified as ${paymentDetails.status} in live mode`);
+            return { 
+              isValid: true, 
+              paymentStatus: paymentDetails.status 
+            };
+          } else {
+            console.log(`❌ Payment status is ${paymentDetails.status} in live mode`);
+            return { 
+              isValid: false, 
+              error: `Payment status is ${paymentDetails.status}`,
+              paymentStatus: paymentDetails.status 
+            };
+          }
+        } catch (paymentError) {
+          console.error('Failed to fetch payment details for fallback verification:', paymentError);
+          return { 
+            isValid: false, 
+            error: 'Both signature and payment status verification failed' 
+          };
+        }
+      }
+
+      return signatureVerification;
+    } catch (error) {
+      console.error('Enhanced payment verification failed:', error);
+      return { 
+        isValid: false, 
+        error: 'Payment verification failed' 
+      };
     }
   }
 

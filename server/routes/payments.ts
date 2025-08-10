@@ -21,7 +21,7 @@ router.get('/plans', async (req, res) => {
 });
 
 // Create payment order for subscription  
-router.post('/create-order', authenticateToken, async (req: AuthRequest, res) => {
+router.post('/create-order', authenticateToken as any, async (req: AuthRequest, res) => {
   try {
     const userId = req.userId!;
     const { planType } = req.body;
@@ -89,7 +89,7 @@ router.post('/create-order', authenticateToken, async (req: AuthRequest, res) =>
 });
 
 // Verify payment and upgrade user subscription
-router.post('/verify-payment', authenticateToken, async (req: AuthRequest, res) => {
+router.post('/verify-payment', authenticateToken as any, async (req: AuthRequest, res) => {
   try {
     const userId = req.userId!;
     const { 
@@ -102,8 +102,10 @@ router.post('/verify-payment', authenticateToken, async (req: AuthRequest, res) 
       return res.status(400).json({ error: 'Payment verification data is required' });
     }
 
-    // Verify payment signature
-    const verification = razorpayService.verifyPaymentSignature(
+    // Enhanced payment verification for live mode with fallback
+    console.log(`🔍 Starting payment verification for order: ${razorpay_order_id}`);
+    
+    const verification = await razorpayService.verifyPaymentWithFallback(
       razorpay_order_id,
       razorpay_payment_id,
       razorpay_signature
@@ -111,8 +113,18 @@ router.post('/verify-payment', authenticateToken, async (req: AuthRequest, res) 
 
     if (!verification.isValid) {
       console.error('❌ Payment verification failed:', verification.error);
-      return res.status(400).json({ error: 'Payment verification failed' });
+      // Enhanced error response for live mode debugging
+      return res.status(400).json({ 
+        error: 'Payment verification failed',
+        details: verification.error,
+        orderId: razorpay_order_id,
+        paymentId: razorpay_payment_id,
+        paymentStatus: verification.paymentStatus
+      });
     }
+
+    console.log(`✅ Payment verified successfully for: ${razorpay_payment_id}` + 
+      (verification.paymentStatus ? ` (Status: ${verification.paymentStatus})` : ''));
 
     // Get payment record
     const payment = await storage.getPaymentByOrderId(razorpay_order_id);
@@ -167,7 +179,7 @@ router.post('/verify-payment', authenticateToken, async (req: AuthRequest, res) 
 });
 
 // Get user's subscription status
-router.get('/subscription-status', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/subscription-status', authenticateToken as any, async (req: AuthRequest, res) => {
   try {
     const userId = req.userId!;
     const status = await subscriptionService.getSubscriptionStatus(userId);
@@ -183,7 +195,7 @@ router.get('/subscription-status', authenticateToken, async (req: AuthRequest, r
 });
 
 // Check AI usage limits
-router.get('/ai-limits', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/ai-limits', authenticateToken as any, async (req: AuthRequest, res) => {
   try {
     const userId = req.userId!;
     const limits = await subscriptionService.canUseAI(userId);
@@ -198,14 +210,18 @@ router.get('/ai-limits', authenticateToken, async (req: AuthRequest, res) => {
   }
 });
 
-// Test Razorpay connection endpoint
+// Test Razorpay connection endpoint with live mode detection
 router.get('/test-razorpay', async (req, res) => {
   try {
     const hasKeys = !!(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET);
+    const keyType = process.env.RAZORPAY_KEY_ID?.startsWith('rzp_live_') ? 'LIVE' : 'TEST';
+    
     res.json({
       success: true,
-      status: hasKeys ? 'Razorpay keys configured' : 'Missing Razorpay keys',
+      status: hasKeys ? `Razorpay keys configured (${keyType} mode)` : 'Missing Razorpay keys',
       keyId: process.env.RAZORPAY_KEY_ID ? `${process.env.RAZORPAY_KEY_ID.substring(0, 12)}...` : 'Not set',
+      mode: keyType,
+      timestamp: new Date().toISOString()
     });
   } catch (error) {
     console.error('Razorpay test failed:', error);

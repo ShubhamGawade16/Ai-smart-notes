@@ -223,7 +223,13 @@ export function useSubscription() {
         order_id: orderData.order.id,
         handler: async function (response: any) {
           try {
-            // Verify payment on backend
+            console.log('🔄 Payment completed, verifying with backend...', {
+              payment_id: response.razorpay_payment_id,
+              order_id: response.razorpay_order_id,
+              signature: response.razorpay_signature?.substring(0, 10) + '...'
+            });
+
+            // Verify payment on backend with enhanced error handling
             const verifyResponse = await apiRequest('POST', '/api/payments/verify-payment', {
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_order_id: response.razorpay_order_id,
@@ -231,17 +237,18 @@ export function useSubscription() {
             });
 
             if (verifyResponse.ok) {
+              console.log('✅ Payment verification successful');
               toast({
                 title: "Payment Successful!",
                 description: `Welcome to ${plan.charAt(0).toUpperCase() + plan.slice(1)} plan! Your subscription is now active.`,
               });
               
-              // Clear all related caches and force fresh data (copied from working upgrade button)
+              // Clear all related caches and force fresh data
               queryClient.removeQueries({ queryKey: ['/api/payments/subscription-status'] });
               queryClient.removeQueries({ queryKey: ['/api/payments/ai-limits'] });
               
               // Add delay to ensure backend has processed the update
-              await new Promise(resolve => setTimeout(resolve, 1000));
+              await new Promise(resolve => setTimeout(resolve, 1500));
               
               // Force fresh fetch with proper auth headers
               const authToken = localStorage.getItem('auth_token');
@@ -264,15 +271,17 @@ export function useSubscription() {
                 });
               }
               
-              console.log("Subscription data refreshed after payment");
+              console.log("✅ Subscription data refreshed after payment");
             } else {
-              throw new Error('Payment verification failed');
+              const errorData = await verifyResponse.json();
+              console.error('❌ Payment verification failed:', errorData);
+              throw new Error(errorData.error || 'Payment verification failed');
             }
-          } catch (error) {
-            console.error('Payment verification failed:', error);
+          } catch (error: any) {
+            console.error('Payment verification error:', error);
             toast({
               title: "Payment Verification Failed",
-              description: "Please contact support if amount was deducted.",
+              description: error.message || "Please contact support if amount was deducted.",
               variant: "destructive"
             });
           }
@@ -288,6 +297,11 @@ export function useSubscription() {
           ondismiss: function() {
             console.log('Payment modal closed by user');
           }
+        },
+        timeout: 300, // 5 minutes timeout for live mode
+        retry: {
+          enabled: true,
+          max_count: 3
         }
       };
 
