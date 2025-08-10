@@ -101,14 +101,31 @@ export default function SmartCategorizerModal({ isOpen, onClose }: SmartCategori
 
     try {
       for (const task of results.categorizedTasks) {
-        await apiRequest("POST", "/api/tasks", {
+        const taskData = {
           title: task.title,
-          description: task.description || '',
-          category: task.category,
-          tags: task.tags || [],
+          description: task.description || null,
+          category: task.category || null,
+          tags: task.tags && task.tags.length > 0 ? task.tags : null,
           priority: task.priority || 'medium',
-          taskType: task.taskType || 'routine'
-        });
+          taskType: 'routine',
+          estimatedTime: task.estimatedTime || null,
+          completed: false,
+          dueDate: null,
+          scheduledAt: null,
+          parentTaskId: null,
+          readinessScore: null,
+          optimalTimeSlot: null
+        };
+        
+        console.log('Creating task with data:', taskData);
+        
+        const response = await apiRequest("POST", "/api/tasks", taskData);
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('Task creation failed:', errorData);
+          throw new Error(errorData.error || 'Failed to create task');
+        }
       }
 
       queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
@@ -190,15 +207,22 @@ export default function SmartCategorizerModal({ isOpen, onClose }: SmartCategori
                         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{task.description}</p>
                       )}
                       <div className="flex gap-2 mt-2 flex-wrap">
-                        <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-xs">
-                          {task.category}
+                        <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-xs font-medium">
+                          📂 {task.category}
                         </span>
-                        <span className="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded text-xs">
-                          {task.priority}
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                          task.priority === 'high' ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' :
+                          task.priority === 'low' ? 'bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200' :
+                          'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
+                        }`}>
+                          {task.priority === 'high' ? '🔥' : task.priority === 'low' ? '📉' : '📊'} {task.priority}
+                        </span>
+                        <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded text-xs font-medium">
+                          ⏱️ {task.estimatedTime}min
                         </span>
                         {task.tags?.map((tag: string, tagIndex: number) => (
-                          <span key={tagIndex} className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded text-xs">
-                            {tag}
+                          <span key={tagIndex} className="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded text-xs font-medium">
+                            🏷️ {tag}
                           </span>
                         ))}
                       </div>
