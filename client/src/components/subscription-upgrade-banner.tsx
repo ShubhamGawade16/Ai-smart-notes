@@ -10,6 +10,8 @@ export function SubscriptionUpgradeBanner() {
   const [dismissed, setDismissed] = useState(false);
   const { subscription, usage, isFree, isBasic, canUseAI } = useSubscription();
   
+  console.log('🔵 SubscriptionUpgradeBanner render:', { showModal, dismissed, isFree, isBasic });
+  
   // Handle loading state
   if (!subscription) {
     return null;

@@ -133,6 +133,57 @@ export function useSubscription() {
     queryClient.invalidateQueries({ queryKey: ['/api/payments/ai-limits'] });
   };
 
+  // Define plans object for subscription modal
+  const plans = {
+    basic: {
+      name: 'Basic',
+      price: '₹199',
+      features: [
+        '100 AI requests per month',
+        'Smart task categorization',
+        'Priority scheduling',
+        'Basic analytics'
+      ]
+    },
+    pro: {
+      name: 'Pro',
+      price: '₹499',
+      features: [
+        'Unlimited AI requests',
+        'Advanced productivity insights',
+        'Smart timing optimization',
+        'Priority support',
+        'Custom integrations'
+      ]
+    }
+  };
+
+  // Define usage object for UI display
+  const usage = aiLimitsData ? {
+    type: aiLimitsData.limitType as 'daily' | 'monthly',
+    used: aiLimitsData.currentUsage,
+    total: aiLimitsData.userLimit,
+    remaining: Math.max(0, aiLimitsData.userLimit - aiLimitsData.currentUsage),
+    dailyUsed: subscriptionData?.dailyAiCalls || 0,
+    dailyTotal: aiLimitsData.limitType === 'daily' ? aiLimitsData.userLimit : 3,
+    dailyRemaining: Math.max(0, (aiLimitsData.limitType === 'daily' ? aiLimitsData.userLimit : 3) - (subscriptionData?.dailyAiCalls || 0)),
+    monthlyUsed: subscriptionData?.monthlyAiCalls || 0,
+    monthlyTotal: aiLimitsData.limitType === 'monthly' ? aiLimitsData.userLimit : 100,
+    monthlyRemaining: Math.max(0, (aiLimitsData.limitType === 'monthly' ? aiLimitsData.userLimit : 100) - (subscriptionData?.monthlyAiCalls || 0)),
+    usingMonthlyPool: aiLimitsData.limitType === 'monthly' && (subscriptionData?.dailyAiCalls || 0) >= 3
+  } : null;
+
+  // Mock payment handler for now
+  const handlePayment = async (plan: 'basic' | 'pro') => {
+    // This would normally integrate with Razorpay
+    console.log('Payment initiated for plan:', plan);
+    // For now, just show success message
+    toast({
+      title: "Payment Integration",
+      description: `Payment for ${plan} plan would be processed here with Razorpay`,
+    });
+  };
+
   return {
     // Data
     subscriptionData,
@@ -151,6 +202,12 @@ export function useSubscription() {
 
     // Mutation states
     isIncrementingUsage: incrementAiUsageMutation.isPending,
+    isProcessingPayment: false, // Add this for modal compatibility
+
+    // New properties for subscription modal
+    plans,
+    usage,
+    handlePayment,
 
     // Legacy compatibility properties
     subscription: subscriptionData,
