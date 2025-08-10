@@ -75,6 +75,7 @@ export default function UpgradePage() {
 
         {/* Payment Component */}
         <RazorpayPayment
+          plan="pro"
           onSuccess={handlePaymentSuccess}
           onError={handlePaymentError}
           userEmail={user?.email}

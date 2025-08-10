@@ -29,8 +29,8 @@ export function SubscriptionUpgradeBanner() {
       icon: <Zap className="w-5 h-5 text-amber-500" />,
       title: "Daily limit reached",
       description: isFree 
-        ? "Upgrade to Basic (₹299/month) or Pro (₹599/month) for more AI interactions"
-        : "Upgrade to Pro (₹599/month) for 100 monthly credits with rollover",
+        ? "Upgrade to Basic (₹299/month) or Pro (₹499/month) for more AI interactions"
+        : "Upgrade to Pro (₹499/month) for 100 monthly credits with rollover",
       urgency: "high",
       cta: isFree ? "Upgrade Now" : "Upgrade to Pro"
     };

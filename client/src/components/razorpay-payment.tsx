@@ -28,7 +28,7 @@ interface SubscriptionPlan {
 const SUBSCRIPTION_PLAN: SubscriptionPlan = {
   id: "pro",
   name: "Planify Pro",
-  amount: 50000, // $5 ≈ ₹500 in paise
+  amount: 49900, // ₹499 in paise
   currency: "INR", 
   interval: "monthly",
   description: "Unlock unlimited AI-powered productivity",
@@ -219,8 +219,8 @@ export function RazorpayPayment({ plan, onSuccess, onError, userEmail }: Razorpa
   };
 
   const formatPrice = (amount: number) => {
-    // Show $5 for demo purposes (₹500 = ~$5 USD)
-    return `$5.00`;
+    // Convert from paise to rupees and format
+    return `₹${(amount / 100).toFixed(0)}`;
   };
 
   return (
