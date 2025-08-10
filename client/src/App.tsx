@@ -19,7 +19,6 @@ import DebugAuthPage from "@/pages/debug-auth";
 import AdvancedFeatures from "./pages/advanced-features";
 import UpgradePage from "@/pages/upgrade";
 import OnboardingPage from "@/pages/onboarding";
-import AdminPanel from "@/pages/admin";
 import NotFound from "@/pages/not-found";
 import { Loader2 } from "lucide-react";
 
@@ -95,10 +94,6 @@ function Router() {
       
       <Route path="/onboarding">
         {user ? <OnboardingPage /> : <Redirect to="/" />}
-      </Route>
-      
-      <Route path="/admin">
-        {user ? <AdminPanel /> : <Redirect to="/" />}
       </Route>
       
       <Route component={NotFound} />

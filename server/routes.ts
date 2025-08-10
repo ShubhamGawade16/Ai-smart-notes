@@ -2933,140 +2933,127 @@ Guidelines:
     }
   });
 
-  // Admin system - only accessible by super admin users
-  const ADMIN_EMAILS = [
-    'admin@planify.app',
-    'shubham.gawade@underdogsthestudio.com',
-    'yanoloj740@elobits.com' // Adding current test user as admin
-  ];
-
-  const isAdminUser = (email: string): boolean => {
-    return ADMIN_EMAILS.includes(email.toLowerCase());
-  };
-
-  const requireAdmin = async (req: AuthRequest, res: any, next: any) => {
+  // Developer Tools - Reset AI Usage
+  app.post('/api/dev/reset-ai-usage', optionalAuth, async (req: AuthRequest, res) => {
     try {
-      if (!req.userId) {
-        return res.status(401).json({ error: "Authentication required" });
+      if (process.env.NODE_ENV === 'production') {
+        return res.status(403).json({ error: 'Developer tools not available in production' });
       }
 
-      const user = await storage.getUser(req.userId);
-      if (!user || !isAdminUser(user.email)) {
-        return res.status(403).json({ error: "Admin access required" });
+      const userId = req.userId;
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
       }
 
-      next();
-    } catch (error) {
-      return res.status(500).json({ error: "Admin verification failed" });
-    }
-  };
-
-  // Admin endpoints - secure and only for authorized administrators
-  app.post("/api/admin/change-user-tier", requireAuth, requireAdmin, async (req: AuthRequest, res) => {
-    try {
-      const { userEmail, tier } = req.body;
-      
-      if (!userEmail || !['free', 'basic', 'pro'].includes(tier)) {
-        return res.status(400).json({ error: "Invalid userEmail or tier" });
-      }
-      
-      // Find user by email
-      const users = await storage.getAllUsers();
-      const targetUser = users.find(u => u.email.toLowerCase() === userEmail.toLowerCase());
-      
-      if (!targetUser) {
-        return res.status(404).json({ error: "User not found" });
-      }
-      
-      const subscriptionStatus = tier === 'free' ? null : 'active';
-      
-      await storage.updateUser(targetUser.id, {
-        tier: tier as 'free' | 'basic' | 'pro',
-        subscriptionStatus: subscriptionStatus
-      });
-      
-      console.log(`👑 Admin: Changed user ${targetUser.email} (${targetUser.id}) tier to ${tier}`);
-      
-      res.json({ 
-        success: true, 
-        message: `User ${userEmail} tier changed to ${tier}`,
-        tier,
-        subscriptionStatus
-      });
-    } catch (error) {
-      console.error("Admin failed to change tier:", error);
-      res.status(500).json({ error: "Failed to change tier" });
-    }
-  });
-
-  app.post("/api/admin/reset-user-ai-usage", requireAuth, requireAdmin, async (req: AuthRequest, res) => {
-    try {
-      const { userEmail } = req.body;
-      
-      if (!userEmail) {
-        return res.status(400).json({ error: "UserEmail required" });
-      }
-      
-      // Find user by email
-      const users = await storage.getAllUsers();
-      const targetUser = users.find(u => u.email.toLowerCase() === userEmail.toLowerCase());
-      
-      if (!targetUser) {
-        return res.status(404).json({ error: "User not found" });
-      }
-      
-      await storage.updateUser(targetUser.id, {
+      // Reset both daily and monthly AI usage
+      await storage.updateUser(userId, {
         dailyAiCalls: 0,
         monthlyAiCalls: 0,
         dailyAiCallsResetAt: new Date(),
-        monthlyAiCallsResetAt: new Date()
+        monthlyAiCallsResetAt: new Date(),
       });
-      
-      console.log(`👑 Admin: Reset AI usage for user ${targetUser.email} (${targetUser.id})`);
-      
+
+      console.log(`🔄 Dev Tools: Reset AI usage for user ${userId}`);
+
       res.json({ 
         success: true, 
-        message: `AI usage reset for ${userEmail}` 
+        message: 'AI usage counters reset successfully' 
       });
     } catch (error) {
-      console.error("Admin failed to reset AI usage:", error);
-      res.status(500).json({ error: "Failed to reset AI usage" });
+      console.error('Failed to reset AI usage:', error);
+      res.status(500).json({ error: 'Failed to reset AI usage' });
     }
   });
 
-  app.get("/api/admin/users", requireAuth, requireAdmin, async (req: AuthRequest, res) => {
+  // Developer Tools - Change User Tier 
+  app.post('/api/dev/change-tier', optionalAuth, async (req: AuthRequest, res) => {
     try {
-      const users = await storage.getAllUsers();
-      const safeUsers = users.map(user => ({
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        tier: user.tier,
-        subscriptionStatus: user.subscriptionStatus,
-        dailyAiCalls: user.dailyAiCalls,
-        monthlyAiCalls: user.monthlyAiCalls,
-        createdAt: user.createdAt
-      }));
-      
-      res.json({ users: safeUsers });
-    } catch (error) {
-      console.error("Admin failed to get users:", error);
-      res.status(500).json({ error: "Failed to get users" });
-    }
-  });
+      if (process.env.NODE_ENV === 'production') {
+        return res.status(403).json({ error: 'Developer tools not available in production' });
+      }
 
-  app.get("/api/admin/check", requireAuth, async (req: AuthRequest, res) => {
-    try {
-      const user = await storage.getUser(req.userId!);
-      const isAdmin = user && isAdminUser(user.email);
+      const userId = req.userId;
+      const { tier } = req.body;
       
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      if (!['free', 'basic', 'pro'].includes(tier)) {
+        return res.status(400).json({ error: 'Invalid tier. Must be free, basic, or pro' });
+      }
+
+      // Update user tier and reset AI usage
+      await storage.updateUser(userId, {
+        tier: tier as 'free' | 'basic' | 'pro',
+        dailyAiCalls: 0,
+        monthlyAiCalls: 0,
+        dailyAiCallsResetAt: new Date(),
+        monthlyAiCallsResetAt: new Date(),
+        subscriptionStatus: tier === 'free' ? null : 'active',
+      });
+
+      console.log(`🔄 Dev Tools: Changed user ${userId} tier to ${tier}`);
+
       res.json({ 
-        isAdmin,
-        email: user?.email 
+        success: true, 
+        message: `User tier changed to ${tier} successfully`,
+        tier
       });
     } catch (error) {
-      res.status(500).json({ error: "Failed to check admin status" });
+      console.error('Failed to change user tier:', error);
+      res.status(500).json({ error: 'Failed to change user tier' });
+    }
+  });
+
+  // Developer Tools - Toggle Tier (backward compatibility)
+  app.post('/api/dev/toggle-tier', optionalAuth, async (req: AuthRequest, res) => {
+    try {
+      if (process.env.NODE_ENV === 'production') {
+        return res.status(403).json({ error: 'Developer tools not available in production' });
+      }
+
+      const userId = req.userId;
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      // Cycle through tiers: free -> basic -> pro -> free
+      let nextTier: 'free' | 'basic' | 'pro';
+      if (user.tier === 'free') {
+        nextTier = 'basic';
+      } else if (user.tier === 'basic') {
+        nextTier = 'pro';
+      } else {
+        nextTier = 'free';
+      }
+
+      // Update user tier and reset AI usage
+      await storage.updateUser(userId, {
+        tier: nextTier,
+        dailyAiCalls: 0,
+        monthlyAiCalls: 0,
+        dailyAiCallsResetAt: new Date(),
+        monthlyAiCallsResetAt: new Date(),
+        subscriptionStatus: nextTier === 'free' ? null : 'active',
+      });
+
+      console.log(`🔄 Dev Tools: Toggled user ${userId} tier from ${user.tier} to ${nextTier}`);
+
+      res.json({ 
+        success: true, 
+        message: `User tier toggled to ${nextTier} successfully`,
+        newTier: nextTier,
+        oldTier: user.tier
+      });
+    } catch (error) {
+      console.error('Failed to toggle user tier:', error);
+      res.status(500).json({ error: 'Failed to toggle user tier' });
     }
   });
 
