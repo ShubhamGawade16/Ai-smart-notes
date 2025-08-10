@@ -120,10 +120,14 @@ export const optionalAuth = async (
         const { data: { user }, error } = await supabase.auth.getUser(token);
         
         if (user && !error) {
+          console.log('🔍 Supabase user found:', { id: user.id, email: user.email });
+          
           // Get or create user in our database
           let dbUser = await storage.getUserByEmail(user.email!);
           
           if (!dbUser) {
+            console.log('🔍 Database user lookup by ID: not found');
+            console.log('📡 Creating user from Supabase data directly...');
             dbUser = await storage.createUser({
               email: user.email!,
               firstName: user.user_metadata?.first_name || '',
@@ -131,21 +135,29 @@ export const optionalAuth = async (
               tier: 'free',
               onboardingCompleted: false,
             });
+            console.log('✅ User created:', dbUser.id);
+          } else {
+            console.log('🔍 Database user lookup by email: found');
+            console.log('✅ Using existing user:', dbUser.id);
           }
           
           req.userId = dbUser.id;
           req.user = dbUser;
+          // Store Supabase user ID for admin checks
+          (req as any).supabaseUserId = user.id;
         }
       } else {
         // Fallback: Try JWT token decode
         const decoded = jwt.decode(token) as any;
         if (decoded?.sub) {
-          req.userId = decoded.sub;
+          console.log('🔍 Supabase user found:', { id: decoded.sub, email: decoded.email });
           
           // Try to get user from database
           if (decoded.email) {
             let dbUser = await storage.getUserByEmail(decoded.email);
             if (!dbUser) {
+              console.log('🔍 Database user lookup by ID: not found');
+              console.log('🔍 Database user lookup by email: found');
               try {
                 dbUser = await storage.createUser({
                   email: decoded.email,
@@ -159,10 +171,15 @@ export const optionalAuth = async (
                   dbUser = await storage.getUserByEmail(decoded.email);
                 }
               }
+            } else {
+              console.log('🔍 Database user lookup by email: found');
+              console.log('✅ Using existing user:', dbUser.id);
             }
             if (dbUser) {
               req.user = dbUser;
               req.userId = dbUser.id;
+              // Store Supabase user ID for admin checks
+              (req as any).supabaseUserId = decoded.sub;
             }
           }
         }

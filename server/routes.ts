@@ -3091,13 +3091,15 @@ Guidelines:
         return res.json({ isAdmin: false });
       }
 
-      const adminStatus = isAdmin(userId);
+      // Check admin status using Supabase user ID if available
+      const supabaseUserId = (req as any).supabaseUserId;
+      const adminStatus = supabaseUserId ? isAdmin(supabaseUserId) : isAdmin(userId);
       
       // Debug logging for admin users
       if (req.user?.email) {
         const adminEmails = ['shubhamgawadegd@gmail.com', 'shubhamchandangawade63@gmail.com', 'contact.hypervox@gmail.com', 'yanoloj740@elobits.com'];
         if (adminEmails.includes(req.user.email)) {
-          console.log(`🔍 Admin Login Debug - Email: ${req.user.email}, UserID: ${userId}, IsAdmin: ${adminStatus}`);
+          console.log(`🔍 Admin Login Debug - Email: ${req.user.email}, DbUserID: ${userId}, SupabaseID: ${supabaseUserId}, IsAdmin: ${adminStatus}`);
         }
       }
       
@@ -3107,7 +3109,8 @@ Guidelines:
         // Temporarily include debug info for admin identification
         debug: process.env.NODE_ENV === 'development' ? {
           email: req.user?.email,
-          userId: userId
+          dbUserId: userId,
+          supabaseUserId: supabaseUserId
         } : undefined
       });
     } catch (error) {
