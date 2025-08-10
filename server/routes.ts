@@ -2746,7 +2746,16 @@ Guidelines:
         confidence: 0.75
       };
 
-      res.json({
+      console.log(`✅ AI categorizer: Returning analysis for "${title}":`, {
+        category,
+        priority,
+        tags,
+        estimatedTime
+      });
+
+      // Ensure we return proper JSON response
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(200).json({
         success: true,
         analysis: result,
         suggestions: [
@@ -2756,8 +2765,12 @@ Guidelines:
         ]
       });
     } catch (error) {
-      console.error('Task categorization error:', error);
-      res.status(500).json({ error: 'Failed to categorize task' });
+      console.error('💥 AI categorizer FATAL ERROR:', error);
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(500).json({ 
+        error: 'AI categorization failed',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 
