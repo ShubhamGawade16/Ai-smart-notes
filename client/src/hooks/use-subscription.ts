@@ -136,8 +136,10 @@ export function useSubscription() {
   };
 
   const refetch = async () => {
-    queryClient.invalidateQueries({ queryKey: ['/api/payments/subscription-status'] });
-    queryClient.invalidateQueries({ queryKey: ['/api/payments/ai-limits'] });
+    await queryClient.invalidateQueries({ queryKey: ['/api/payments/subscription-status'] });
+    await queryClient.invalidateQueries({ queryKey: ['/api/payments/ai-limits'] });
+    await queryClient.refetchQueries({ queryKey: ['/api/payments/subscription-status'] });
+    await queryClient.refetchQueries({ queryKey: ['/api/payments/ai-limits'] });
   };
 
   // Define plans object for subscription modal
@@ -234,10 +236,19 @@ export function useSubscription() {
                 description: `Welcome to ${plan.charAt(0).toUpperCase() + plan.slice(1)} plan! Your subscription is now active.`,
               });
               
-              // Refresh subscription data
-              await refetch();
-              queryClient.invalidateQueries({ queryKey: ['/api/payments/subscription-status'] });
-              queryClient.invalidateQueries({ queryKey: ['/api/payments/ai-limits'] });
+              // Force immediate cache refresh for instant UI updates
+              await queryClient.invalidateQueries({ queryKey: ['/api/payments/subscription-status'] });
+              await queryClient.invalidateQueries({ queryKey: ['/api/payments/ai-limits'] });
+              
+              // Trigger immediate refetch to ensure UI updates instantly
+              await queryClient.refetchQueries({ queryKey: ['/api/payments/subscription-status'] });
+              await queryClient.refetchQueries({ queryKey: ['/api/payments/ai-limits'] });
+              
+              // Small delay to ensure data is loaded, then close modal if it's open
+              setTimeout(() => {
+                // Trigger a page refresh effect by updating state
+                window.dispatchEvent(new CustomEvent('subscription-updated'));
+              }, 500);
             } else {
               throw new Error('Payment verification failed');
             }

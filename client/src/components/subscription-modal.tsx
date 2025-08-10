@@ -142,7 +142,7 @@ export function SubscriptionModal({ isOpen, onOpenChange, defaultPlan }: Subscri
               </div>
               <CardDescription>Maximum productivity with unlimited AI</CardDescription>
               <div className="flex items-baseline gap-2 mt-2">
-                <span className="text-3xl font-bold">₹599</span>
+                <span className="text-3xl font-bold">₹499</span>
                 <span className="text-muted-foreground">/month</span>
               </div>
             </CardHeader>
