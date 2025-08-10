@@ -187,8 +187,7 @@ export function useSubscription() {
       
       // Create Razorpay order
       const response = await apiRequest('POST', '/api/payments/create-order', {
-        plan: plan,
-        tier: plan
+        planType: plan
       });
 
       if (!response.ok) {
@@ -213,7 +212,7 @@ export function useSubscription() {
 
       // Configure Razorpay options
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        key: orderData.razorpayKeyId || import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: orderData.order.amount,
         currency: orderData.order.currency,
         name: 'Planify',
