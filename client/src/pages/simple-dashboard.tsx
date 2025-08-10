@@ -32,6 +32,7 @@ import {
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useSubscription } from "@/hooks/use-subscription";
+import { useAdmin } from "@/hooks/use-admin";
 import { useTimezone } from "@/hooks/use-timezone";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -71,6 +72,7 @@ export default function SimpleDashboard() {
   
   const { user, signOut } = useAuth();
   const { subscriptionStatus, incrementAiUsage, checkAiUsageLimit, refreshStatus, resetAiUsage } = useSubscription();
+  const { isAdmin } = useAdmin();
   const { toast } = useToast();
   
   // Initialize timezone auto-detection
@@ -351,8 +353,8 @@ export default function SimpleDashboard() {
 
           {/* AI Features Sidebar */}
           <div className="space-y-4">
-            {/* Dev Mode Controls - Toggle between free and premium testing */}
-            {import.meta.env.DEV && (
+            {/* Dev Mode Controls - ADMIN ONLY */}
+            {import.meta.env.DEV && isAdmin && (
               <Card className="border-2 border-dashed border-blue-300 bg-blue-50 dark:bg-blue-900/20">
                 <CardContent className="p-4">
                   <h3 className="font-bold text-blue-800 dark:text-blue-200 mb-3 text-center">

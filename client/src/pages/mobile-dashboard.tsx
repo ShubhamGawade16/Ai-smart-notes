@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-supabase-auth";
 import { useSubscription } from "@/hooks/use-subscription";
+import { useAdmin } from "@/hooks/use-admin";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +33,7 @@ export default function MobileDashboard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { subscription, canUseAI, isPro, isBasic, isFree } = useSubscription();
+  const { isAdmin } = useAdmin();
   
   const [showSmartInput, setShowSmartInput] = useState(false);
   const [showAIRefiner, setShowAIRefiner] = useState(false);
@@ -159,17 +161,19 @@ export default function MobileDashboard() {
               </Button>
             </Link>
 
-            {/* Dev Mode Button - Clean and simple */}
-            <Button
-              onClick={() => setShowDevMode(true)}
-              variant="outline"
-              size="sm"
-              className="border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
-              title="Developer Tools"
-            >
-              <Code className="w-4 h-4 mr-2" />
-              Dev
-            </Button>
+            {/* Dev Mode Button - ADMIN ONLY */}
+            {isAdmin && (
+              <Button
+                onClick={() => setShowDevMode(true)}
+                variant="outline"
+                size="sm"
+                className="border-orange-200 text-orange-700 hover:bg-orange-50 dark:border-orange-800 dark:text-orange-300 dark:hover:bg-orange-900/20"
+                title="Developer Tools (Admin Only)"
+              >
+                <Code className="w-4 h-4 mr-2" />
+                Dev
+              </Button>
+            )}
 
             {isFree && (
               <Button

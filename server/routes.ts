@@ -2959,8 +2959,8 @@ Guidelines:
     }
   });
 
-  // Developer Tools - Reset AI Usage
-  app.post('/api/dev/reset-ai-usage', optionalAuth, async (req: AuthRequest, res) => {
+  // Developer Tools - Reset AI Usage (ADMIN ONLY)
+  app.post('/api/dev/reset-ai-usage', optionalAuth, requireAdmin, async (req: AuthRequest, res) => {
     try {
       if (process.env.NODE_ENV === 'production') {
         return res.status(403).json({ error: 'Developer tools not available in production' });
@@ -2991,8 +2991,8 @@ Guidelines:
     }
   });
 
-  // Developer Tools - Change User Tier 
-  app.post('/api/dev/change-tier', optionalAuth, async (req: AuthRequest, res) => {
+  // Developer Tools - Change User Tier (ADMIN ONLY)
+  app.post('/api/dev/change-tier', optionalAuth, requireAdmin, async (req: AuthRequest, res) => {
     try {
       if (process.env.NODE_ENV === 'production') {
         return res.status(403).json({ error: 'Developer tools not available in production' });
@@ -3032,8 +3032,8 @@ Guidelines:
     }
   });
 
-  // Developer Tools - Toggle Tier (backward compatibility)
-  app.post('/api/dev/toggle-tier', optionalAuth, async (req: AuthRequest, res) => {
+  // Developer Tools - Toggle Tier (ADMIN ONLY - backward compatibility)
+  app.post('/api/dev/toggle-tier', optionalAuth, requireAdmin, async (req: AuthRequest, res) => {
     try {
       if (process.env.NODE_ENV === 'production') {
         return res.status(403).json({ error: 'Developer tools not available in production' });

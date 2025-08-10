@@ -28,7 +28,13 @@ export function Header() {
     { label: 'AI Features', path: '/advanced-features', icon: Sparkles },
     { label: 'Task Refiner', path: '/task-refiner', icon: MessageCircle },
     { label: 'Settings', path: '/settings', icon: Settings },
-  ];
+  ].filter(item => {
+    // Remove any dev-related items for non-admin users
+    if (item.label === 'Dev' && !isAdmin) {
+      return false;
+    }
+    return true;
+  });
 
   return (
     <header className="bg-white/95 dark:bg-gray-900/95 border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0 z-50 backdrop-blur-xl transition-all duration-300">
