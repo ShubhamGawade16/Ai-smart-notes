@@ -8,6 +8,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 
 import { AuthProvider, useAuth } from "@/hooks/use-supabase-auth";
+import { supabase } from "@/lib/supabase";
 import { ErrorBoundary } from "@/components/error-boundary";
 import MobileDashboard from "@/pages/mobile-dashboard";
 import LandingPage from "@/pages/landing";
@@ -17,6 +18,8 @@ import AuthCallbackPage from "@/pages/auth-callback";
 import AuthVerifiedPage from "@/pages/auth-verified";
 import SupabaseSetupGuide from "@/pages/supabase-setup-guide";
 import DebugAuthPage from "@/pages/debug-auth";
+import AuthDebugPage from "@/pages/auth-debug";
+import AuthCompletePage from "@/pages/auth-complete";
 import AdvancedFeatures from "./pages/advanced-features";
 import UpgradePage from "@/pages/upgrade";
 import OnboardingPage from "@/pages/onboarding";
@@ -76,6 +79,8 @@ function Router() {
       </Route>
       <Route path="/supabase-setup" component={SupabaseSetupGuide} />
       <Route path="/debug-auth" component={DebugAuthPage} />
+      <Route path="/auth-debug" component={AuthDebugPage} />
+      <Route path="/auth-complete" component={AuthCompletePage} />
       
       {/* Protected routes */}
       <Route path="/dashboard">

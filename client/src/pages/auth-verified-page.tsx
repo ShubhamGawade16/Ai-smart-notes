@@ -16,7 +16,7 @@ export default function AuthVerifiedPage() {
     // If user is already authenticated, redirect to dashboard immediately
     if (user) {
       console.log('✅ User already authenticated on verification page, redirecting to dashboard');
-      navigate('/dashboard');
+      window.location.href = '/dashboard';
       return;
     }
 
@@ -33,7 +33,7 @@ export default function AuthVerifiedPage() {
         if (session?.user) {
           // User has a valid session, redirect to dashboard
           console.log('✅ User has valid session, redirecting to dashboard');
-          navigate('/dashboard');
+          window.location.href = '/dashboard';
           return;
         }
         
@@ -73,7 +73,7 @@ export default function AuthVerifiedPage() {
               </p>
             </div>
             <Button 
-              onClick={() => navigate('/dashboard')}
+              onClick={() => window.location.href = '/dashboard'}
               className="w-full bg-teal-600 hover:bg-teal-700"
             >
               Continue to Dashboard <ArrowRight className="w-4 h-4 ml-2" />

@@ -82,7 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         
         return { redirectTo: '/dashboard' };
-      } else {
+      } else if (response.status === 404) {
         // User doesn't exist in our database - this is a new Google user
         console.log('🆕 New Google user detected, creating basic profile...');
         
@@ -105,6 +105,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         // Always redirect new Google users to onboarding
         return { redirectTo: '/onboarding' };
+      } else {
+        // API error - treat as existing user but redirect to dashboard
+        console.log('⚠️ API error checking user, assuming existing user');
+        
+        const fallbackUserData = {
+          id: supabaseUser.id,
+          email: supabaseUser.email || '',
+          firstName: supabaseUser.user_metadata?.first_name || '',
+          lastName: supabaseUser.user_metadata?.last_name || '',
+          onboardingCompleted: true,
+        };
+        
+        setUser(fallbackUserData);
+        return { redirectTo: '/dashboard' };
       }
       
     } catch (error) {
@@ -215,8 +229,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const currentPath = window.location.pathname;
             console.log('🔄 SIGNED_IN event on path:', currentPath, 'redirecting to:', syncResult.redirectTo);
             
-            // Only redirect if we're on auth pages
-            if (currentPath === '/auth' || currentPath === '/auth/callback') {
+            // Redirect from auth pages and also from verification pages
+            if (currentPath === '/auth' || currentPath === '/auth/callback' || currentPath === '/auth/verified' || currentPath === '/verify-email') {
               // For deployed environments (.replit.app/.replit.co), use longer delay and location.href
               const isDeployedEnv = window.location.hostname.includes('.replit.app') || window.location.hostname.includes('.replit.co');
               const delay = isDeployedEnv ? 2000 : 100; // Longer delay for production
@@ -238,7 +252,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // On error, show message and redirect to onboarding to be safe
           if (event === 'SIGNED_IN') {
             const currentPath = window.location.pathname;
-            if (currentPath === '/auth' || currentPath === '/auth/callback') {
+            if (currentPath === '/auth' || currentPath === '/auth/callback' || currentPath === '/auth/verified' || currentPath === '/verify-email') {
               toast({
                 title: "Setting up your account...",
                 description: "We'll help you complete your profile setup.",
