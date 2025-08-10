@@ -36,14 +36,20 @@ const ADMIN_UIDS = new Set([
 
 // Admin verification middleware
 const requireAdmin = (req: AuthRequest, res: any, next: any) => {
-  if (!req.user?.id) {
+  if (!req.userId) {
     return res.status(401).json({ error: 'Authentication required' });
   }
   
-  if (!ADMIN_UIDS.has(req.user.id)) {
+  // Check admin status using Supabase user ID if available, fallback to database user ID
+  const supabaseUserId = (req as any).supabaseUserId;
+  const userIdToCheck = supabaseUserId || req.userId;
+  
+  if (!ADMIN_UIDS.has(userIdToCheck)) {
+    console.log(`🚫 Admin access denied for user: ${userIdToCheck} (Supabase: ${supabaseUserId}, DB: ${req.userId})`);
     return res.status(403).json({ error: 'Admin access required' });
   }
   
+  console.log(`✅ Admin access granted for user: ${userIdToCheck}`);
   next();
 };
 
