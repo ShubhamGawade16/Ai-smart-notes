@@ -58,6 +58,8 @@ export default function UpgradePage() {
 
   const handleSubscribe = async () => {
     await handlePayment(selectedPlan);
+    // Redirect to dashboard after successful payment - just like View Plans
+    window.location.href = "/dashboard";
   };
 
   const currentTier = subscription?.tier || 'free';
