@@ -88,11 +88,16 @@ router.post('/parse-task', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Task Refinement - Conversational AI feature (PREMIUM - consumes 1 credit)
-router.post('/refine-task', authenticateToken, async (req: AuthRequest, res) => {
+router.post('/refine-task', optionalAuth, async (req: AuthRequest, res) => {
   try {
     const { originalTask, userQuery, context } = req.body;
-    const userId = req.userId!;
-    const user = await storage.getUser(userId);
+    const userId = req.userId;
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+    
+    // Get the actual database user (the auth middleware does this lookup)
+    const user = req.user;
     
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
@@ -102,7 +107,7 @@ router.post('/refine-task', authenticateToken, async (req: AuthRequest, res) => 
       return res.status(400).json({ error: 'Original task and user query are required' });
     }
 
-    // Check AI usage limits - call increment function directly instead of fetch
+    // Check AI usage limits - use standardized approach
     console.log(`🧠 Task refiner request - checking AI usage limits for user: ${userId}`);
     
     // Check current usage first
@@ -114,10 +119,26 @@ router.post('/refine-task', authenticateToken, async (req: AuthRequest, res) => 
       });
     }
     
-    // Increment AI usage
-    await storage.incrementDailyAiCalls(userId);
-    const updatedUser = await storage.getUser(userId);
-    console.log(`✅ Task refiner AI usage approved - count now: ${updatedUser?.dailyAiCalls || 0}/3`);
+    // Increment AI usage via the standardized endpoint
+    try {
+      const response = await fetch(`${process.env.BASE_URL || 'http://localhost:5000'}/api/increment-ai-usage`, {
+        method: 'POST',
+        headers: {
+          'Authorization': req.headers.authorization || '',
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to increment AI usage');
+      }
+      
+      const usageData = await response.json();
+      console.log(`✅ Task refiner usage approved - count now: ${usageData.dailyAiUsage || usageData.monthlyAiUsage || 0}`);
+    } catch (error) {
+      console.error('Failed to increment AI usage:', error);
+      return res.status(500).json({ error: 'Failed to track AI usage' });
+    }
 
     const refinement = await aiService.refineTask(originalTask, userQuery, user.tier || 'free');
     

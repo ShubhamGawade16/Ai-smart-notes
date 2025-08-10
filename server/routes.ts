@@ -2299,18 +2299,20 @@ Guidelines:
         return res.status(401).json({ error: 'Authentication required' });
       }
       
-      const user = await storage.getUser(userId);
+      // Get the actual database user (the auth middleware does this lookup)
+      const user = req.user;
       if (!user) {
         return res.status(404).json({ error: 'User not found' });
       }
 
+      console.log(`🧠 AI categorizer request - checking AI usage limits for user: ${userId}`);
+
       // Check AI usage limits
       const usageCheck = checkAiUsageLimit(user);
       if (!usageCheck.allowed) {
+        console.log(`❌ AI categorizer: AI usage limit reached for user ${userId}`);
         return res.status(429).json({ 
-          error: 'AI usage limit reached',
-          userLimit: usageCheck.userLimit,
-          limitType: usageCheck.limitType
+          error: `AI usage limit reached. You've used ${user.dailyAiCalls || 0}/${usageCheck.userLimit} ${usageCheck.limitType} AI calls. Upgrade to Basic (₹299/month) or Pro (₹599/month) for more usage.`
         });
       }
 
@@ -2318,8 +2320,26 @@ Guidelines:
         return res.status(400).json({ error: 'Tasks array is required' });
       }
 
-      // Increment AI usage
-      await storage.incrementAiUsage(userId);
+      // Increment AI usage via the standardized endpoint
+      try {
+        const response = await fetch(`${process.env.BASE_URL || 'http://localhost:5000'}/api/increment-ai-usage`, {
+          method: 'POST',
+          headers: {
+            'Authorization': req.headers.authorization || '',
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to increment AI usage');
+        }
+        
+        const usageData = await response.json();
+        console.log(`✅ AI categorizer usage approved - count now: ${usageData.dailyAiUsage || usageData.monthlyAiUsage || 0}`);
+      } catch (error) {
+        console.error('Failed to increment AI usage:', error);
+        return res.status(500).json({ error: 'Failed to track AI usage' });
+      }
 
       // Simple categorization logic
       const categorizedTasks = tasks.map((task: any) => {
@@ -2585,6 +2605,139 @@ Guidelines:
     } catch (error) {
       console.error('Error incrementing AI usage:', error);
       res.status(500).json({ error: 'Failed to increment AI usage' });
+    }
+  });
+
+  // AI Task Categorization endpoint (single task)
+  app.post('/api/ai/categorize', optionalAuth, async (req: AuthRequest, res) => {
+    try {
+      const { title, description } = req.body;
+      const userId = req.userId;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+      
+      // Get the actual database user (the auth middleware does this lookup)
+      const user = req.user;
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      console.log(`🧠 AI categorizer request - checking AI usage limits for user: ${userId}`);
+
+      // Check AI usage limits
+      const usageCheck = checkAiUsageLimit(user);
+      if (!usageCheck.allowed) {
+        console.log(`❌ AI categorizer: AI usage limit reached for user ${userId}`);
+        return res.status(429).json({ 
+          error: `AI usage limit reached. You've used ${user.dailyAiCalls || 0}/${usageCheck.userLimit} ${usageCheck.limitType} AI calls. Upgrade to Basic (₹299/month) or Pro (₹599/month) for more usage.`
+        });
+      }
+
+      if (!title) {
+        return res.status(400).json({ error: 'Task title is required' });
+      }
+
+      // Increment AI usage via the standardized endpoint
+      try {
+        const response = await fetch(`${process.env.BASE_URL || 'http://localhost:5000'}/api/increment-ai-usage`, {
+          method: 'POST',
+          headers: {
+            'Authorization': req.headers.authorization || '',
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to increment AI usage');
+        }
+        
+        const usageData = await response.json();
+        console.log(`✅ AI categorizer usage approved - count now: ${usageData.dailyAiUsage || usageData.monthlyAiUsage || 0}`);
+      } catch (error) {
+        console.error('Failed to increment AI usage:', error);
+        return res.status(500).json({ error: 'Failed to track AI usage' });
+      }
+
+      // Simple categorization logic (enhanced)
+      const taskTitle = title.toLowerCase();
+      const taskDesc = (description || '').toLowerCase();
+      const combined = `${taskTitle} ${taskDesc}`;
+      
+      let category = 'General';
+      let priority = 'medium';
+      let tags: string[] = [];
+      let estimatedTime = 30;
+      
+      // Priority detection
+      if (combined.includes('urgent') || combined.includes('asap') || combined.includes('emergency') || combined.includes('critical')) {
+        priority = 'high';
+        tags.push('urgent');
+      } else if (combined.includes('later') || combined.includes('someday') || combined.includes('eventually')) {
+        priority = 'low';
+      }
+      
+      // Category detection
+      if (combined.includes('meeting') || combined.includes('call') || combined.includes('discussion') || combined.includes('phone')) {
+        category = 'Communication';
+        estimatedTime = 60;
+        tags.push('meeting');
+      } else if (combined.includes('code') || combined.includes('develop') || combined.includes('programming') || combined.includes('bug') || combined.includes('feature')) {
+        category = 'Development';
+        estimatedTime = 120;
+        tags.push('coding');
+      } else if (combined.includes('design') || combined.includes('creative') || combined.includes('art') || combined.includes('ui') || combined.includes('ux')) {
+        category = 'Creative';
+        estimatedTime = 90;
+        tags.push('design');
+      } else if (combined.includes('research') || combined.includes('study') || combined.includes('learn') || combined.includes('read')) {
+        category = 'Learning';
+        estimatedTime = 60;
+        tags.push('research');
+      } else if (combined.includes('admin') || combined.includes('paperwork') || combined.includes('document') || combined.includes('form')) {
+        category = 'Administrative';
+        estimatedTime = 45;
+        tags.push('admin');
+      } else if (combined.includes('email') || combined.includes('message') || combined.includes('respond')) {
+        category = 'Communication';
+        estimatedTime = 15;
+        tags.push('email');
+      } else if (combined.includes('exercise') || combined.includes('workout') || combined.includes('gym') || combined.includes('run')) {
+        category = 'Health';
+        estimatedTime = 60;
+        tags.push('health');
+      }
+
+      // Time estimation refinements
+      if (combined.includes('quick') || combined.includes('brief') || combined.includes('short')) {
+        estimatedTime = Math.max(15, Math.floor(estimatedTime * 0.5));
+        tags.push('quick');
+      } else if (combined.includes('long') || combined.includes('detailed') || combined.includes('thorough')) {
+        estimatedTime = Math.floor(estimatedTime * 1.5);
+        tags.push('detailed');
+      }
+
+      const result = {
+        category,
+        priority,
+        tags,
+        estimatedTime,
+        confidence: 0.75
+      };
+
+      res.json({
+        success: true,
+        analysis: result,
+        suggestions: [
+          `Categorized as "${category}" with ${priority} priority`,
+          `Estimated completion time: ${estimatedTime} minutes`,
+          tags.length > 0 ? `Added tags: ${tags.join(', ')}` : 'No special tags detected'
+        ]
+      });
+    } catch (error) {
+      console.error('Task categorization error:', error);
+      res.status(500).json({ error: 'Failed to categorize task' });
     }
   });
 
