@@ -107,30 +107,9 @@ router.post('/refine-task', optionalAuth, async (req: AuthRequest, res) => {
       return res.status(400).json({ error: 'Original task and user query are required' });
     }
 
-    // Check AI usage limits - use direct validation
-    console.log(`🧠 Task refiner request - checking AI usage limits for user: ${userId}`, {
-      dailyAiCalls: user.dailyAiCalls,
-      tier: user.tier,
-      subscriptionStatus: user.subscriptionStatus
-    });
-    
-    // Check current usage first - for free users, check daily limit
-    if (user.tier === 'free' || !user.tier) {
-      const dailyUsage = user.dailyAiCalls || 0;
-      const dailyLimit = 3;
-      
-      if (dailyUsage >= dailyLimit) {
-        console.log(`❌ Task refiner: Free tier limit reached for user ${userId} - ${dailyUsage}/${dailyLimit}`);
-        return res.status(429).json({ 
-          error: `AI usage limit reached. You've used ${dailyUsage}/${dailyLimit} daily AI calls. Upgrade to Basic (₹299/month) or Pro (₹599/month) for more usage.`
-        });
-      }
-      console.log(`✅ Task refiner: Free tier usage OK - ${dailyUsage}/${dailyLimit}`);
-    } else {
-      console.log(`✅ Task refiner: Premium tier user, usage allowed`);
-    }
-    
-    // Increment AI usage via the standardized endpoint
+    console.log(`🧠 Task refiner request for user: ${userId}`);
+
+    // Check and increment AI usage via the standardized endpoint
     try {
       const response = await fetch(`${process.env.BASE_URL || 'http://localhost:5000'}/api/increment-ai-usage`, {
         method: 'POST',
@@ -141,7 +120,11 @@ router.post('/refine-task', optionalAuth, async (req: AuthRequest, res) => {
       });
       
       if (!response.ok) {
-        throw new Error('Failed to increment AI usage');
+        const errorData = await response.json();
+        console.log(`❌ Task refiner: Usage limit reached for user ${userId}`);
+        return res.status(429).json({ 
+          error: errorData.message || 'AI usage limit reached. Upgrade to Basic (₹299/month) or Pro (₹599/month) for more usage.'
+        });
       }
       
       const usageData = await response.json();

@@ -2630,27 +2630,11 @@ Guidelines:
         subscriptionStatus: user.subscriptionStatus
       });
 
-      // Check AI usage limits - for free users, check daily limit
-      if (user.tier === 'free' || !user.tier) {
-        const dailyUsage = user.dailyAiCalls || 0;
-        const dailyLimit = 3;
-        
-        if (dailyUsage >= dailyLimit) {
-          console.log(`❌ AI categorizer: Free tier limit reached for user ${userId} - ${dailyUsage}/${dailyLimit}`);
-          return res.status(429).json({ 
-            error: `AI usage limit reached. You've used ${dailyUsage}/${dailyLimit} daily AI calls. Upgrade to Basic (₹299/month) or Pro (₹599/month) for more usage.`
-          });
-        }
-        console.log(`✅ AI categorizer: Free tier usage OK - ${dailyUsage}/${dailyLimit}`);
-      } else {
-        console.log(`✅ AI categorizer: Premium tier user, usage allowed`);
-      }
-
       if (!title) {
         return res.status(400).json({ error: 'Task title is required' });
       }
 
-      // Increment AI usage via the standardized endpoint
+      // Check and increment AI usage via the standardized endpoint
       try {
         const response = await fetch(`${process.env.BASE_URL || 'http://localhost:5000'}/api/increment-ai-usage`, {
           method: 'POST',
@@ -2661,7 +2645,11 @@ Guidelines:
         });
         
         if (!response.ok) {
-          throw new Error('Failed to increment AI usage');
+          const errorData = await response.json();
+          console.log(`❌ AI categorizer: Usage limit reached for user ${userId}`);
+          return res.status(429).json({ 
+            error: errorData.message || 'AI usage limit reached. Upgrade to Basic (₹299/month) or Pro (₹599/month) for more usage.'
+          });
         }
         
         const usageData = await response.json();
