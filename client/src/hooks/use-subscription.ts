@@ -243,21 +243,26 @@ export function useSubscription() {
               // Add delay to ensure backend has processed the update
               await new Promise(resolve => setTimeout(resolve, 1000));
               
-              // Force fresh fetch with proper auth headers (matching our working system)
+              // Force fresh fetch with proper auth headers
               const authToken = localStorage.getItem('auth_token');
-              const headers = authToken ? { 'Authorization': `Bearer ${authToken}` } : {};
               
-              await queryClient.fetchQuery({ 
-                queryKey: ['/api/payments/subscription-status'], 
-                queryFn: () => fetch('/api/payments/subscription-status', { headers }).then(res => res.json()),
-                staleTime: 0
-              });
-              
-              await queryClient.fetchQuery({ 
-                queryKey: ['/api/payments/ai-limits'], 
-                queryFn: () => fetch('/api/payments/ai-limits', { headers }).then(res => res.json()),
-                staleTime: 0
-              });
+              if (authToken) {
+                await queryClient.fetchQuery({ 
+                  queryKey: ['/api/payments/subscription-status'], 
+                  queryFn: () => fetch('/api/payments/subscription-status', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                  }).then(res => res.json()),
+                  staleTime: 0
+                });
+                
+                await queryClient.fetchQuery({ 
+                  queryKey: ['/api/payments/ai-limits'], 
+                  queryFn: () => fetch('/api/payments/ai-limits', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                  }).then(res => res.json()),
+                  staleTime: 0
+                });
+              }
               
               console.log("Subscription data refreshed after payment");
             } else {

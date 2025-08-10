@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/use-supabase-auth';
 import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 import { Crown, Zap, Check } from 'lucide-react';
 
 interface RazorpayCheckoutProps {
@@ -45,7 +45,7 @@ export default function RazorpayCheckout({ plan, onSuccess, onClose }: RazorpayC
     try {
       // Create order on backend
       const response = await apiRequest("POST", "/api/payments/create-order", {
-        planType: plan
+        plan: plan
       });
 
       if (!response.ok) {
@@ -75,8 +75,8 @@ export default function RazorpayCheckout({ plan, onSuccess, onClose }: RazorpayC
         },
         handler: async function (response: any) {
           try {
-            // Verify payment on backend
-            const verifyResponse = await apiRequest("POST", "/api/payments/verify", {
+            // Verify payment on backend using same endpoint as View Plans modal
+            const verifyResponse = await apiRequest("POST", "/api/payments/verify-payment", {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature
@@ -87,6 +87,36 @@ export default function RazorpayCheckout({ plan, onSuccess, onClose }: RazorpayC
                 title: "Payment Successful!",
                 description: `Welcome to ${selectedPlan.name}! Your subscription is now active.`,
               });
+              
+              // Clear all related caches and force fresh data (same as View Plans modal)
+              queryClient.removeQueries({ queryKey: ['/api/payments/subscription-status'] });
+              queryClient.removeQueries({ queryKey: ['/api/payments/ai-limits'] });
+              
+              // Add delay to ensure backend has processed the update
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              
+              // Force fresh fetch with proper auth headers
+              const authToken = localStorage.getItem('auth_token');
+              
+              if (authToken) {
+                await queryClient.fetchQuery({ 
+                  queryKey: ['/api/payments/subscription-status'], 
+                  queryFn: () => fetch('/api/payments/subscription-status', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                  }).then(res => res.json()),
+                  staleTime: 0
+                });
+                
+                await queryClient.fetchQuery({ 
+                  queryKey: ['/api/payments/ai-limits'], 
+                  queryFn: () => fetch('/api/payments/ai-limits', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                  }).then(res => res.json()),
+                  staleTime: 0
+                });
+              }
+              
+              console.log("Subscription data refreshed after payment");
               onSuccess();
             } else {
               throw new Error('Payment verification failed');

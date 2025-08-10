@@ -43,12 +43,13 @@ const SUBSCRIPTION_PLAN: SubscriptionPlan = {
 };
 
 interface RazorpayPaymentProps {
+  plan: 'basic' | 'pro';
   onSuccess?: () => void;
   onError?: (error: string) => void;
   userEmail?: string;
 }
 
-export function RazorpayPayment({ onSuccess, onError, userEmail }: RazorpayPaymentProps) {
+export function RazorpayPayment({ plan, onSuccess, onError, userEmail }: RazorpayPaymentProps) {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -97,7 +98,7 @@ export function RazorpayPayment({ onSuccess, onError, userEmail }: RazorpayPayme
         currency: orderData.order.currency,
         order_id: orderData.order.id,
         name: "Planify",
-        description: `${SUBSCRIPTION_PLAN.name} Subscription`,
+        description: `${plan.charAt(0).toUpperCase() + plan.slice(1)} Plan Subscription`,
         image: "/attached_assets/Planify_imresizer_1754161747016.jpg",
         handler: async (paymentResponse: any) => {
           try {
@@ -116,7 +117,7 @@ export function RazorpayPayment({ onSuccess, onError, userEmail }: RazorpayPayme
             if (verifyResponse.ok) {
               toast({
                 title: "Payment Successful!",
-                description: `Welcome to ${SUBSCRIPTION_PLAN.name}! Your premium features are now active.`,
+                description: `Welcome to ${plan.charAt(0).toUpperCase() + plan.slice(1)} plan! Your subscription is now active.`,
               });
               
               // Clear all related caches and force fresh data (same as View Plans modal)
@@ -128,19 +129,24 @@ export function RazorpayPayment({ onSuccess, onError, userEmail }: RazorpayPayme
               
               // Force fresh fetch using same cache keys as View Plans modal
               const authToken = localStorage.getItem('auth_token');
-              const headers = authToken ? { 'Authorization': `Bearer ${authToken}` } : {};
               
-              await queryClient.fetchQuery({ 
-                queryKey: ['/api/payments/subscription-status'], 
-                queryFn: () => fetch('/api/payments/subscription-status', { headers }).then(res => res.json()),
-                staleTime: 0
-              });
-              
-              await queryClient.fetchQuery({ 
-                queryKey: ['/api/payments/ai-limits'], 
-                queryFn: () => fetch('/api/payments/ai-limits', { headers }).then(res => res.json()),
-                staleTime: 0
-              });
+              if (authToken) {
+                await queryClient.fetchQuery({ 
+                  queryKey: ['/api/payments/subscription-status'], 
+                  queryFn: () => fetch('/api/payments/subscription-status', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                  }).then(res => res.json()),
+                  staleTime: 0
+                });
+                
+                await queryClient.fetchQuery({ 
+                  queryKey: ['/api/payments/ai-limits'], 
+                  queryFn: () => fetch('/api/payments/ai-limits', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                  }).then(res => res.json()),
+                  staleTime: 0
+                });
+              }
               
               console.log("Subscription data refreshed after payment");
               
