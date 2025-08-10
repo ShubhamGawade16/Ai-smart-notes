@@ -18,7 +18,7 @@ export default function SmartCategorizerModal({ isOpen, onClose }: SmartCategori
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<any>(null);
   const { toast } = useToast();
-  const { incrementAiUsage, checkAiUsageLimit } = useSubscription();
+  const { } = useSubscription(); // Remove the problematic frontend validation
 
   const handleCategorize = async () => {
     if (!input.trim()) {
@@ -30,47 +30,65 @@ export default function SmartCategorizerModal({ isOpen, onClose }: SmartCategori
       return;
     }
 
-    if (!checkAiUsageLimit()) {
-      toast({
-        title: "AI Usage Limit Reached",
-        description: "You've reached your AI usage limit for this period",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Increment AI usage before making the call
-    const canProceed = await incrementAiUsage();
-    if (!canProceed) {
-      toast({
-        title: "AI Usage Limit Reached",
-        description: "You've reached your AI usage limit for this period",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsLoading(true);
+    
     try {
-      const response = await apiRequest("POST", "/api/ai/smart-categorizer", {
-        text: input
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setResults(data);
-        toast({
-          title: "Categorization Complete!",
-          description: "Your tasks have been analyzed and categorized.",
-        });
-      } else {
-        throw new Error('Failed to categorize tasks');
+      // Parse tasks from input (one per line)
+      const taskLines = input.split('\n')
+        .map(line => line.replace(/^[-•*]\s*/, '').trim())
+        .filter(line => line.length > 0);
+      
+      if (taskLines.length === 0) {
+        throw new Error('No valid tasks found');
       }
-    } catch (error) {
+
+      // Categorize each task using our working API endpoint
+      const categorizedTasks = [];
+      
+      for (const taskTitle of taskLines) {
+        const response = await apiRequest("POST", "/api/ai/categorize", {
+          title: taskTitle,
+          description: ''
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.analysis) {
+            categorizedTasks.push({
+              title: data.analysis.title,
+              description: data.analysis.description,
+              category: data.analysis.category,
+              priority: data.analysis.priority,
+              tags: data.analysis.tags,
+              estimatedTime: data.analysis.estimatedTime
+            });
+          }
+        } else {
+          const errorData = await response.json();
+          if (response.status === 429) {
+            // Show the actual limit error from backend
+            toast({
+              title: "AI Usage Limit Reached",
+              description: errorData.error || "You've reached your AI usage limit",
+              variant: "destructive",
+            });
+            return;
+          }
+          throw new Error(errorData.error || 'Failed to categorize task');
+        }
+      }
+
+      setResults({ categorizedTasks });
+      toast({
+        title: "Categorization Complete!",
+        description: `${categorizedTasks.length} tasks have been analyzed and categorized.`,
+      });
+      
+    } catch (error: any) {
       console.error('Smart categorizer error:', error);
       toast({
         title: "Categorization Failed",
-        description: "Failed to categorize tasks. Please try again.",
+        description: error.message || "Failed to categorize tasks. Please try again.",
         variant: "destructive"
       });
     } finally {
