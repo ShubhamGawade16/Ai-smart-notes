@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, Crown, Zap, Clock, CreditCard, Sparkles, Check } from 'lucide-react';
+import { CheckCircle, Crown, Zap, Clock, CreditCard } from 'lucide-react';
 import { useSubscription } from '@/hooks/use-subscription';
 import { cn } from '@/lib/utils';
 
@@ -15,8 +15,6 @@ interface SubscriptionModalProps {
 
 export function SubscriptionModal({ isOpen, onOpenChange, defaultPlan }: SubscriptionModalProps) {
   const [selectedPlan, setSelectedPlan] = useState<'basic' | 'pro'>(defaultPlan || 'basic');
-  const [isUpgrading, setIsUpgrading] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
   const { 
     plans, 
     subscription, 
@@ -32,73 +30,15 @@ export function SubscriptionModal({ isOpen, onOpenChange, defaultPlan }: Subscri
   }
 
   const handleSubscribe = async () => {
-    setIsUpgrading(true);
-    try {
-      await handlePayment(selectedPlan);
-      setShowSuccess(true);
-      
-      // Show success animation for 2 seconds then close
-      setTimeout(() => {
-        setShowSuccess(false);
-        setIsUpgrading(false);
-        onOpenChange(false);
-      }, 2000);
-    } catch (error) {
-      setIsUpgrading(false);
-    }
+    await handlePayment(selectedPlan);
+    onOpenChange(false);
   };
-
-  // Reset states when modal closes
-  useEffect(() => {
-    if (!isOpen) {
-      setIsUpgrading(false);
-      setShowSuccess(false);
-    }
-  }, [isOpen]);
 
   const currentTier = subscription?.tier || 'free';
 
-  // Success animation overlay
-  if (showSuccess) {
-    return (
-      <Dialog open={isOpen} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-md">
-          <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
-            <div className="relative mb-6">
-              <div className="w-20 h-20 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-full flex items-center justify-center animate-pulse">
-                <Check className="w-10 h-10 text-white" />
-              </div>
-              <Sparkles className="w-6 h-6 text-yellow-400 absolute -top-2 -right-2 animate-bounce" />
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-              Welcome to {selectedPlan.charAt(0).toUpperCase() + selectedPlan.slice(1)}!
-            </h3>
-            <p className="text-gray-600 dark:text-gray-300 mb-4">
-              Your premium features are now active
-            </p>
-            <div className="flex items-center gap-2 text-teal-600 dark:text-teal-400">
-              <Zap className="w-4 h-4" />
-              <span className="text-sm font-medium">AI powers unlocked</span>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto relative">
-        {/* Processing overlay */}
-        {isUpgrading && (
-          <div className="absolute inset-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm z-50 flex items-center justify-center">
-            <div className="text-center">
-              <div className="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-              <p className="text-lg font-medium text-gray-900 dark:text-white">Processing payment...</p>
-              <p className="text-sm text-gray-600 dark:text-gray-300">This will only take a moment</p>
-            </div>
-          </div>
-        )}
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-center">
             Choose Your Plan
@@ -245,23 +185,13 @@ export function SubscriptionModal({ isOpen, onOpenChange, defaultPlan }: Subscri
             <>
               <Button 
                 onClick={handleSubscribe}
-                disabled={isProcessingPayment || isUpgrading}
-                className={cn(
-                  "w-full font-semibold transition-all duration-300",
-                  isUpgrading 
-                    ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white scale-105" 
-                    : "bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 hover:scale-105"
-                )}
+                disabled={isProcessingPayment}
+                className="w-full bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700"
               >
-                {isUpgrading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Activating your premium features...
-                  </div>
-                ) : isProcessingPayment ? (
+                {isProcessingPayment ? (
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 animate-spin border-2 border-white border-t-transparent rounded-full" />
-                    Processing payment...
+                    Processing...
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">

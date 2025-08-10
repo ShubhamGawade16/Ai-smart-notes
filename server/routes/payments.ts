@@ -3,7 +3,6 @@ import { authenticateToken, type AuthRequest } from '../auth';
 import { storage } from '../storage';
 import { razorpayService, RazorpayService } from '../services/razorpay-service';
 import { subscriptionService } from '../services/subscription-service';
-import { logger } from '../utils/logger';
 
 const router = express.Router();
 
@@ -16,13 +15,13 @@ router.get('/plans', async (req, res) => {
       plans,
     });
   } catch (error) {
-    logger.error('Failed to get pricing plans', { error });
+    console.error('Failed to get pricing plans:', error);
     res.status(500).json({ error: 'Failed to get pricing plans' });
   }
 });
 
 // Create payment order for subscription
-router.post('/create-order', authenticateToken, async (req: AuthRequest, res: any) => {
+router.post('/create-order', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const userId = req.userId!;
     const { planType } = req.body;
@@ -67,12 +66,7 @@ router.post('/create-order', authenticateToken, async (req: AuthRequest, res: an
       },
     });
 
-    logger.payment(`Payment order created: ${razorpayOrder.id} for ${planType} plan`, {
-      orderId: razorpayOrder.id,
-      userId,
-      planType,
-      amount: selectedPlan.price
-    });
+    console.log(`💳 Payment order created: ${razorpayOrder.id} for ${planType} plan (₹${selectedPlan.price})`);
 
     res.json({
       success: true,
@@ -89,13 +83,13 @@ router.post('/create-order', authenticateToken, async (req: AuthRequest, res: an
       razorpayKeyId: process.env.RAZORPAY_KEY_ID,
     });
   } catch (error) {
-    logger.error('Failed to create payment order', { error, userId: req.userId });
+    console.error('Failed to create payment order:', error);
     res.status(500).json({ error: 'Failed to create payment order' });
   }
 });
 
 // Verify payment and upgrade user subscription
-router.post('/verify-payment', authenticateToken, async (req: AuthRequest, res: any) => {
+router.post('/verify-payment', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const userId = req.userId!;
     const { 
@@ -116,11 +110,7 @@ router.post('/verify-payment', authenticateToken, async (req: AuthRequest, res: 
     );
 
     if (!verification.isValid) {
-      logger.security('Payment verification failed', {
-        userId,
-        orderId: razorpay_order_id,
-        error: verification.error
-      });
+      console.error('❌ Payment verification failed:', verification.error);
       return res.status(400).json({ error: 'Payment verification failed' });
     }
 
@@ -153,12 +143,7 @@ router.post('/verify-payment', authenticateToken, async (req: AuthRequest, res: 
       return res.status(400).json({ error: 'Invalid plan type in payment record' });
     }
 
-    logger.payment(`Payment verified and user upgraded: ${userId} to ${payment.planType} plan`, {
-      userId,
-      planType: payment.planType,
-      paymentId: razorpay_payment_id,
-      amount: payment.amount
-    });
+    console.log(`✅ Payment verified and user upgraded: ${userId} to ${payment.planType} plan`);
 
     res.json({
       success: true,
@@ -176,13 +161,13 @@ router.post('/verify-payment', authenticateToken, async (req: AuthRequest, res: 
       },
     });
   } catch (error) {
-    logger.error('Payment verification error', { error, userId: req.userId });
+    console.error('Payment verification error:', error);
     res.status(500).json({ error: 'Payment verification failed' });
   }
 });
 
 // Get user's subscription status
-router.get('/subscription-status', authenticateToken, async (req: AuthRequest, res: any) => {
+router.get('/subscription-status', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const userId = req.userId!;
     const status = await subscriptionService.getSubscriptionStatus(userId);
@@ -192,13 +177,13 @@ router.get('/subscription-status', authenticateToken, async (req: AuthRequest, r
       ...status,
     });
   } catch (error) {
-    logger.error('Failed to get subscription status', { error, userId: req.userId });
+    console.error('Failed to get subscription status:', error);
     res.status(500).json({ error: 'Failed to get subscription status' });
   }
 });
 
 // Check AI usage limits
-router.get('/ai-limits', authenticateToken, async (req: AuthRequest, res: any) => {
+router.get('/ai-limits', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const userId = req.userId!;
     const limits = await subscriptionService.canUseAI(userId);
@@ -208,7 +193,7 @@ router.get('/ai-limits', authenticateToken, async (req: AuthRequest, res: any) =
       ...limits,
     });
   } catch (error) {
-    logger.error('Failed to check AI limits', { error, userId: req.userId });
+    console.error('Failed to check AI limits:', error);
     res.status(500).json({ error: 'Failed to check AI limits' });
   }
 });
@@ -223,7 +208,7 @@ router.get('/test-razorpay', async (req, res) => {
       keyId: process.env.RAZORPAY_KEY_ID ? `${process.env.RAZORPAY_KEY_ID.substring(0, 12)}...` : 'Not set',
     });
   } catch (error) {
-    logger.error('Razorpay test failed', { error });
+    console.error('Razorpay test failed:', error);
     res.status(500).json({ error: 'Razorpay test failed' });
   }
 });
