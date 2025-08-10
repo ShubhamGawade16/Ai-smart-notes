@@ -44,15 +44,12 @@ router.get('/me', verifySupabaseToken, async (req: any, res) => {
     let user = await storage.getUserByEmail(supabaseUser.email);
     
     if (!user) {
-      // New Google OAuth user - return 404 so frontend can handle onboarding
-      return res.status(404).json({ 
-        error: 'User not found',
-        isNewUser: true,
-        supabaseData: {
-          email: supabaseUser.email,
-          firstName: supabaseUser.user_metadata?.first_name || supabaseUser.user_metadata?.name?.split(' ')[0] || '',
-          lastName: supabaseUser.user_metadata?.last_name || supabaseUser.user_metadata?.name?.split(' ').slice(1).join(' ') || '',
-        }
+      // Create user if doesn't exist
+      user = await storage.createUser({
+        email: supabaseUser.email,
+        firstName: supabaseUser.user_metadata?.first_name || '',
+        lastName: supabaseUser.user_metadata?.last_name || '',
+        onboardingCompleted: false,
       });
     }
     
@@ -114,37 +111,6 @@ router.post('/complete-onboarding', verifySupabaseToken, async (req: any, res) =
   } catch (error) {
     console.error('Complete onboarding error:', error);
     res.status(500).json({ error: 'Failed to complete onboarding' });
-  }
-});
-
-// Create new user (for onboarding completion)
-router.post('/create-user', verifySupabaseToken, async (req: any, res) => {
-  try {
-    const supabaseUser = req.user;
-    const { firstName, lastName, preferences } = req.body;
-    
-    // Check if user already exists
-    let user = await storage.getUserByEmail(supabaseUser.email);
-    
-    if (user) {
-      return res.json({ success: true, user, message: 'User already exists' });
-    }
-    
-    // Create new user with onboarding data
-    user = await storage.createUser({
-      email: supabaseUser.email,
-      firstName: firstName || supabaseUser.user_metadata?.first_name || '',
-      lastName: lastName || supabaseUser.user_metadata?.last_name || '',
-      tier: 'free',
-      subscriptionStatus: null,
-      onboardingCompleted: true,
-      preferences: preferences || {}
-    });
-    
-    res.json({ success: true, user, message: 'User created successfully' });
-  } catch (error) {
-    console.error('Create user error:', error);
-    res.status(500).json({ error: 'Failed to create user' });
   }
 });
 

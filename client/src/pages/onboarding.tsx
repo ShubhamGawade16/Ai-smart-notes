@@ -52,7 +52,7 @@ function PreferencesStep({ onNext, preferences, setPreferences }: any) {
       {/* Progress Bar */}
       <div className="mb-8">
         <div className="flex items-center justify-center space-x-4 mb-4">
-          <div className="h-2 w-32 bg-teal-600 rounded-full"></div>
+          <div className="h-2 w-32 bg-indigo-600 rounded-full"></div>
           <div className="h-2 w-32 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
           <div className="h-2 w-32 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
         </div>
@@ -60,19 +60,19 @@ function PreferencesStep({ onNext, preferences, setPreferences }: any) {
       </div>
       
       <div className="text-center mb-12">
-        <Badge className="mb-4 bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200">Welcome to Planify</Badge>
+        <Badge className="mb-4 bg-indigo-100 text-indigo-800">Step 1 of 3</Badge>
         <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-          Let's Set Up Your AI Assistant
+          Let's Personalize Your Experience
         </h1>
         <p className="text-xl text-gray-600 dark:text-gray-300">
-          Complete this quick setup to unlock personalized AI-powered productivity features
+          Tell us about your priorities so we can provide better AI suggestions
         </p>
       </div>
 
       <Card className="mb-8">
         <CardHeader>
           <CardTitle className="flex items-center">
-            <Target className="h-5 w-5 mr-2 text-teal-600" />
+            <Target className="h-5 w-5 mr-2 text-indigo-600" />
             What are your top 3 daily priorities?
           </CardTitle>
           <CardDescription>
@@ -92,17 +92,17 @@ function PreferencesStep({ onNext, preferences, setPreferences }: any) {
                   key={priority.id}
                   className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
                     isSelected
-                      ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20'
-                      : 'border-gray-200 dark:border-gray-700 hover:border-teal-300'
+                      ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
+                      : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300'
                   }`}
                   onClick={() => handlePriorityToggle(priority.id)}
                 >
                   <div className="flex items-center space-x-3">
-                    <Icon className={`h-5 w-5 ${isSelected ? 'text-teal-600' : 'text-gray-500'}`} />
-                    <span className={`font-medium ${isSelected ? 'text-teal-900 dark:text-teal-100' : 'text-gray-900 dark:text-white'}`}>
+                    <Icon className={`h-5 w-5 ${isSelected ? 'text-indigo-600' : 'text-gray-500'}`} />
+                    <span className={`font-medium ${isSelected ? 'text-indigo-900 dark:text-indigo-100' : 'text-gray-900 dark:text-white'}`}>
                       {priority.label}
                     </span>
-                    {isSelected && <CheckCircle className="h-4 w-4 text-teal-600 ml-auto" />}
+                    {isSelected && <CheckCircle className="h-4 w-4 text-indigo-600 ml-auto" />}
                   </div>
                 </div>
               );
