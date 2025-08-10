@@ -2680,9 +2680,9 @@ Guidelines:
       
       console.log(`✅ AI categorizer: Usage incremented for ${tier} tier user ${userId}`);
 
-      // Simple categorization logic (enhanced)
-      const taskTitle = title.toLowerCase();
-      const taskDesc = (description || '').toLowerCase();
+      // INTELLIGENT CATEGORIZATION LOGIC (ENHANCED)
+      const taskTitle = title.toLowerCase().trim();
+      const taskDesc = (description || '').toLowerCase().trim();
       const combined = `${taskTitle} ${taskDesc}`;
       
       let category = 'General';
@@ -2690,53 +2690,119 @@ Guidelines:
       let tags: string[] = [];
       let estimatedTime = 30;
       
-      // Priority detection
-      if (combined.includes('urgent') || combined.includes('asap') || combined.includes('emergency') || combined.includes('critical')) {
+      console.log(`🔍 AI categorizer: Analyzing "${title}" -> "${combined}"`);
+      
+      // PRIORITY DETECTION - Enhanced pattern matching
+      if (combined.match(/\b(urgent|asap|emergency|critical|immediate|now|today|deadline|due)\b/)) {
         priority = 'high';
         tags.push('urgent');
-      } else if (combined.includes('later') || combined.includes('someday') || combined.includes('eventually')) {
+        console.log(`🚨 HIGH priority detected for: ${title}`);
+      } else if (combined.match(/\b(important|priority|high|must|need|should)\b/)) {
+        priority = 'high';
+        console.log(`📈 HIGH priority detected for: ${title}`);
+      } else if (combined.match(/\b(later|someday|eventually|low|minor|maybe|optional)\b/)) {
         priority = 'low';
+        console.log(`📉 LOW priority detected for: ${title}`);
+      } else {
+        console.log(`📊 MEDIUM priority (default) for: ${title}`);
       }
       
-      // Category detection
-      if (combined.includes('meeting') || combined.includes('call') || combined.includes('discussion') || combined.includes('phone')) {
+      // CATEGORY DETECTION - Much more comprehensive and accurate
+      if (combined.match(/\b(meet|meeting|call|discussion|phone|interview|conference|chat|talk|speak|presentation|video)\b/)) {
         category = 'Communication';
         estimatedTime = 60;
         tags.push('meeting');
-      } else if (combined.includes('code') || combined.includes('develop') || combined.includes('programming') || combined.includes('bug') || combined.includes('feature')) {
+        console.log(`💬 COMMUNICATION category for: ${title}`);
+      } else if (combined.match(/\b(code|coding|develop|programming|bug|feature|deploy|test|debug|app|software|web|api|technical)\b/)) {
         category = 'Development';
         estimatedTime = 120;
         tags.push('coding');
-      } else if (combined.includes('design') || combined.includes('creative') || combined.includes('art') || combined.includes('ui') || combined.includes('ux')) {
+        console.log(`💻 DEVELOPMENT category for: ${title}`);
+      } else if (combined.match(/\b(design|creative|art|ui|ux|mockup|wireframe|logo|graphic|visual|brand|creative)\b/)) {
         category = 'Creative';
         estimatedTime = 90;
         tags.push('design');
-      } else if (combined.includes('research') || combined.includes('study') || combined.includes('learn') || combined.includes('read')) {
+        console.log(`🎨 CREATIVE category for: ${title}`);
+      } else if (combined.match(/\b(research|study|learn|read|documentation|tutorial|course|book|training|education)\b/)) {
         category = 'Learning';
-        estimatedTime = 60;
-        tags.push('research');
-      } else if (combined.includes('admin') || combined.includes('paperwork') || combined.includes('document') || combined.includes('form')) {
-        category = 'Administrative';
         estimatedTime = 45;
-        tags.push('admin');
-      } else if (combined.includes('email') || combined.includes('message') || combined.includes('respond')) {
-        category = 'Communication';
-        estimatedTime = 15;
-        tags.push('email');
-      } else if (combined.includes('exercise') || combined.includes('workout') || combined.includes('gym') || combined.includes('run')) {
+        tags.push('research');
+        console.log(`📚 LEARNING category for: ${title}`);
+      } else if (combined.match(/\b(exercise|workout|health|doctor|medical|fitness|gym|run|walk|yoga|hospital)\b/)) {
         category = 'Health';
         estimatedTime = 60;
         tags.push('health');
+        console.log(`🏥 HEALTH category for: ${title}`);
+      } else if (combined.match(/\b(shop|shopping|buy|purchase|grocery|store|order|amazon|market|get)\b/)) {
+        category = 'Personal';
+        estimatedTime = 45;
+        tags.push('shopping');
+        console.log(`🛒 PERSONAL/Shopping category for: ${title}`);
+      } else if (combined.match(/\b(finance|budget|money|bank|payment|invoice|tax|bill|account|pay)\b/)) {
+        category = 'Finance';
+        estimatedTime = 30;
+        tags.push('finance');
+        console.log(`💰 FINANCE category for: ${title}`);
+      } else if (combined.match(/\b(work|office|business|job|project|task|client|report|email|work)\b/)) {
+        category = 'Work';
+        estimatedTime = 60;
+        tags.push('work');
+        console.log(`💼 WORK category for: ${title}`);
+      } else if (combined.match(/\b(home|house|clean|organize|repair|fix|maintenance|chore)\b/)) {
+        category = 'Personal';
+        estimatedTime = 45;
+        tags.push('home');
+        console.log(`🏠 PERSONAL/Home category for: ${title}`);
+      } else if (combined.match(/\b(travel|trip|vacation|flight|hotel|book|reserve)\b/)) {
+        category = 'Personal';
+        estimatedTime = 30;
+        tags.push('travel');
+        console.log(`✈️ PERSONAL/Travel category for: ${title}`);
+      } else if (combined.match(/\b(food|cook|recipe|eat|meal|dinner|lunch|breakfast|kitchen|cake|bake)\b/)) {
+        category = 'Personal';
+        estimatedTime = 45;
+        tags.push('food');
+        console.log(`🍳 PERSONAL/Food category for: ${title}`);
+      } else if (combined.match(/\b(admin|paperwork|document|form|fill|submit|application)\b/)) {
+        category = 'Administrative';
+        estimatedTime = 45;
+        tags.push('admin');
+        console.log(`📋 ADMINISTRATIVE category for: ${title}`);
+      } else if (combined.match(/\b(email|message|respond|reply|send|communication)\b/)) {
+        category = 'Communication';
+        estimatedTime = 15;
+        tags.push('email');
+        console.log(`📧 COMMUNICATION/Email category for: ${title}`);
+      } else {
+        console.log(`📝 GENERAL category (default) for: ${title}`);
       }
 
-      // Time estimation refinements
-      if (combined.includes('quick') || combined.includes('brief') || combined.includes('short')) {
-        estimatedTime = Math.max(15, Math.floor(estimatedTime * 0.5));
+      // CONTEXTUAL TAGS - Smart detection based on content
+      if (combined.match(/\b(important|critical|key|essential|must)\b/)) tags.push('important');
+      if (combined.match(/\b(quick|fast|brief|short|5|min|minute)\b/)) {
         tags.push('quick');
-      } else if (combined.includes('long') || combined.includes('detailed') || combined.includes('thorough')) {
-        estimatedTime = Math.floor(estimatedTime * 1.5);
-        tags.push('detailed');
+        estimatedTime = Math.min(estimatedTime, 15);
       }
+      if (combined.match(/\b(project|big|large|complex|major|full)\b/)) {
+        tags.push('project');
+        estimatedTime = Math.max(estimatedTime, 90);
+      }
+      if (combined.match(/\b(review|check|verify|validate|test|confirm)\b/)) tags.push('review');
+      if (combined.match(/\b(team|group|collaborate|together|with)\b/)) tags.push('team');
+      if (combined.match(/\b(plan|planning|schedule|organize|prepare)\b/)) tags.push('planning');
+      if (combined.match(/\b(follow|followup|follow-up|check|status)\b/)) tags.push('followup');
+
+      // TIME ESTIMATION REFINEMENTS
+      if (combined.match(/\b(quick|fast|brief|short)\b/)) {
+        estimatedTime = Math.max(15, Math.floor(estimatedTime * 0.5));
+        if (!tags.includes('quick')) tags.push('quick');
+      } else if (combined.match(/\b(long|detailed|thorough|complex)\b/)) {
+        estimatedTime = Math.floor(estimatedTime * 1.5);
+        if (!tags.includes('detailed')) tags.push('detailed');
+      }
+
+      // Remove duplicates and limit to 5 tags
+      tags = [...new Set(tags)].slice(0, 5);
 
       const result = {
         category,
