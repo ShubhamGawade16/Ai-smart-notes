@@ -236,19 +236,30 @@ export function useSubscription() {
                 description: `Welcome to ${plan.charAt(0).toUpperCase() + plan.slice(1)} plan! Your subscription is now active.`,
               });
               
-              // Force immediate cache refresh for instant UI updates
-              await queryClient.invalidateQueries({ queryKey: ['/api/payments/subscription-status'] });
-              await queryClient.invalidateQueries({ queryKey: ['/api/payments/ai-limits'] });
+              // Clear all related caches and force fresh data (copied from working upgrade button)
+              queryClient.removeQueries({ queryKey: ['/api/payments/subscription-status'] });
+              queryClient.removeQueries({ queryKey: ['/api/payments/ai-limits'] });
               
-              // Trigger immediate refetch to ensure UI updates instantly
-              await queryClient.refetchQueries({ queryKey: ['/api/payments/subscription-status'] });
-              await queryClient.refetchQueries({ queryKey: ['/api/payments/ai-limits'] });
+              // Add delay to ensure backend has processed the update
+              await new Promise(resolve => setTimeout(resolve, 1000));
               
-              // Small delay to ensure data is loaded, then close modal if it's open
-              setTimeout(() => {
-                // Trigger a page refresh effect by updating state
-                window.dispatchEvent(new CustomEvent('subscription-updated'));
-              }, 500);
+              // Force fresh fetch with proper auth headers (matching our working system)
+              const authToken = localStorage.getItem('auth_token');
+              const headers = authToken ? { 'Authorization': `Bearer ${authToken}` } : {};
+              
+              await queryClient.fetchQuery({ 
+                queryKey: ['/api/payments/subscription-status'], 
+                queryFn: () => fetch('/api/payments/subscription-status', { headers }).then(res => res.json()),
+                staleTime: 0
+              });
+              
+              await queryClient.fetchQuery({ 
+                queryKey: ['/api/payments/ai-limits'], 
+                queryFn: () => fetch('/api/payments/ai-limits', { headers }).then(res => res.json()),
+                staleTime: 0
+              });
+              
+              console.log("Subscription data refreshed after payment");
             } else {
               throw new Error('Payment verification failed');
             }
