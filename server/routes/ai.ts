@@ -155,38 +155,60 @@ router.post('/refine-task', optionalAuth, async (req: AuthRequest, res) => {
     
     console.log(`✅ Task refiner: Usage incremented for ${tier} tier user ${userId}`);
 
-    // For now, provide a simple refinement without external AI calls to ensure functionality
-    const refinement = {
-      refinedTask: `${originalTask} - Enhanced based on: ${userQuery}`,
-      decomposition: [
-        'Break down the task into smaller steps',
-        'Set specific deadlines for each step', 
-        'Identify required resources',
-        'Plan for potential obstacles'
-      ],
-      suggestions: [
-        `Applied your request: "${userQuery}"`,
-        'Consider setting a specific deadline',
-        'Break complex tasks into smaller subtasks',
-        'Allocate appropriate time for completion'
-      ]
-    };
+    // Enhanced refinement logic based on user query  
+    let refinedTitle = originalTask;
+    let refinedDescription = originalTask;
+    const suggestions = [`Applied your request: "${userQuery}"`];
+    const subtasks = [];
     
-    console.log(`✅ Task refiner: Returning refined task for "${originalTask}"`);
+    // Parse user query to provide better refinement
+    const query = userQuery.toLowerCase();
     
-    res.json({
+    if (query.includes('break') || query.includes('smaller') || query.includes('steps')) {
+      subtasks.push(
+        'Research and gather requirements',
+        'Plan the implementation approach', 
+        'Execute the main task',
+        'Review and test the results'
+      );
+      suggestions.push('Task broken down into manageable steps');
+    }
+    
+    if (query.includes('specific') || query.includes('detail')) {
+      refinedTitle = `${originalTask} - Detailed Implementation`;
+      refinedDescription = `Comprehensive approach to: ${originalTask}. This includes research, planning, execution, and validation phases.`;
+      suggestions.push('Added specific details and context');
+    }
+    
+    if (query.includes('deadline') || query.includes('time') || query.includes('schedule')) {
+      suggestions.push('Consider setting a specific deadline based on task complexity');
+      suggestions.push('Allocate buffer time for unexpected challenges');
+    }
+    
+    if (query.includes('efficient') || query.includes('optimize') || query.includes('better')) {
+      subtasks.push(
+        'Identify the most efficient approach',
+        'Eliminate unnecessary steps',
+        'Focus on high-impact activities'
+      );
+      suggestions.push('Optimized for efficiency and effectiveness');
+    }
+    
+    console.log(`✅ Task refiner: Generated refinement for "${originalTask}" with ${subtasks.length} subtasks`);
+    
+    return res.json({
       success: true,
       refinedTasks: [{
-        title: refinement.refinedTask,
-        description: refinement.refinedTask,
+        title: refinedTitle,
+        description: refinedDescription,
         priority: 'medium',
         category: 'General',
-        tags: [],
-        estimatedTime: 30,
-        subtasks: refinement.decomposition || [],
+        tags: ['refined'],
+        estimatedTime: 45,
+        subtasks: subtasks,
       }],
       explanation: `Task refined based on your request: "${userQuery}"`,
-      suggestions: refinement.suggestions,
+      suggestions: suggestions,
     });
   } catch (error) {
     console.error('Task refinement error:', error);
