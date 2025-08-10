@@ -68,8 +68,12 @@ function Router() {
       </Route>
       
       <Route path="/auth/callback" component={AuthCallbackPage} />
-      <Route path="/auth/verified" component={AuthVerifiedPage} />
-      <Route path="/verify-email" component={AuthVerifiedPage} />
+      <Route path="/auth/verified">
+        {user ? <Redirect to="/dashboard" /> : <AuthVerifiedPage />}
+      </Route>
+      <Route path="/verify-email">
+        {user ? <Redirect to="/dashboard" /> : <AuthVerifiedPage />}
+      </Route>
       <Route path="/supabase-setup" component={SupabaseSetupGuide} />
       <Route path="/debug-auth" component={DebugAuthPage} />
       

@@ -1,15 +1,25 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { CheckCircle, Mail, ArrowRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/hooks/use-supabase-auth";
 
 export default function AuthVerifiedPage() {
   const [isVerified, setIsVerified] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
+  const [, navigate] = useLocation();
 
   useEffect(() => {
+    // If user is already authenticated, redirect to dashboard immediately
+    if (user) {
+      console.log('✅ User already authenticated on verification page, redirecting to dashboard');
+      navigate('/dashboard');
+      return;
+    }
+
     const checkVerification = async () => {
       if (!supabase) {
         setIsLoading(false);
@@ -18,7 +28,14 @@ export default function AuthVerifiedPage() {
 
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
-        console.log('Verification check:', { session, error });
+        console.log('Verification check:', { session, error, hasUser: !!user });
+        
+        if (session?.user) {
+          // User has a valid session, redirect to dashboard
+          console.log('✅ User has valid session, redirecting to dashboard');
+          navigate('/dashboard');
+          return;
+        }
         
         if (session?.user?.email_confirmed_at) {
           setIsVerified(true);
@@ -31,7 +48,7 @@ export default function AuthVerifiedPage() {
     };
 
     checkVerification();
-  }, []);
+  }, [user, navigate]);
 
   if (isLoading) {
     return (
@@ -55,11 +72,12 @@ export default function AuthVerifiedPage() {
                 Your email has been successfully verified. Welcome to Planify!
               </p>
             </div>
-            <Link href="/onboarding">
-              <Button className="w-full bg-teal-600 hover:bg-teal-700">
-                Get Started <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </Link>
+            <Button 
+              onClick={() => navigate('/dashboard')}
+              className="w-full bg-teal-600 hover:bg-teal-700"
+            >
+              Continue to Dashboard <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
           </>
         ) : (
           <>
