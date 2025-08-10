@@ -1,10 +1,27 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { errorHandler } from './middleware/error-handler';
+import { generalLimiter } from './middleware/rate-limiter';
+import { healthCheck, readinessCheck } from './utils/health-check';
+import { setupGracefulShutdown } from './utils/graceful-shutdown';
+import { config } from './utils/environment';
 
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+
+// Security and production middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: false, limit: '10mb' }));
+
+// Trust proxy for accurate IP addresses (important for rate limiting)
+app.set('trust proxy', 1);
+
+// Health check endpoints (before rate limiting)
+app.get('/health', healthCheck);
+app.get('/ready', readinessCheck);
+
+// Apply rate limiting to all routes except health checks
+app.use(generalLimiter.middleware());
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -39,13 +56,8 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-
-    res.status(status).json({ message });
-    throw err;
-  });
+  // Use production-ready error handler
+  app.use(errorHandler);
 
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
@@ -60,12 +72,21 @@ app.use((req, res, next) => {
   // Other ports are firewalled. Default to 5000 if not specified.
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || '5000', 10);
+  const port = config.PORT;
   server.listen({
     port,
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
+    
+    // Setup graceful shutdown handling
+    setupGracefulShutdown(server, {
+      timeout: 10000, // 10 seconds
+      cleanup: async () => {
+        // Add any cleanup tasks here (close database connections, etc.)
+        console.log('Running cleanup tasks...');
+      }
+    });
   });
 })();

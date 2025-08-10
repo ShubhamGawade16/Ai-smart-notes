@@ -68,7 +68,7 @@ export default function RazorpayCheckout({ plan, onSuccess, onClose }: RazorpayC
         prefill: {
           name: `${user?.firstName || ''} ${user?.lastName || ''}`.trim(),
           email: user?.email || '',
-          contact: user?.phone || ''
+          contact: ''
         },
         theme: {
           color: '#14b8a6' // Teal theme color

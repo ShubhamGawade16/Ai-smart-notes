@@ -20,7 +20,7 @@ router.get('/plans', async (req, res) => {
   }
 });
 
-// Create payment order for subscription
+// Create payment order for subscription  
 router.post('/create-order', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const userId = req.userId!;

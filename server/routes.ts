@@ -1,5 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { apiLimiter, paymentLimiter, aiLimiter } from './middleware/rate-limiter';
+import { validateBody, schemas } from './middleware/validation';
+import { securityHeaders, sanitizeInput } from './middleware/security';
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { setupAuth, isAuthenticated } from "./replitAuth";
@@ -213,6 +216,10 @@ const requireAuth = async (req: any, res: any, next: any) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  
+  // Apply security middleware to all routes
+  app.use(securityHeaders);
+  app.use(sanitizeInput);
   
   // Add authentication routes
   app.get('/api/auth/me', requireAuth, async (req: any, res) => {
@@ -794,8 +801,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // RAZORPAY PAYMENT INTEGRATION
   // ============================================================================
 
+  // Apply rate limiting and validation to all payment routes
+  app.use('/api/razorpay', paymentLimiter.middleware());
+
   // Create Razorpay order
-  app.post("/api/razorpay/create-order", requireAuth, async (req: AuthRequest, res) => {
+  app.post("/api/razorpay/create-order", requireAuth, validateBody(schemas.createOrder), async (req: AuthRequest, res) => {
     try {
       if (!req.userId) {
         return res.status(401).json({ error: "User ID not found in token" });
@@ -837,7 +847,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Verify Razorpay payment
-  app.post("/api/razorpay/verify-payment", requireAuth, async (req: AuthRequest, res) => {
+  app.post("/api/razorpay/verify-payment", requireAuth, validateBody(schemas.verifyPayment), async (req: AuthRequest, res) => {
     try {
       if (!req.userId) {
         return res.status(401).json({ error: "User ID not found in token" });
@@ -3370,7 +3380,8 @@ Guidelines:
   const { registerAIBrainRoutes } = await import("./routes/ai-brain");
   registerAIBrainRoutes(app);
 
-  // Payment Routes
+  // Payment Routes (with rate limiting and validation)
+  app.use('/api/payments', paymentLimiter.middleware());
   const paymentRoutes = await import("./routes/payments");
   app.use('/api/payments', paymentRoutes.default);
   
