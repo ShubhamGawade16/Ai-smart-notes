@@ -81,7 +81,7 @@ export function RazorpayPayment({ plan, onSuccess, onError, userEmail }: Razorpa
       // Create subscription order using same endpoint as View Plans modal
       console.log("Creating subscription order...");
       const response = await apiRequest("POST", "/api/payments/create-order", {
-        plan: plan,
+        planType: plan,
       });
       
       const orderData = await response.json();

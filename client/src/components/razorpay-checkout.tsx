@@ -45,7 +45,7 @@ export default function RazorpayCheckout({ plan, onSuccess, onClose }: RazorpayC
     try {
       // Create order on backend
       const response = await apiRequest("POST", "/api/payments/create-order", {
-        plan: plan
+        planType: plan
       });
 
       if (!response.ok) {
