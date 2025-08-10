@@ -35,41 +35,82 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
 
   // Sync user data from our backend when Supabase user changes
-  const syncUserData = async (supabaseUser: User | null) => {
-    console.log('🔄 syncUserData called with user:', supabaseUser?.email);
+  const syncUserData = async (supabaseUser: User | null, isNewSignIn: boolean = false) => {
+    console.log('🔄 syncUserData called with user:', supabaseUser?.email, 'isNewSignIn:', isNewSignIn);
     
     if (!supabaseUser) {
       console.log('❌ No supabase user, clearing data');
       setUser(null);
       localStorage.removeItem('auth_token');
-      return;
+      return { redirectTo: null };
     }
 
     try {
-      console.log('📡 Creating user from Supabase data directly...');
-      const userData = {
-        id: supabaseUser.id,
-        email: supabaseUser.email || '',
-        firstName: supabaseUser.user_metadata?.first_name || '',
-        lastName: supabaseUser.user_metadata?.last_name || '',
-        onboardingCompleted: false,
-      };
-      
-      console.log('✅ Setting user data:', userData);
-      setUser(userData);
-      
-      // Store token for API requests
+      // Store token for API requests first
       const session = (await supabase?.auth.getSession())?.data.session;
       if (session?.access_token) {
         localStorage.setItem('auth_token', session.access_token);
         console.log('✅ Stored auth token');
       }
-      
-      console.log('✅ User sync complete');
+
+      // Check if user exists in our database
+      console.log('📡 Checking if user exists in our database...');
+      const response = await fetch('/api/supabase-auth/me', {
+        headers: {
+          'Authorization': `Bearer ${session?.access_token}`
+        }
+      });
+
+      if (response.ok) {
+        const dbUser = await response.json();
+        console.log('✅ Found existing user in database:', dbUser);
+        
+        const userData = {
+          id: dbUser.id,
+          email: dbUser.email,
+          firstName: dbUser.firstName || '',
+          lastName: dbUser.lastName || '',
+          onboardingCompleted: dbUser.onboardingCompleted || false,
+        };
+        
+        setUser(userData);
+        
+        // If user hasn't completed onboarding, redirect to onboarding
+        if (!dbUser.onboardingCompleted) {
+          console.log('🔄 User needs onboarding, will redirect to onboarding page');
+          return { redirectTo: '/onboarding' };
+        }
+        
+        return { redirectTo: '/dashboard' };
+      } else {
+        // User doesn't exist in our database - this is a new Google user
+        console.log('🆕 New Google user detected, creating basic profile...');
+        
+        const userData = {
+          id: supabaseUser.id,
+          email: supabaseUser.email || '',
+          firstName: supabaseUser.user_metadata?.first_name || supabaseUser.user_metadata?.name?.split(' ')[0] || '',
+          lastName: supabaseUser.user_metadata?.last_name || supabaseUser.user_metadata?.name?.split(' ').slice(1).join(' ') || '',
+          onboardingCompleted: false,
+        };
+        
+        console.log('✅ Setting new user data:', userData);
+        setUser(userData);
+        
+        // Show a welcome toast for new users
+        toast({
+          title: "Welcome to Planify!",
+          description: "Let's complete your profile setup to unlock AI-powered task management.",
+        });
+        
+        // Always redirect new Google users to onboarding
+        return { redirectTo: '/onboarding' };
+      }
       
     } catch (error) {
       console.error('Error in syncUserData:', error);
-      // Still set a basic user to unblock the UI
+      
+      // Fallback: set basic user data from Supabase
       const fallbackUserData = {
         id: supabaseUser.id,
         email: supabaseUser.email || '',
@@ -79,8 +120,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
       console.log('✅ Using fallback user data:', fallbackUserData);
       setUser(fallbackUserData);
-    } finally {
-      console.log('🔄 syncUserData complete');
+      
+      // If there's an error, still redirect to onboarding to be safe
+      return { redirectTo: '/onboarding' };
     }
   };
 
@@ -139,7 +181,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
           setSupabaseUser(session.user);
           console.log('🔄 About to sync user data...');
-          await syncUserData(session.user);
+          await syncUserData(session.user, false);
         } else {
           console.log('❌ No initial session found');
         }
@@ -163,36 +205,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSupabaseUser(session.user);
         console.log('🔄 Auth state change - about to sync user data...');
         
-        // Call syncUserData
+        // Call syncUserData with proper redirect handling
         try {
-          await syncUserData(session.user);
-          console.log('✅ syncUserData completed successfully');
+          const syncResult = await syncUserData(session.user, event === 'SIGNED_IN');
+          console.log('✅ syncUserData completed successfully, redirect to:', syncResult?.redirectTo);
+          
+          // Handle redirect after auth state change
+          if (event === 'SIGNED_IN' && syncResult?.redirectTo) {
+            const currentPath = window.location.pathname;
+            console.log('🔄 SIGNED_IN event on path:', currentPath, 'redirecting to:', syncResult.redirectTo);
+            
+            // Only redirect if we're on auth pages
+            if (currentPath === '/auth' || currentPath === '/auth/callback') {
+              // For deployed environments (.replit.app/.replit.co), use longer delay and location.href
+              const isDeployedEnv = window.location.hostname.includes('.replit.app') || window.location.hostname.includes('.replit.co');
+              const delay = isDeployedEnv ? 2000 : 100; // Longer delay for production
+              
+              setTimeout(() => {
+                console.log('🚀 Executing auth state redirect to:', syncResult.redirectTo);
+                if (isDeployedEnv) {
+                  // For production, use location.href to ensure proper navigation
+                  window.location.href = syncResult.redirectTo;
+                } else {
+                  window.location.replace(syncResult.redirectTo);
+                }
+              }, delay);
+            }
+          }
         } catch (error) {
           console.error('❌ syncUserData failed:', error);
-        }
-        
-        // Handle redirect after auth state change
-        if (event === 'SIGNED_IN') {
-          const currentPath = window.location.pathname;
-          console.log('🔄 SIGNED_IN event on path:', currentPath);
           
-          // Enhanced production redirect logic for Google OAuth
-          if (currentPath === '/auth' || currentPath === '/auth/callback') {
-            console.log('✅ Redirecting to dashboard after sign in');
-            
-            // For deployed environments (.replit.app/.replit.co), use longer delay and location.href
-            const isDeployedEnv = window.location.hostname.includes('.replit.app') || window.location.hostname.includes('.replit.co');
-            const delay = isDeployedEnv ? 2000 : 100; // Longer delay for production
-            
-            setTimeout(() => {
-              console.log('🚀 Executing auth state redirect to dashboard');
-              if (isDeployedEnv) {
-                // For production, use location.href to ensure proper navigation
-                window.location.href = '/dashboard';
-              } else {
-                window.location.replace('/dashboard');
-              }
-            }, delay);
+          // On error, show message and redirect to onboarding to be safe
+          if (event === 'SIGNED_IN') {
+            const currentPath = window.location.pathname;
+            if (currentPath === '/auth' || currentPath === '/auth/callback') {
+              toast({
+                title: "Setting up your account...",
+                description: "We'll help you complete your profile setup.",
+              });
+              
+              setTimeout(() => {
+                window.location.href = '/onboarding';
+              }, 1500);
+            }
           }
         }
       } else if (event === 'SIGNED_OUT') {
