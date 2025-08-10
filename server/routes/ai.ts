@@ -109,24 +109,51 @@ router.post('/refine-task', optionalAuth, async (req: AuthRequest, res) => {
 
     console.log(`🧠 Task refiner request for user: ${userId}`);
 
-    // Check and increment AI usage directly
+    // Check and increment AI usage based on tier
     const dailyUsage = user.dailyAiCalls || 0;
-    const dailyLimit = 3;
+    const monthlyUsage = user.monthlyAiCalls || 0;
+    const tier = user.tier || 'free';
+    const isActiveSubscription = user.subscriptionStatus === 'active';
     
-    if (dailyUsage >= dailyLimit) {
-      console.log(`❌ Task refiner: Free tier limit reached for user ${userId} - ${dailyUsage}/${dailyLimit}`);
-      return res.status(429).json({ 
-        error: `AI usage limit reached. You've used ${dailyUsage}/${dailyLimit} daily AI calls. Upgrade to Basic (₹299/month) or Pro (₹599/month) for more usage.`
-      });
+    // Tier-based limits
+    let shouldBlock = false;
+    let errorMessage = '';
+    
+    if (tier === 'pro' && isActiveSubscription) {
+      // Pro tier: Unlimited AI
+      console.log(`✅ Task refiner: Pro tier unlimited usage for user ${userId}`);
+    } else if (tier === 'basic' && isActiveSubscription) {
+      // Basic tier: 100 monthly calls
+      if (monthlyUsage >= 100) {
+        shouldBlock = true;
+        errorMessage = `AI usage limit reached. You've used ${monthlyUsage}/100 monthly AI calls. Upgrade to Pro (₹599/month) for unlimited usage.`;
+      } else {
+        console.log(`✅ Task refiner: Basic tier usage OK - ${monthlyUsage}/100 monthly`);
+      }
+    } else {
+      // Free tier: 3 daily calls
+      if (dailyUsage >= 3) {
+        shouldBlock = true;
+        errorMessage = `AI usage limit reached. You've used ${dailyUsage}/3 daily AI calls. Upgrade to Basic (₹299/month) or Pro (₹599/month) for more usage.`;
+      } else {
+        console.log(`✅ Task refiner: Free tier usage OK - ${dailyUsage}/3 daily`);
+      }
+    }
+    
+    if (shouldBlock) {
+      console.log(`❌ Task refiner: Usage limit reached for user ${userId} (${tier} tier)`);
+      return res.status(429).json({ error: errorMessage });
     }
     
     // Increment usage directly
     await storage.updateUser(userId, {
       dailyAiCalls: dailyUsage + 1,
-      dailyAiCallsResetAt: user.dailyAiCallsResetAt || new Date()
+      monthlyAiCalls: monthlyUsage + 1,
+      dailyAiCallsResetAt: user.dailyAiCallsResetAt || new Date(),
+      monthlyAiCallsResetAt: user.monthlyAiCallsResetAt || new Date()
     });
     
-    console.log(`✅ Task refiner: Usage incremented to ${dailyUsage + 1}/${dailyLimit}`);
+    console.log(`✅ Task refiner: Usage incremented for ${tier} tier user ${userId}`);
 
     // For now, provide a simple refinement without external AI calls to ensure functionality
     const refinement = {
