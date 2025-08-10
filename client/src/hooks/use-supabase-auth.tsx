@@ -176,15 +176,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const currentPath = window.location.pathname;
           console.log('🔄 SIGNED_IN event on path:', currentPath);
           
-          // For deployed environments, add extra delay and force redirect
+          // Enhanced production redirect logic for Google OAuth
           if (currentPath === '/auth' || currentPath === '/auth/callback') {
             console.log('✅ Redirecting to dashboard after sign in');
             
-            // Force redirect using production-aware helper
+            // For deployed environments (.replit.app/.replit.co), use longer delay and location.href
+            const isDeployedEnv = window.location.hostname.includes('.replit.app') || window.location.hostname.includes('.replit.co');
+            const delay = isDeployedEnv ? 2000 : 100; // Longer delay for production
+            
             setTimeout(() => {
               console.log('🚀 Executing auth state redirect to dashboard');
-              window.location.replace('/dashboard');
-            }, 50);
+              if (isDeployedEnv) {
+                // For production, use location.href to ensure proper navigation
+                window.location.href = '/dashboard';
+              } else {
+                window.location.replace('/dashboard');
+              }
+            }, delay);
           }
         }
       } else if (event === 'SIGNED_OUT') {

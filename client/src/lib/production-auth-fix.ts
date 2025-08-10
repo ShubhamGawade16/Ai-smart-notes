@@ -22,18 +22,29 @@ export const handleProductionAuthRedirect = () => {
   });
 
   // In deployed environments, if we're on auth callback with auth tokens, 
-  // immediately redirect after a short delay to allow processing
+  // immediately redirect after a longer delay to allow proper session establishment
   if (isDeployedEnvironment() && 
       currentPath === '/auth/callback' && 
       (hasAuthFragment || hasAuthParam)) {
     
     console.log('🚀 Production auth redirect triggered');
     
-    // Wait for auth processing then redirect
+    // Store tokens before redirect for improved reliability
+    if (hasAuthFragment) {
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const accessToken = hashParams.get('access_token');
+      if (accessToken) {
+        localStorage.setItem('auth_token', accessToken);
+        console.log('✅ Stored auth token from hash');
+      }
+    }
+    
+    // Wait longer for auth processing then redirect to app interface
     setTimeout(() => {
       console.log('🔄 Executing production redirect to dashboard');
-      window.location.replace('/dashboard');
-    }, 1500); // Longer delay for production auth processing
+      // Force redirect to main app interface, not general dashboard
+      window.location.href = '/dashboard';
+    }, 2500); // Increased delay for better production auth processing
     
     return true;
   }

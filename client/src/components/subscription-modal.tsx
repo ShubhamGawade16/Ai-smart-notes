@@ -196,7 +196,7 @@ export function SubscriptionModal({ isOpen, onOpenChange, defaultPlan }: Subscri
                 ) : (
                   <div className="flex items-center gap-2">
                     <CreditCard className="w-4 h-4" />
-                    Subscribe to {selectedPlan} Plan - ₹{plans[selectedPlan].price}/month
+                    Subscribe to {selectedPlan} Plan - {plans[selectedPlan].price}/month
                   </div>
                 )}
               </Button>
