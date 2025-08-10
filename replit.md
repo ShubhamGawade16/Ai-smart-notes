@@ -34,7 +34,7 @@ Planify aims to be a leading AI-powered productivity tool with a freemium model.
 - Fixed dev tools tier toggle functionality with proper cache invalidation using correct query keys
 - Resolved View Plans button modal issue by adding missing plans object to useSubscription hook
 - Integrated complete Razorpay payment system with subscription modal
-- Added dynamic pricing display: Basic (₹199/month), Pro (₹499/month) 
+- Added dynamic pricing display: Basic (₹299/month), Pro (₹499/month) 
 - Implemented full payment flow: order creation, Razorpay modal, payment verification, and success handling
 - Enhanced subscription modal with usage tracking and proper tier-based plan recommendations
 - Both admin dev tools and View Plans payment flow now working seamlessly
@@ -47,6 +47,13 @@ Planify aims to be a leading AI-powered productivity tool with a freemium model.
 - Standard payment upgrades now mirror dev menu logic for complete subscription activation
 - Fixed API endpoint naming: /verify-payment route now matches frontend calls
 - Both badge display and functional permissions now work correctly after payment
+
+**Pricing Consistency Fix (August 2025):**
+- Updated all pricing to match requirements: Basic (₹299/month), Pro (₹499/month)
+- Fixed frontend pricing display in subscription modal and upgrade banners
+- Aligned backend Razorpay service pricing with frontend display
+- Updated feature descriptions to accurately reflect plan benefits
+- Both UI pricing and actual payment amounts now consistent across entire application
 
 **Admin Security System Complete (August 2025):**
 - Fixed critical security vulnerability where unauthorized users could access developer tools

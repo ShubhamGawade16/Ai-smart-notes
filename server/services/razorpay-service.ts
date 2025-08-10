@@ -34,7 +34,7 @@ export class RazorpayService {
       },
       pro: {
         name: 'Pro Plan',
-        price: 599, // ₹599/month
+        price: 499, // ₹499/month
         currency: 'INR',
         features: [
           'Unlimited AI interactions',

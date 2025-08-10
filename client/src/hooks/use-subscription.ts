@@ -144,12 +144,13 @@ export function useSubscription() {
   const plans = {
     basic: {
       name: 'Basic',
-      price: '₹199',
+      price: '₹299',
       features: [
-        '100 AI requests per month',
+        '3 daily + 100 monthly AI credits',
         'Smart task categorization',
         'Priority scheduling',
-        'Basic analytics'
+        'Basic productivity insights',
+        'Priority email support'
       ]
     },
     pro: {
@@ -157,10 +158,10 @@ export function useSubscription() {
       price: '₹499',
       features: [
         'Unlimited AI requests',
-        'Advanced productivity insights',
-        'Smart timing optimization',
-        'Priority support',
-        'Custom integrations'
+        'Advanced productivity analytics',
+        'Predictive focus forecasting',
+        'Priority scheduling optimization',
+        'Dedicated support & early access'
       ]
     }
   };
