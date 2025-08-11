@@ -189,57 +189,158 @@ Respond with JSON array of task indices in optimal order:
 export async function generateProductivityInsights(
   tasks: Task[], 
   completionHistory: any[], 
-  userPatterns: any = {}
+  userTier: string = 'free'
 ): Promise<ProductivityInsight[]> {
+  // Calculate real user analytics
+  const completedTasks = tasks.filter(t => t.completed);
+  const pendingTasks = tasks.filter(t => !t.completed);
+  const overdueTasks = tasks.filter(t => t.dueDate && new Date(t.dueDate) < new Date() && !t.completed);
+  
+  const completionRate = tasks.length > 0 ? Math.round((completedTasks.length / tasks.length) * 100) : 0;
+  const categoryBreakdown = tasks.reduce((acc, task) => {
+    const cat = task.category || 'uncategorized';
+    acc[cat] = (acc[cat] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  
+  const priorityBreakdown = tasks.reduce((acc, task) => {
+    const priority = task.priority || 'medium';
+    acc[priority] = (acc[priority] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
   const prompt = `
-Analyze this user's productivity data and provide actionable insights:
+Analyze this user's REAL productivity data and provide personalized, actionable insights:
 
-Recent Tasks (${tasks.length}):
-${tasks.slice(0, 10).map(t => `- "${t.title}" (${t.priority}, ${t.completed ? 'Done' : 'Pending'})`).join('\n')}
+ACTUAL USER DATA:
+- Total tasks: ${tasks.length}
+- Completed: ${completedTasks.length} (${completionRate}%)
+- Pending: ${pendingTasks.length}
+- Overdue: ${overdueTasks.length}
 
-Completion Patterns:
-- Average completion rate: ${userPatterns.completionRate || 'N/A'}%
-- Most productive time: ${userPatterns.productiveHours || 'Unknown'}
-- Common bottlenecks: ${userPatterns.bottlenecks || 'None identified'}
-- Streak: ${userPatterns.currentStreak || 0} days
+Task Categories:
+${Object.entries(categoryBreakdown).map(([cat, count]) => `- ${cat}: ${count} tasks`).join('\n')}
 
-Return ONLY a valid JSON array of insights (no markdown, no code blocks, no additional text):
+Priority Distribution:
+${Object.entries(priorityBreakdown).map(([priority, count]) => `- ${priority}: ${count} tasks`).join('\n')}
+
+Recent Tasks Sample:
+${tasks.slice(0, 8).map(t => `- "${t.title}" [${t.priority || 'medium'} priority, ${t.completed ? 'COMPLETED' : 'PENDING'}${t.category ? `, ${t.category}` : ''}]`).join('\n')}
+
+User Tier: ${userTier}
+
+Based on this REAL data, provide 3-4 specific, personalized insights. Return ONLY a valid JSON array:
 [
   {
-    "type": "productivity_tip|bottleneck_analysis|time_optimization",
-    "title": "Actionable insight title",
-    "content": "Specific, actionable advice (2-3 sentences)",
-    "confidence": 0.85,
+    "type": "productivity_tip|bottleneck_analysis|time_optimization|habit_formation",
+    "title": "Insight based on their actual data",
+    "content": "Specific advice based on their task patterns, completion rate, categories, etc. Reference their actual numbers.",
+    "confidence": 0.75-0.95,
     "actionable": true
   }
 ]
 
-Focus on:
-1. Identifying patterns and bottlenecks
-2. Suggesting specific improvements
-3. Time management optimization
-4. Habit formation tips
+Make insights specific to their data:
+- If completion rate is low, suggest task breakdown strategies
+- If many overdue tasks, focus on deadline management
+- If too many high-priority tasks, suggest priority filtering
+- If categories are unbalanced, suggest time allocation
+- Reference their actual numbers and patterns
 `;
 
-  // Return fallback insights if AI service is unavailable
+  // Return data-driven fallback insights if AI service is unavailable
   if (!process.env.OPENAI_API_KEY) {
-    console.log('OpenAI API key not available, using fallback insights');
-    return [
-      {
-        type: "productivity_tip",
-        title: "Establish Consistent Work Blocks",
-        content: "Try scheduling 25-minute focused work sessions followed by 5-minute breaks. This technique can improve concentration and reduce mental fatigue.",
+    console.log('OpenAI API key not available, generating data-driven fallback insights');
+    const insights: ProductivityInsight[] = [];
+    
+    if (completionRate < 50) {
+      insights.push({
+        type: "bottleneck_analysis",
+        title: `Low Completion Rate: ${completionRate}%`,
+        content: `You're completing ${completionRate}% of tasks. Try breaking down large tasks into smaller, manageable subtasks to boost completion rates.`,
         confidence: 0.85,
         actionable: true
-      },
-      {
-        type: "time_optimization", 
-        title: "Batch Similar Tasks Together",
-        content: "Group similar activities like email responses, data entry, or creative work into dedicated time blocks to minimize context switching costs.",
-        confidence: 0.75,
+      });
+    }
+    
+    if (overdueTasks.length > 0) {
+      insights.push({
+        type: "time_optimization",
+        title: `${overdueTasks.length} Overdue Tasks Detected`,
+        content: `You have ${overdueTasks.length} overdue tasks. Consider using time-blocking and setting buffer time for unexpected delays.`,
+        confidence: 0.90,
         actionable: true
-      }
-    ];
+      });
+    }
+    
+    const highPriorityTasks = priorityBreakdown.high || 0;
+    if (highPriorityTasks > pendingTasks.length * 0.3) {
+      insights.push({
+        type: "productivity_tip",
+        title: "Too Many High-Priority Tasks",
+        content: `${highPriorityTasks} high-priority tasks detected. Consider re-evaluating priorities - not everything can be urgent.`,
+        confidence: 0.80,
+        actionable: true
+      });
+    }
+    
+    return insights.length > 0 ? insights : [{
+      type: "productivity_tip",
+      title: "Build Consistent Task Management Habits",
+      content: "Establish a daily review routine to maintain momentum and identify bottlenecks early.",
+      confidence: 0.75,
+      actionable: true
+    }];
+  }
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: GPT_MODEL,
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.4,
+      max_tokens: 1000,
+    });
+
+    const content = response.choices[0]?.message?.content;
+    if (!content) return [];
+
+    const insights = JSON.parse(cleanJsonResponse(content));
+    
+    return Array.isArray(insights) ? insights.filter(insight => 
+      insight.title && insight.content && typeof insight.confidence === 'number'
+    ) : [];
+  } catch (error) {
+    console.error('Insight generation error:', error);
+    // Return data-driven fallback insights when API fails
+    const insights: ProductivityInsight[] = [];
+    
+    if (completionRate < 50) {
+      insights.push({
+        type: "bottleneck_analysis",
+        title: `Low Completion Rate: ${completionRate}%`,
+        content: `You're completing ${completionRate}% of tasks. Try breaking down large tasks into smaller, manageable subtasks to boost completion rates.`,
+        confidence: 0.85,
+        actionable: true
+      });
+    }
+    
+    if (overdueTasks.length > 0) {
+      insights.push({
+        type: "time_optimization",
+        title: `${overdueTasks.length} Overdue Tasks Detected`, 
+        content: `You have ${overdueTasks.length} overdue tasks. Consider using time-blocking and setting buffer time for unexpected delays.`,
+        confidence: 0.90,
+        actionable: true
+      });
+    }
+    
+    return insights.length > 0 ? insights : [{
+      type: "productivity_tip",
+      title: "Build Consistent Task Management Habits",
+      content: "Establish a daily review routine to maintain momentum and identify bottlenecks early.",
+      confidence: 0.75,
+      actionable: true
+    }];
   }
 
   try {
