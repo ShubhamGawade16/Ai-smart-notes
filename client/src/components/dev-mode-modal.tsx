@@ -83,24 +83,34 @@ export default function DevModeModal({ isOpen, onClose }: DevModeModalProps) {
     }
   });
 
-  // AI Credits 1-Minute Timer Testing
+  // AI Credits 1-Minute Timer Testing (using simpler dev-test endpoints)
   const testAiCreditsMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest("POST", `/api/ai-credits-test/set-test-timer/${user?.id}`, {
-        minutes: 1
+      const response = await fetch("/api/dev-test/quick-1min-timer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
       });
       return response.json();
     },
     onSuccess: (data) => {
       toast({
-        title: "1-Minute Timer Set",
-        description: `AI credits will reset in 1 minute. Current credits: ${subscription?.dailyAiUsage || 0}/3`,
+        title: "1-Minute Timer Set ⏰",
+        description: `AI credits will reset in 1 minute! Current: ${data.currentCredits || 0}/3 credits`,
       });
+      // Auto-refresh UI in 65 seconds to see the reset
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['/api/payments/ai-limits'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/payments/subscription-status'] });
+        toast({
+          title: "Timer Complete! 🎯",
+          description: "1-minute timer finished. Credits should now be reset to 0!",
+        });
+      }, 65000);
     },
     onError: (error) => {
       toast({
         title: "Timer Error",
-        description: "Failed to set 1-minute timer. Admin access required.",
+        description: "Failed to set 1-minute timer. Try again.",
         variant: "destructive"
       });
     }
@@ -108,21 +118,25 @@ export default function DevModeModal({ isOpen, onClose }: DevModeModalProps) {
 
   const forceResetCreditsMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest("POST", `/api/ai-credits-test/force-reset/${user?.id}`);
+      const response = await fetch("/api/dev-test/quick-force-reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      });
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
-        title: "Credits Force Reset",
-        description: "AI credits have been reset to 0 immediately.",
+        title: "Credits Force Reset ⚡",
+        description: `AI credits reset immediately! Now: ${data.creditsAfter || 0}/3 credits`,
       });
       refetch();
       queryClient.invalidateQueries({ queryKey: ['/api/payments/ai-limits'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/payments/subscription-status'] });
     },
     onError: () => {
       toast({
         title: "Reset Error",
-        description: "Failed to force reset credits. Admin access required.",
+        description: "Failed to force reset credits. Try again.",
         variant: "destructive"
       });
     }
@@ -139,13 +153,13 @@ export default function DevModeModal({ isOpen, onClose }: DevModeModalProps) {
   };
 
   const handleTestTimer = () => {
-    if (confirm('Set a 1-minute timer for AI credits reset? This will reset credits after 1 minute for testing.')) {
+    if (confirm('⏰ Set a 1-minute timer for AI credits reset?\n\nThis will reset your credits from ' + (subscription?.dailyAiUsage || 0) + ' to 0 after exactly 1 minute for testing.')) {
       testAiCreditsMutation.mutate();
     }
   };
 
   const handleForceReset = () => {
-    if (confirm('Force reset AI credits to 0 immediately?')) {
+    if (confirm('⚡ Force reset AI credits to 0 immediately?\n\nThis will instantly reset your current ' + (subscription?.dailyAiUsage || 0) + ' credits to 0.')) {
       forceResetCreditsMutation.mutate();
     }
   };

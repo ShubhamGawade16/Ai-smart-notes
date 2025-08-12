@@ -38,7 +38,7 @@ const router = express.Router();
 /**
  * Force reset AI credits for testing (Admin only)
  */
-router.post('/force-reset/:userId', authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+router.post('/force-reset/:userId', authenticateToken, requireAdmin, async (req: AuthRequest, res: any) => {
   try {
     const { userId } = req.params;
     
@@ -70,7 +70,7 @@ router.post('/force-reset/:userId', authenticateToken, requireAdmin, async (req:
 /**
  * Set custom timer for testing (Admin only)
  */
-router.post('/set-test-timer/:userId', authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+router.post('/set-test-timer/:userId', authenticateToken, requireAdmin, async (req: AuthRequest, res: any) => {
   try {
     const { userId } = req.params;
     const { minutes = 1 } = req.body;
@@ -112,7 +112,7 @@ router.post('/set-test-timer/:userId', authenticateToken, requireAdmin, async (r
 /**
  * Get timer status for a user (Admin only)
  */
-router.get('/timer-status/:userId', authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+router.get('/timer-status/:userId', authenticateToken, requireAdmin, async (req: AuthRequest, res: any) => {
   try {
     const { userId } = req.params;
     
@@ -149,7 +149,7 @@ router.get('/timer-status/:userId', authenticateToken, requireAdmin, async (req:
 /**
  * Get all active timers (Admin only)
  */
-router.get('/all-timers', authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+router.get('/all-timers', authenticateToken, requireAdmin, async (req: AuthRequest, res: any) => {
   try {
     const activeTimers = aiCreditsScheduler.getActiveTimers();
     const allUsers = await storage.getAllUsers();
@@ -185,7 +185,7 @@ router.get('/all-timers', authenticateToken, requireAdmin, async (req: AuthReque
 /**
  * Manually trigger timer initialization for all users (Admin only)
  */
-router.post('/initialize-all-timers', authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+router.post('/initialize-all-timers', authenticateToken, requireAdmin, async (req: AuthRequest, res: any) => {
   try {
     // This will re-initialize timers for all users
     const allUsers = await storage.getAllUsers();

@@ -3048,6 +3048,9 @@ Guidelines:
     }
   });
 
+  // Simple dev test routes (no auth for quick testing)
+  app.use('/api/dev-test', await import('./routes/dev-test').then(m => m.default));
+
   // Developer Tools - Toggle Tier (ADMIN ONLY - backward compatibility)
   app.post('/api/dev/toggle-tier', optionalAuth, requireAdmin, async (req: AuthRequest, res) => {
     try {

@@ -146,7 +146,7 @@ class AiCreditsScheduler {
    */
   getActiveTimers(): Array<{userId: string, hasTimer: boolean}> {
     const timers: Array<{userId: string, hasTimer: boolean}> = [];
-    for (const [userId] of this.resetTimers) {
+    for (const [userId] of Array.from(this.resetTimers.keys())) {
       timers.push({ userId, hasTimer: true });
     }
     return timers;
@@ -207,7 +207,7 @@ class AiCreditsScheduler {
     console.log('🛑 Stopping AI Credits Scheduler Service...');
     
     // Clear all timers
-    for (const [userId, timer] of this.resetTimers) {
+    for (const [userId, timer] of Array.from(this.resetTimers.entries())) {
       clearTimeout(timer);
     }
     this.resetTimers.clear();
