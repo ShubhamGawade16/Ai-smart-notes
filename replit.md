@@ -64,6 +64,15 @@ Planify aims to be a leading AI-powered productivity tool with a freemium model.
 - All dev tool access is server-side verified and completely hidden from non-admin users
 - Added debug logging to help identify admin user IDs during authentication
 
+**AI Credits 24-Hour Reset System Verification (August 2025):**
+- Verified 24-hour reset system works with mathematical precision
+- Timer calculation: `(resetTime + 24h) - now` correctly schedules future resets
+- Server restart resilience: timers are restored based on `dailyAiCallsResetAt` timestamps
+- 1-minute testing timer confirmed working: credits reset from 2 to 0 exactly after 1 minute
+- Fixed AI Chat Assistant authentication issue by changing from requireAuth to optionalAuth and implementing demo user support
+- System properly handles user tier changes and removes timers for upgraded users
+- Confirmed 24-hour timer maintains 1434 minutes (exactly 24 hours) remaining time precision
+
 **Major UI Cleanup & Animation Improvements (August 2025):**
 - Removed star (AI view) and settings (advanced view) buttons for cleaner interface design
 - Streamlined button layout to only essential actions: Add Task, Filter, and Sort

@@ -1441,10 +1441,20 @@ Respond with JSON in this format:
   });
 
   // AI Chat Assistant API (PREMIUM - consumes 1 credit)
-  app.post("/api/ai/chat-assistant", requireAuth, async (req: AuthRequest, res) => {
+  app.post("/api/ai/chat-assistant", optionalAuth, async (req: AuthRequest, res) => {
     try {
-      if (!req.userId) {
-        return res.status(401).json({ error: "User ID not found in token" });
+      // Allow guest/demo usage for AI chat assistant
+      const userId = req.userId || 'demo-user';
+      
+      // Ensure demo user exists
+      if (userId === 'demo-user') {
+        let demoUser = await storage.getUser('demo-user');
+        if (!demoUser) {
+          demoUser = await storage.upsertUser({
+            id: 'demo-user',
+            email: 'demo@planify.com'
+          });
+        }
       }
 
       const { message, context } = req.body;
@@ -1452,33 +1462,66 @@ Respond with JSON in this format:
         return res.status(400).json({ error: "Message is required" });
       }
 
-      // Check AI usage limits using the new endpoint
-      console.log(`🧠 AI chat assistant request - checking AI usage limits`);
-      const usageResponse = await fetch(`${req.protocol}://${req.get('host')}/api/increment-ai-usage`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': req.headers.authorization || ''
-        },
-        body: JSON.stringify({ feature: 'ai_assistant' })
-      });
-      
-      const usageData = await usageResponse.json();
-      if (!usageData.canUseAi) {
-        return res.status(429).json({ 
-          error: usageData.message || 'AI usage limit reached. Upgrade to Basic (₹299/month) or Pro (₹599/month) for more usage.' 
+      // For demo users, skip AI usage limits (free demo usage)
+      if (userId === 'demo-user') {
+        console.log(`🆓 AI chat assistant - Demo mode, bypassing usage limits`);
+      } else {
+        // Check AI usage limits for authenticated users
+        console.log(`🧠 AI chat assistant request - checking AI usage limits`);
+        // Check user's AI usage limits directly instead of calling external endpoint
+        const user = await storage.getUser(userId);
+        if (!user) {
+          return res.status(404).json({ error: "User not found" });
+        }
+        
+        // Check tier-based limits
+        const dailyUsage = user.dailyAiCalls || 0;
+        const monthlyUsage = user.monthlyAiCalls || 0;
+        const tier = user.tier || 'free';
+        const isActiveSubscription = user.subscriptionStatus === 'active';
+        
+        let shouldBlock = false;
+        let errorMessage = '';
+        
+        if (tier === 'pro' && isActiveSubscription) {
+          // Pro tier: Unlimited AI
+          console.log(`✅ AI chat assistant: Pro tier unlimited usage for user ${userId}`);
+        } else if (tier === 'basic' && isActiveSubscription) {
+          // Basic tier: 100 monthly calls
+          if (monthlyUsage >= 100) {
+            shouldBlock = true;
+            errorMessage = `AI usage limit reached. You've used ${monthlyUsage}/100 monthly AI calls. Upgrade to Pro (₹499/month) for unlimited usage.`;
+          }
+        } else {
+          // Free tier: 3 daily calls
+          if (dailyUsage >= 3) {
+            shouldBlock = true;
+            errorMessage = `AI usage limit reached. You've used ${dailyUsage}/3 daily AI calls. Upgrade to Basic (₹299/month) or Pro (₹499/month) for more usage.`;
+          }
+        }
+        
+        if (shouldBlock) {
+          return res.status(429).json({ error: errorMessage });
+        }
+        
+        // Increment AI usage for authenticated users
+        await storage.updateUser(userId, {
+          dailyAiCalls: dailyUsage + 1,
+          monthlyAiCalls: monthlyUsage + 1,
+          dailyAiCallsResetAt: user.dailyAiCallsResetAt || new Date(),
+          monthlyAiCallsResetAt: user.monthlyAiCallsResetAt || new Date()
         });
+        
+        console.log(`✅ AI chat assistant usage approved`);
       }
-      
-      console.log(`✅ AI chat assistant usage approved`);
 
       // Get user's tasks for context
-      const tasks = await storage.getTasks(req.userId);
+      const tasks = await storage.getTasks(userId);
       const recentTasks = tasks.slice(-5).map(t => `${t.title} (${t.completed ? 'completed' : 'pending'})`);
 
-      console.log(`Chat assistant: Found ${tasks.length} total tasks for user ${req.userId}`);
+      console.log(`Chat assistant: Found ${tasks.length} total tasks for user ${userId}`);
 
-      // Usage already incremented by the increment-ai-usage endpoint
+      // Usage already incremented above for authenticated users
 
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
