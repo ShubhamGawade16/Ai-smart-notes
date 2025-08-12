@@ -3632,6 +3632,11 @@ Guidelines:
     }
   });
 
+  // AI Credits Testing routes (Admin only) - Add before server creation
+  import('./routes/ai-credits-test').then(({ aiCreditsTest }) => {
+    app.use("/api/ai-credits-test", aiCreditsTest);
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

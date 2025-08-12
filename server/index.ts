@@ -6,6 +6,7 @@ import { generalLimiter } from './middleware/rate-limiter';
 import { healthCheck, readinessCheck } from './utils/health-check';
 import { setupGracefulShutdown } from './utils/graceful-shutdown';
 import { config } from './utils/environment';
+import { aiCreditsScheduler } from './services/ai-credits-scheduler';
 
 const app = express();
 
@@ -80,12 +81,16 @@ app.use((req, res, next) => {
   }, () => {
     log(`serving on port ${port}`);
     
+    // Initialize AI Credits Scheduler after server starts
+    console.log('🔄 AI Credits Scheduler initialized and running');
+    
     // Setup graceful shutdown handling
     setupGracefulShutdown(server, {
       timeout: 10000, // 10 seconds
       cleanup: async () => {
         // Add any cleanup tasks here (close database connections, etc.)
         console.log('Running cleanup tasks...');
+        aiCreditsScheduler.stopService();
       }
     });
   });

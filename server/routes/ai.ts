@@ -154,6 +154,15 @@ router.post('/refine-task', optionalAuth, async (req: AuthRequest, res) => {
     });
     
     console.log(`✅ Task refiner: Usage incremented for ${tier} tier user ${userId}`);
+    
+    // Schedule 24-hour reset for free tier users when they make their first AI call
+    if (tier === 'free' && dailyUsage === 0) {
+      // Import scheduler dynamically to avoid circular dependencies
+      import('../services/ai-credits-scheduler').then(({ aiCreditsScheduler }) => {
+        aiCreditsScheduler.scheduleUserReset(userId, tier);
+        console.log(`🕐 Started 24-hour reset timer for free user: ${userId}`);
+      });
+    }
 
     // Use AI service for real task refinement
     const refinementResult = await aiService.refineTask(originalTask, userQuery, context);

@@ -248,13 +248,24 @@ export class DatabaseStorage implements IStorage {
   async incrementDailyAiCalls(userId: string): Promise<void> {
     const user = await this.getUser(userId);
     if (user) {
+      const newDailyCount = (user.dailyAiCalls || 0) + 1;
+      
       await db
         .update(users)
         .set({
-          dailyAiCalls: (user.dailyAiCalls || 0) + 1,
+          dailyAiCalls: newDailyCount,
           updatedAt: new Date()
         })
         .where(eq(users.id, userId));
+      
+      // Schedule 24-hour reset for free tier users when they use their first AI call
+      if (user.tier === 'free' && newDailyCount === 1) {
+        // Import scheduler dynamically to avoid circular dependencies
+        import('./services/ai-credits-scheduler').then(({ aiCreditsScheduler }) => {
+          aiCreditsScheduler.scheduleUserReset(userId, user.tier);
+          console.log(`🕐 Started 24-hour reset timer for free user: ${userId} (first call of the day)`);
+        });
+      }
     }
   }
 
