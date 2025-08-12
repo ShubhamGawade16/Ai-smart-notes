@@ -83,6 +83,51 @@ export default function DevModeModal({ isOpen, onClose }: DevModeModalProps) {
     }
   });
 
+  // AI Credits 1-Minute Timer Testing
+  const testAiCreditsMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", `/api/ai-credits-test/set-test-timer/${user?.id}`, {
+        minutes: 1
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "1-Minute Timer Set",
+        description: `AI credits will reset in 1 minute. Current credits: ${subscription?.dailyAiUsage || 0}/3`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Timer Error",
+        description: "Failed to set 1-minute timer. Admin access required.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const forceResetCreditsMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", `/api/ai-credits-test/force-reset/${user?.id}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Credits Force Reset",
+        description: "AI credits have been reset to 0 immediately.",
+      });
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ['/api/payments/ai-limits'] });
+    },
+    onError: () => {
+      toast({
+        title: "Reset Error",
+        description: "Failed to force reset credits. Admin access required.",
+        variant: "destructive"
+      });
+    }
+  });
+
   const handleToggleTier = () => {
     toggleTierMutation.mutate();
   };
@@ -90,6 +135,18 @@ export default function DevModeModal({ isOpen, onClose }: DevModeModalProps) {
   const handleResetData = () => {
     if (confirm('Are you sure you want to reset all data? This cannot be undone.')) {
       resetDataMutation.mutate();
+    }
+  };
+
+  const handleTestTimer = () => {
+    if (confirm('Set a 1-minute timer for AI credits reset? This will reset credits after 1 minute for testing.')) {
+      testAiCreditsMutation.mutate();
+    }
+  };
+
+  const handleForceReset = () => {
+    if (confirm('Force reset AI credits to 0 immediately?')) {
+      forceResetCreditsMutation.mutate();
     }
   };
 
@@ -114,6 +171,24 @@ export default function DevModeModal({ isOpen, onClose }: DevModeModalProps) {
       loading: resetDataMutation.isPending,
       buttonText: 'Reset AI Usage',
       destructive: false
+    },
+    {
+      title: '1-Minute AI Credits Timer',
+      description: 'Test AI credits reset with 1-minute timer (instead of 24 hours)',
+      icon: <Zap className="w-6 h-6 text-orange-600" />,
+      action: handleTestTimer,
+      loading: testAiCreditsMutation.isPending,
+      buttonText: '1-Min Timer Test',
+      highlight: true
+    },
+    {
+      title: 'Force Reset AI Credits',
+      description: 'Instantly reset AI credits to 0 for testing',
+      icon: <RefreshCw className="w-6 h-6 text-red-600" />,
+      action: handleForceReset,
+      loading: forceResetCreditsMutation.isPending,
+      buttonText: 'Force Reset Now',
+      destructive: true
     },
     {
       title: 'Database Status',
@@ -194,8 +269,12 @@ export default function DevModeModal({ isOpen, onClose }: DevModeModalProps) {
                 key={index}
                 onClick={feature.action}
                 disabled={feature.loading}
-                variant={feature.destructive ? "destructive" : "outline"}
-                className="w-full justify-start"
+                variant={feature.destructive ? "destructive" : feature.highlight ? "default" : "outline"}
+                className={`w-full justify-start ${
+                  feature.highlight 
+                    ? 'bg-orange-500 hover:bg-orange-600 text-white border-orange-600' 
+                    : ''
+                }`}
               >
                 {feature.loading ? (
                   <RefreshCw className="w-4 h-4 mr-3 animate-spin" />
